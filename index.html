@@ -21,9 +21,26 @@
                 <a href="#protocols" class="nav-link">Protocols</a>
                 <a href="#squad" class="nav-link">The Squad</a>
             </div>
-            <a href="#join" class="join-btn">Join Now</a>
+
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <a href="#join" class="join-btn">Join Now</a>
+                <button class="menu-toggle" id="menuToggle" aria-label="Open Menu">
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
         </div>
     </nav>
+
+    <!-- MOBILE SIDE DRAWER -->
+    <div class="mobile-drawer" id="mobileDrawer">
+        <div class="drawer-content">
+            <a href="#home" class="drawer-link">Home</a>
+            <a href="#protocols" class="drawer-link">Protocols</a>
+            <a href="#squad" class="drawer-link">The Squad</a>
+            <a href="#join" class="drawer-link" style="color: var(--black);">Join Now</a>
+        </div>
+    </div>
 
     <!-- HERO -->
     <main>

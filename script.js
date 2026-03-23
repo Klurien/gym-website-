@@ -29,6 +29,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     reveals.forEach(el => observer.observe(el));
 
+    // ===== MOBILE DRAWER TOGGLE =====
+    const menuToggle = document.getElementById('menuToggle');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const drawerLinks = document.querySelectorAll('.drawer-link');
+
+    if (menuToggle && mobileDrawer) {
+        menuToggle.addEventListener('click', () => {
+            menuToggle.classList.toggle('active');
+            mobileDrawer.classList.toggle('active');
+            document.body.style.overflow = mobileDrawer.classList.contains('active') ? 'hidden' : '';
+        });
+
+        // Close drawer on link click
+        drawerLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                menuToggle.classList.remove('active');
+                mobileDrawer.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+    }
+
     // ===== PARALLAX FOR IMPACT =====
     window.addEventListener('scroll', () => {
         const scrolled = window.scrollY;
