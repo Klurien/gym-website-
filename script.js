@@ -1,77 +1,89 @@
-/* ==========================================
-   DARK FORGE: THE BRUTALIST ENGINE
-   ========================================== */
+// script.js
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const glow = document.getElementById('glow');
-    const reveals = document.querySelectorAll('.reveal');
+    // Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const closeMenuBtn = document.getElementById('close-menu');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileLinks = document.querySelectorAll('.mobile-links a');
 
-    // ===== MOUSE PULSE (RED GLOW) =====
-    window.addEventListener('mousemove', (e) => {
-        glow.style.left = `${e.clientX - 300}px`;
-        glow.style.top = `${e.clientY - 300}px`;
-    }, { passive: true });
+    mobileMenuBtn.addEventListener('click', () => {
+        mobileMenu.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
 
-    // ===== REVEAL OBSERVER (SNAPPY) =====
+    closeMenuBtn.addEventListener('click', () => {
+        mobileMenu.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    });
+
+    mobileLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+    });
+
+    // Navbar Scroll Effect
+    const navbar = document.getElementById('navbar');
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+
+    // Active Link Scroll Spy
+    const sections = document.querySelectorAll('section, header');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (scrollY >= (sectionTop - 200)) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').substring(1) === current) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // Simple Reveal Animation on Scroll
     const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('active');
+                entry.target.style.opacity = 1;
+                entry.target.style.transform = 'translateY(0)';
+                observer.unobserve(entry.target);
             }
         });
     }, observerOptions);
 
-    reveals.forEach(el => observer.observe(el));
+    // Apply reveal to elements that need it
+    const revealElements = document.querySelectorAll('.about-text, .about-image-wrapper, .class-card, .benefit-item');
 
-    // ===== MOBILE DRAWER TOGGLE =====
-    const menuToggle = document.getElementById('menuToggle');
-    const mobileDrawer = document.getElementById('mobileDrawer');
-    const drawerLinks = document.querySelectorAll('.drawer-link');
-
-    if (menuToggle && mobileDrawer) {
-        menuToggle.addEventListener('click', () => {
-            menuToggle.classList.toggle('active');
-            mobileDrawer.classList.toggle('active');
-            document.body.style.overflow = mobileDrawer.classList.contains('active') ? 'hidden' : '';
-        });
-
-        // Close drawer on link click
-        drawerLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                menuToggle.classList.remove('active');
-                mobileDrawer.classList.remove('active');
-                document.body.style.overflow = '';
-            });
-        });
-    }
-
-    // ===== PARALLAX FOR IMPACT =====
-    window.addEventListener('scroll', () => {
-        const scrolled = window.scrollY;
-
-        // Massive Hero Title Parallax
-        const heroTitle = document.querySelector('.hero-title');
-        if (heroTitle) {
-            heroTitle.style.transform = `translateY(${scrolled * 0.4}px) rotate(${scrolled * 0.01}deg)`;
-        }
-
-        // Section Title Parallaxes
-        const sectionTitles = document.querySelectorAll('.section-title');
-        sectionTitles.forEach(title => {
-            const rect = title.getBoundingClientRect();
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
-                title.style.transform = `translateX(${(window.innerHeight - rect.top) * 0.1}px)`;
-            }
-        });
-    }, { passive: true });
-
-    // Console brutality
-    console.log('%c DARK FORGE: BRUTALIST EDITION %c NO EXCUSES ', 'background: #ff0000; color: black; font-weight: 900; padding: 4px 8px;', '');
+    revealElements.forEach(el => {
+        el.style.opacity = 0;
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'all 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+        observer.observe(el);
+    });
 
 });
