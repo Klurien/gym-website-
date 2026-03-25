@@ -321,7 +321,7 @@ h4,
     height: 100%;
     background-image: linear-gradient(to right, rgba(5, 5, 5, 0.9) 0%, rgba(5, 5, 5, 0.4) 100%), url('https://lh3.googleusercontent.com/gps-cs-s/AHVAwepUQzbN8dKuJhEv6hxomxfbImpx1a6wYsAyPLesRDF9Lf0U7oq75IxVd4-Qq1kF3SqAJJ_8EehSTRCLVrejndWUCC9jqBB_m6A3aXXHnPmWttXmPfTE1bCYYOJdesR-ginyvyYV1_Yuzds=s1200-k-no');
     background-size: cover;
-    background-position: center;
+    background-position: center 15%;
     background-repeat: no-repeat;
     z-index: -1;
     transform: scale(1.05);
@@ -516,6 +516,8 @@ h4,
 .about-img {
     width: 100%;
     height: auto;
+    object-fit: cover;
+    object-position: center 15%;
     filter: grayscale(80%) contrast(120%);
     transition: var(--transition);
     position: relative;
@@ -586,6 +588,7 @@ h4,
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center 15%;
     filter: grayscale(100%) brightness(0.4);
     transition: transform 0.8s ease, filter 0.8s ease;
 }
@@ -706,9 +709,9 @@ h4,
    JOIN BANNER
 ------------------------ */
 .join-banner {
-    background-image: linear-gradient(rgba(230, 0, 0, 0.9), rgba(150, 0, 0, 0.9)), url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop');
+    background-image: linear-gradient(rgba(230, 0, 0, 0.9), rgba(150, 0, 0, 0.9)), url('https://lh3.googleusercontent.com/gps-cs-s/AHVAwepUQzbN8dKuJhEv6hxomxfbImpx1a6wYsAyPLesRDF9Lf0U7oq75IxVd4-Qq1kF3SqAJJ_8EehSTRCLVrejndWUCC9jqBB_m6A3aXXHnPmWttXmPfTE1bCYYOJdesR-ginyvyYV1_Yuzds=s1200-k-no');
     background-size: cover;
-    background-position: center;
+    background-position: center 15%;
     background-attachment: fixed;
     padding: 6rem 5%;
     text-align: center;
