@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Comrades Gym</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="subpage">
+    <nav class="navbar scrolled">
+        <div class="nav-container">
+            <a href="index.html" class="logo"><span class="logo-red">COMRADES</span> GYM</a>
+        </div>
+    </nav>
+
+    <section class="contact-section" style="padding-top: 15rem; min-height: 100vh;">
+        <div class="container" style="max-width: 500px;">
+            <div class="contact-form">
+                <div class="section-badge">JOIN THE BROTHERHOOD</div>
+                <h1 class="service-name" style="font-size: 2.5rem; margin-bottom: 2rem;">JOIN THE <span class="text-red">TEAM.</span></h1>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label>USERNAME</label>
+                        <input type="text" name="username" required placeholder="User_2026">
+                    </div>
+                    <div class="form-group">
+                        <label>EMAIL ADDRESS</label>
+                        <input type="email" name="email" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>PASSWORD</label>
+                        <input type="password" name="password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">CREATE ACCOUNT</button>
+                    <p id="statusMsg" class="status-msg"></p>
+                </form>
+                <p style="margin-top: 2rem; color: var(--color-text-muted); text-align: center;">
+                    Already have an account? <a href="login.html" class="text-red">Login here</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('statusMsg');
+            const data = { 
+                username: e.target.username.value, 
+                email: e.target.email.value, 
+                password: e.target.password.value 
+            };
+            
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                
+                if (res.ok) {
+                    msg.innerHTML = "Success! Redirecting to login...";
+                    msg.className = "status-msg success";
+                    setTimeout(() => window.location.href = 'login.html', 2000);
+                } else {
+                    msg.innerHTML = result.error;
+                    msg.className = "status-msg error";
+                }
+            } catch (err) {
+                msg.innerHTML = "Connection error";
+                msg.className = "status-msg error";
+            }
+        });
+    </script>
+</body>
+</html>

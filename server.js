@@ -11,6 +11,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('.'));
 
+const fs = require('fs');
+
 // TiDB Connection setup
 const dbConfig = {
     host: process.env.DB_HOST,
@@ -19,7 +21,9 @@ const dbConfig = {
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 4000,
     ssl: {
-        rejectUnauthorized: true
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: process.env.DB_CA_PATH ? true : false,
+        ca: process.env.DB_CA_PATH ? fs.readFileSync(process.env.DB_CA_PATH) : undefined
     }
 };
 
@@ -30,6 +34,17 @@ async function initDB() {
         pool = mysql.createPool(dbConfig);
         console.log('Connected to TiDB');
         
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                role ENUM('user', 'admin') DEFAULT 'user',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         await pool.query(`
             CREATE TABLE IF NOT EXISTS client_info (
                 id INT AUTO_INCREMENT PRIMARY KEY,

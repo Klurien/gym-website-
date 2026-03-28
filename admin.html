@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Comrades Gym</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="subpage">
+    <nav class="navbar scrolled">
+        <div class="nav-container">
+            <a href="index.html" class="logo"><span class="logo-red">COMRADES</span> ADMIN</a>
+            <div class="nav-links">
+                <a href="#" id="logoutBtn" class="nav-link">LOGOUT</a>
+            </div>
+        </div>
+    </nav>
+
+    <section style="padding: 15rem 2rem;">
+        <div class="container">
+            <h1 class="service-name">CLIENT <span class="text-red">RESPONSES.</span></h1>
+            <p class="section-description">Manage and reach out to new potential comrades.</p>
+            
+            <div id="loading" class="text-red" style="margin-top: 2rem;">Fetching latest data...</div>
+
+            <div id="responsesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; margin-top: 4rem;">
+                <!-- Cards will be injected here -->
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Auth Defense
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+        
+        if (!token || !user || user.role !== 'admin') {
+            window.location.href = 'login.html';
+        }
+
+        async function fetchResponses() {
+            try {
+                const res = await fetch('/api/admin/responses', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (res.ok) {
+                    const container = document.getElementById('responsesContainer');
+                    if (result.responses.length === 0) {
+                        container.innerHTML = "No inquiries yet.";
+                        return;
+                    }
+                    
+                    container.innerHTML = result.responses.map(resp => `
+                        <div class="benefit-item" style="padding: 2rem; border-radius: 12px; border: 1px solid var(--color-border); flex-direction: column; align-items: flex-start;">
+                            <h4 class="text-red">${resp.name.toUpperCase()}</h4>
+                            <p style="font-size: 0.8rem; margin: 0.5rem 0;">${new Date(resp.created_at).toLocaleString()}</p>
+                            <p><i class="fa-solid fa-envelope"></i> ${resp.email}</p>
+                            <p><i class="fa-solid fa-phone"></i> ${resp.phone}</p>
+                            <div style="margin-top: 1rem; border-top: 1px solid #333; padding-top: 1rem;">
+                                <span class="section-badge" style="font-size: 0.6rem;">INTEREST: ${resp.interests}</span>
+                                <p style="margin-top: 0.5rem; display: block;">${resp.message}</p>
+                            </div>
+                            <a href="mailto:${resp.email}" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.7rem; margin-top: 1rem;">REPLY NOW</a>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('loading').innerHTML = result.error;
+                }
+            } catch (err) {
+                document.getElementById('loading').innerHTML = "Failed to fetch responses.";
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+
+        fetchResponses();
+    </script>
+</body>
+</html>

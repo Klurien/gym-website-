@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Comrades Gym</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="subpage">
+    <nav class="navbar scrolled">
+        <div class="nav-container">
+            <a href="index.html" class="logo"><span class="logo-red">COMRADES</span> GYM</a>
+        </div>
+    </nav>
+
+    <section class="contact-section" style="padding-top: 15rem; min-height: 100vh;">
+        <div class="container" style="max-width: 500px;">
+            <div class="contact-form">
+                <div class="section-badge">MEMBER LOGIN</div>
+                <h1 class="service-name" style="font-size: 2.5rem; margin-bottom: 2rem;">WELCOME <span class="text-red">BACK.</span></h1>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>EMAIL ADDRESS</label>
+                        <input type="email" name="email" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>PASSWORD</label>
+                        <input type="password" name="password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">ACCESS DASHBOARD</button>
+                </form>
+                <p style="margin-top: 2rem; color: var(--color-text-muted); text-align: center;">
+                    Don't have an account? <a href="register.html" class="text-red">Register here</a>
+                </p>
+                <div id="statusMsg" class="status-msg"></div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('statusMsg');
+            const data = { email: e.target.email.value, password: e.target.password.value };
+            
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    msg.innerHTML = "Login successful! Redirecting...";
+                    msg.className = "status-msg success";
+                    window.location.href = result.user.role === 'admin' ? 'admin.html' : 'dashboard.html';
+                } else {
+                    msg.innerHTML = result.error;
+                    msg.className = "status-msg error";
+                }
+            } catch (err) {
+                msg.innerHTML = "Connection error";
+                msg.className = "status-msg error";
+            }
+        });
+    </script>
+</body>
+</html>
