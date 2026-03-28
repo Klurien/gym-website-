@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boxing | Comrades Gym</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="subpage">
+    <!-- Navigation -->
+    <nav class="navbar scrolled" id="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-red">COMRADES</span> GYM
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">HOME</a>
+                <a href="about.html" class="nav-link">ABOUT</a>
+                <a href="contact.html" class="nav-link">CONTACT</a>
+            </div>
+            <a href="contact.html" class="btn-primary join-btn">JOIN NOW <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 150px; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
+        <!-- Video Side (X style) -->
+        <div class="video-feed-container" style="margin: 0; max-width: 100%;">
+            <div class="video-post">
+                <div class="video-header">
+                    <div class="user-avatar"></div>
+                    <div class="user-info">
+                        <h4>Marcus Trainer</h4>
+                        <span>@comradesgym • 1d ago</span>
+                    </div>
+                </div>
+                <div class="video-caption">
+                    Rhythm, discipline, and power. Boxing is more than just throwing punches. It's about mental fortitude. 🥊 #BoxingRuiru #ComradesGym #WarriorSpirit
+                </div>
+                <div class="video-wrapper">
+                    <video id="gymVideo" loop muted autoplay playsinline>
+                        <source src="videos/boxing.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="video-actions">
+                    <span style="font-size: 0.8rem; color: var(--color-text-muted);">12.5k Views</span>
+                    <button id="unmuteBtn" class="video-action-btn"><i class="fa-solid fa-volume-xmark"></i> UNMUTE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Side -->
+        <div class="service-content-detail">
+            <div class="section-badge">PROGRAM</div>
+            <h1 class="service-name">PRO-LEVEL <span class="text-red">BOXING</span></h1>
+            <p class="section-description">
+                From technical sparring to heavy bag conditioning, our boxing program is built for those who want to fight for their fitness. Train like a pro in a safe and supportive environment.
+            </p>
+            
+            <div class="benefits-mini" style="margin: 2rem 0;">
+                <div class="benefit-item">
+                    <div class="benefit-icon" style="width: 40px; height: 40px; font-size: 1.2rem;"><i class="fa-solid fa-mitten"></i></div>
+                    <div class="benefit-text">
+                        <h4>TECHNIQUE</h4>
+                        <p>Master the art of boxing transitions.</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon" style="width: 40px; height: 40px; font-size: 1.2rem;"><i class="fa-solid fa-wind"></i></div>
+                    <div class="benefit-text">
+                        <h4>ENDURANCE</h4>
+                        <p>Unlock elite-level stamina.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <a href="contact.html?interest=boxing" class="btn-primary">START TRAINING</a>
+            
+            <div style="margin-top: 4rem;">
+                <h3 style="font-family: var(--font-accent); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 2rem;">OTHER SERVICES</h3>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="strength.html" class="btn-secondary" style="padding: 0.8rem 1.5rem; font-size: 0.7rem;">STRENGTH</a>
+                    <a href="aerobics.html" class="btn-secondary" style="padding: 0.8rem 1.5rem; font-size: 0.7rem;">AEROBICS</a>
+                    <a href="zumba.html" class="btn-secondary" style="padding: 0.8rem 1.5rem; font-size: 0.7rem;">ZUMBA</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('gymVideo');
+        const unmuteBtn = document.getElementById('unmuteBtn');
+        
+        unmuteBtn.addEventListener('click', () => {
+            if (video.muted) {
+                video.muted = false;
+                unmuteBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> MUTE';
+            } else {
+                video.muted = true;
+                unmuteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> UNMUTE';
+            }
+        });
+    </script>
+</body>
+</html>
