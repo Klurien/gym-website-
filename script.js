@@ -2,6 +2,19 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Auth Integration
+    const profileLink = document.getElementById('profileLink');
+    if (profileLink) {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user'));
+        
+        if (token && user) {
+            profileLink.href = user.role === 'admin' ? 'admin.html' : 'dashboard.html';
+            profileLink.title = `Dashboard (${user.username})`;
+            profileLink.classList.add('logged-in');
+        }
+    }
+
     // Mobile Menu Toggle
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
     const closeMenuBtn = document.getElementById('close-menu');
