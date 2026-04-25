@@ -5,6 +5,7 @@ export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Modals state
   const [showPostModal, setShowPostModal] = useState(false);
@@ -134,6 +135,14 @@ export default function Feed() {
 
   return (
     <main className="pt-28 pb-32 px-edge-margin space-y-gutter max-w-2xl mx-auto">
+      {/* Personalized Welcome Header */}
+      <div className="mb-8 pl-1">
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
+          Morning, <span className="text-lime-400">{user.username || 'Member'}</span>
+        </h1>
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.3em] mt-2">Your Daily Progress</p>
+      </div>
+
       {/* Stories/Quick Access Bento */}
       <div className="grid grid-cols-4 gap-stack-md h-24 mb-stack-lg">
         <div onClick={() => setShowPostModal(true)} className="col-span-1 bg-zinc-900/40 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-1 hover:border-lime-400/50 transition-colors cursor-pointer active:scale-95 duration-150">

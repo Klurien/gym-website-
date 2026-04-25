@@ -36,9 +36,10 @@ export default function Auth() {
             if (loginRes.ok) {
               localStorage.setItem('token', loginData.token);
               localStorage.setItem('user', JSON.stringify(loginData.user));
+              setStatus({ success: `Welcome, ${loginData.user.username}! Tuning your feed...`, error: '' });
               setTimeout(() => {
                 navigate('/feed');
-              }, 800);
+              }, 1200);
             } else {
               setIsLogin(true);
             }
@@ -47,9 +48,9 @@ export default function Auth() {
           }
         } else {
           // Login successful
-          setStatus({ success: 'Success! Redirecting...', error: '' });
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
+          setStatus({ success: `Welcome back, ${data.user.username}!`, error: '' });
           
           setTimeout(() => {
             if (data.user?.role === 'admin') {
@@ -57,7 +58,7 @@ export default function Auth() {
             } else {
               navigate('/feed');
             }
-          }, 800);
+          }, 1000);
         }
       } else {
         setStatus({ error: data.error || 'Authentication failed', success: '' });
