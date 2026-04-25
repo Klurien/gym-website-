@@ -141,47 +141,10 @@ export default function Feed() {
   return (
     <main className="pt-28 pb-32 px-edge-margin space-y-gutter max-w-2xl mx-auto">
       {/* Personalized Welcome Header */}
-      <div className="mb-8 pl-1">
+      <div className="mb-4 pl-1">
         <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
           {greeting()}, <span className="text-lime-400">{user.username || 'Member'}</span>
         </h1>
-        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.3em] mt-2">Your Daily Progress</p>
-      </div>
-
-      {/* Stories/Quick Access Bento */}
-      <div className="grid grid-cols-4 gap-stack-md h-24 mb-stack-lg">
-        <div onClick={() => setShowPostModal(true)} className="col-span-1 bg-zinc-900/40 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-1 hover:border-lime-400/50 transition-colors cursor-pointer active:scale-95 duration-150">
-          <div className="w-12 h-12 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
-            <span className="material-symbols-outlined text-zinc-400">add</span>
-          </div>
-          <span className="font-label-sm text-label-sm text-zinc-500">Post</span>
-        </div>
-        <div onClick={() => navigate('/live')} className="col-span-3 bg-zinc-900/40 rounded-2xl border border-white/5 overflow-hidden relative group cursor-pointer active:scale-95 transition-all duration-150">
-          <img 
-            className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-700" 
-            alt="Live Workout" 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSEjHP7QrRZn36afYXkYWwhYMzgsOeYHS1skaXUClEJrCEBYSXYPrCqtDIpKrZ7zQImqCZdnx2if-obOliXGrFkS-IhxiezKagtuXvacy978-LeN5yPBQe7EEbbsgd6H260sALF_bxu2HZMawJHmBZeHBUF-C3bTwHqd191HTZ9aus5dwyDHchV28CuBKMfY59RJ_oezS06FSoRbqb45me7-nWyy7nmFBJAxU196YIy1bvBirwGVLMRrEa2SZac5fXpi-DDtqdADiY"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-          <div className="absolute top-4 left-4">
-            <span className="bg-lime-400 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">
-              Elite Content
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="flex justify-center p-10">
-          <span className="material-symbols-outlined animate-spin text-lime-400 text-3xl">refresh</span>
-        </div>
-      ) : posts.length === 0 ? (
-        <div className="text-center p-10 text-zinc-500 font-label-bold uppercase tracking-widest text-[10px]">No Posts Found</div>
-      ) : (
-        posts.map((post) => (
-          <article key={post.id} className="bg-zinc-900/60 rounded-[24px] overflow-hidden border border-white/5 shadow-2xl relative group mb-8">
-             <div className="p-container-padding flex items-center justify-between">
-              <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-full border overflow-hidden ${post.trainer_name === 'Alex Rivers' ? 'border-lime-400' : 'border-zinc-700'}`}>
                     <img 
                       alt={post.trainer_name} 

@@ -239,6 +239,14 @@ io.on('connection', (socket) => {
     socket.on('send_message_ping', ({ receiver_id }) => {
         io.to(`user_${receiver_id}`).emit('new_message_ping');
     });
+    
+    socket.on('typing', ({ receiver_id }) => {
+        io.to(`user_${receiver_id}`).emit('typing_status', { userId: currentUserId, isTyping: true });
+    });
+
+    socket.on('stop_typing', ({ receiver_id }) => {
+        io.to(`user_${receiver_id}`).emit('typing_status', { userId: currentUserId, isTyping: false });
+    });
 
     socket.on('disconnect', () => {
         if (currentUserId) console.log(`User ${currentUserId} disconnected.`);
