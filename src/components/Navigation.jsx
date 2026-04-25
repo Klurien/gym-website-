@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 export default function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const getButtonClass = (path) => {
     const isActive = location.pathname === path || (path === '/feed' && location.pathname === '/');
@@ -31,6 +32,11 @@ export default function Navigation() {
       <button onClick={() => navigate('/tasks')} className={getButtonClass('/tasks')}>
         <span className="material-symbols-outlined" style={getIconStyle('/tasks')}>crisis_alert</span>
       </button>
+      {user.role === 'admin' && (
+        <button onClick={() => navigate('/admin')} className={getButtonClass('/admin')}>
+          <span className="material-symbols-outlined" style={getIconStyle('/admin')}>monitoring</span>
+        </button>
+      )}
     </nav>
   );
 }

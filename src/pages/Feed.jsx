@@ -139,183 +139,169 @@ export default function Feed() {
   };
 
   return (
-    <main className="pt-28 pb-32 px-edge-margin space-y-gutter max-w-2xl mx-auto">
-      {/* Personalized Welcome Header */}
-      <div className="mb-4 pl-1">
-        <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
+    <main className="h-screen w-full bg-black overflow-hidden flex flex-col">
+      {/* Immersive Header (Static) */}
+      <header className="px-6 pt-12 pb-6 bg-gradient-to-b from-black/80 to-transparent shrink-0 z-20">
+        <h1 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">
           {greeting()}, <span className="text-lime-400">{user.username || 'Member'}</span>
         </h1>
-                <div className={`w-10 h-10 rounded-full border overflow-hidden ${post.trainer_name === 'Alex Rivers' ? 'border-lime-400' : 'border-zinc-700'}`}>
-                    <img 
-                      alt={post.trainer_name} 
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.trainer_name}`}
-                      className="w-full h-full object-cover"
-                    />
-                </div>
-                <div>
-                  <h3 className="font-label-bold text-label-bold text-on-surface">{post.trainer_name}</h3>
-                  <p className="font-label-sm text-label-sm text-zinc-500">
-                    {post.type.toUpperCase()} • {new Date(post.created_at).toLocaleDateString()}
-                  </p>
-                </div>
+        <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.4em] mt-2">Elite Global Feed</p>
+      </header>
+
+      {/* TikTok Style Vertical Snap Container */}
+      <div className="flex-1 overflow-y-auto scroll-snap-y-mandatory hide-scrollbar pb-32">
+        {loading ? (
+          <div className="h-full flex items-center justify-center">
+            <span className="material-symbols-outlined animate-spin text-lime-400 text-4xl">refresh</span>
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold gap-4">
+             <span className="material-symbols-outlined text-4xl opacity-30">movie_filter</span>
+             No Elite Clips Yet
+          </div>
+        ) : (
+          posts.map(post => (
+            <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-zinc-900 flex flex-col">
+              {/* Media Background */}
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src={post.media_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"} 
+                  className="w-full h-full object-cover"
+                  alt={post.title}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
               </div>
-              <button className="text-zinc-500">
-                <span className="material-symbols-outlined">more_vert</span>
-              </button>
-            </div>
-            
-            <div className={`mx-4 relative ${post.type === 'live' ? 'aspect-video' : 'aspect-[4/5]'} rounded-[20px] overflow-hidden cursor-pointer`}>
-              <img 
-                className={`w-full h-full object-cover ${post.type === 'live' ? 'brightness-75' : ''}`}
-                alt="Post Media" 
-                src={post.media_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuBLROueBxPmAcdXUhD9cZrpBeyS08cmliZxuoQQ5QiqbWwaENcJxmCLabrPH3hhhFf3xwdsaxLCmShUtA_BCEOWsTt_Ra59rxT_m-HyeOJ6PDwGx9HRDjUl6sepC5lCe6g3quem2QO-Bt1t7wzMZCyKjiSyfO6XOOXHWlrtPlCrXBa5A9UtxvrdBZrRCSY-JwNcpz4P6lk4FvXXpQ2HD7qVquoIdMfDl1AhUy4jAqmNR4LtyTmPizLOXs-eODUh3vHXSr3v4aCTHPaL"}
-                onError={(e) => { e.target.src = "https://lh3.googleusercontent.com/aida-public/AB6AXuBLROueBxPmAcdXUhD9cZrpBeyS08cmliZxuoQQ5QiqbWwaENcJxmCLabrPH3hhhFf3xwdsaxLCmShUtA_BCEOWsTt_Ra59rxT_m-HyeOJ6PDwGx9HRDjUl6sepC5lCe6g3quem2QO-Bt1t7wzMZCyKjiSyfO6XOOXHWlrtPlCrXBa5A9UtxvrdBZrRCSY-JwNcpz4P6lk4FvXXpQ2HD7qVquoIdMfDl1AhUy4jAqmNR4LtyTmPizLOXs-eODUh3vHXSr3v4aCTHPaL" }}
-              />
-              
-              {post.type === 'live' && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 bg-lime-400/20 backdrop-blur-md rounded-full flex items-center justify-center border border-lime-400/50 hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-lime-400 text-4xl ml-1" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
-                  </div>
-                </div>
-              )}
 
-              {post.tags && (
-                <div className="absolute top-4 right-4 bg-lime-400 text-black px-3 py-1 rounded-full font-label-bold text-[10px] uppercase tracking-widest kinetic-glow">
-                  {post.tags}
+              {/* Branding & Tags Overlay */}
+              <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                   <div className="w-8 h-8 rounded-full border border-lime-400/50 overflow-hidden shadow-xl">
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.trainer_name}`} className="w-full h-full" alt="Trainer" />
+                   </div>
+                   <span className="text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">@{post.trainer_name || 'Coach'}</span>
                 </div>
-              )}
-            </div>
+                {post.tags && (
+                   <span className="bg-white/10 backdrop-blur-md text-white px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-white/10 w-fit">
+                     #{post.tags}
+                   </span>
+                )}
+              </div>
 
-            <div className="p-container-padding space-y-3">
-              <h2 className="font-headline-md text-lime-400">{post.title}</h2>
-              <p className="font-body-md text-body-md text-zinc-300 leading-relaxed">
-                {post.description}
-              </p>
-              <div className="flex items-center justify-between pt-4">
-                <div className="flex items-center gap-6">
+              {/* Description Overlay */}
+              <div className="absolute bottom-8 left-6 right-20 z-10">
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg">{post.title}</h2>
+                <p className="text-xs text-zinc-300 line-clamp-3 font-body-md opacity-90 drop-shadow-lg">{post.description}</p>
+              </div>
+
+              {/* Side Action Bar (Vertical) */}
+              <div className="absolute right-4 bottom-12 z-20 flex flex-col gap-6 items-center">
+                <div className="flex flex-col items-center gap-1">
                   <button 
                     onClick={() => handleLike(post.id, post.is_liked)}
-                    className="flex items-center gap-2 group/btn active:scale-95 transition-all"
+                    className={`w-12 h-12 rounded-full backdrop-blur-xl flex items-center justify-center transition-all active:scale-75 shadow-2xl ${post.is_liked ? 'bg-lime-400 text-black shadow-lime-400/30' : 'bg-black/40 text-white border border-white/10'}`}
                   >
-                    <span 
-                      className={`material-symbols-outlined group-active/btn:scale-125 transition-transform ${post.is_liked ? 'text-lime-400' : 'text-zinc-400 hover:text-lime-400'}`} 
-                      style={post.is_liked ? { fontVariationSettings: "'FILL' 1" } : {}}
-                    >
-                      favorite
-                    </span>
-                    <span className={`font-label-bold text-label-bold ${post.is_liked ? 'text-lime-400' : 'text-zinc-400'}`}>
-                      {post.likes_count}
-                    </span>
+                    <span className="material-symbols-outlined font-black" style={post.is_liked ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
                   </button>
-                  <button onClick={() => openComments(post.id)} className="flex items-center gap-2 text-zinc-400 hover:text-lime-400 transition-colors active:scale-95">
-                    <span className="material-symbols-outlined">chat</span>
-                    <span className="font-label-bold text-label-bold">{post.comments_count}</span>
-                  </button>
-                  <button className="flex items-center gap-2 text-zinc-400 active:scale-95">
-                    <span className="material-symbols-outlined">share</span>
-                  </button>
+                  <span className="text-[10px] font-black text-white tracking-widest drop-shadow-md">{post.likes_count || 0}</span>
                 </div>
-                <button className="text-zinc-500 active:scale-95 hover:text-white transition-colors">
-                  <span className="material-symbols-outlined">bookmark</span>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button 
+                    onClick={() => openComments(post.id)}
+                    className="w-12 h-12 bg-black/40 backdrop-blur-xl text-white rounded-full flex items-center justify-center border border-white/10 shadow-2xl active:scale-75"
+                  >
+                    <span className="material-symbols-outlined font-black">forum</span>
+                  </button>
+                  <span className="text-[10px] font-black text-white tracking-widest drop-shadow-md">{post.comments_count || 0}</span>
+                </div>
+
+                <button className="w-12 h-12 bg-black/40 backdrop-blur-xl text-white rounded-full flex items-center justify-center border border-white/10 shadow-2xl active:scale-75">
+                  <span className="material-symbols-outlined font-black">share</span>
                 </button>
               </div>
             </div>
-          </article>
-        ))
-      )}
+          ))
+        )}
+      </div>
 
       {/* Floating Create Post Button */}
-      <button 
-        onClick={() => setShowPostModal(true)} 
-        className="fixed bottom-32 right-8 w-14 h-14 bg-lime-400 text-black rounded-2xl shadow-[0_0_30px_rgba(204,255,0,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40"
-      >
-        <span className="material-symbols-outlined text-3xl font-bold">add</span>
-      </button>
+      {user.role === 'admin' && (
+        <button 
+          onClick={() => setShowPostModal(true)} 
+          className="fixed bottom-32 right-6 w-14 h-14 bg-lime-400 text-black rounded-2xl shadow-[0_10px_40px_rgba(204,255,0,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40"
+        >
+          <span className="material-symbols-outlined text-3xl font-bold">add</span>
+        </button>
+      )}
 
-      {/* CREATE POST MODAL */}
+      {/* Modals (Portal-like) */}
       {showPostModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowPostModal(false)}></div>
-          <div className="relative bg-zinc-900 border border-white/10 rounded-[32px] p-6 w-full max-w-sm shadow-2xl animate-in slide-in-from-bottom-8 duration-200">
-            <h2 className="text-xl font-headline-md text-white mb-4 uppercase">New Post</h2>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setShowPostModal(false)}></div>
+          <div className="relative bg-zinc-900 border border-white/10 rounded-[32px] p-6 w-full max-w-sm shadow-2xl">
+            <h2 className="text-xl font-black text-white mb-6 uppercase tracking-tighter">New Global Post</h2>
             <form onSubmit={handleCreatePost} className="space-y-4">
-              <div>
-                <input required type="text" placeholder="Title" value={postForm.title} onChange={e => setPostForm({...postForm, title: e.target.value})} className="w-full bg-zinc-950/50 border border-white/10 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-lime-400" />
-              </div>
-              <div>
-                <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({...postForm, description: e.target.value})} className="w-full h-24 bg-zinc-950/50 border border-white/10 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-lime-400 resize-none"></textarea>
-              </div>
-              <div>
-                <input type="text" placeholder="Media URL (Image / MP4)" value={postForm.media_url} onChange={e => setPostForm({...postForm, media_url: e.target.value})} className="w-full bg-zinc-950/50 border border-white/10 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-lime-400 text-sm" />
-              </div>
-              <div className="flex gap-2">
-                <input type="text" placeholder="Tags (e.g. HIIT)" value={postForm.tags} onChange={e => setPostForm({...postForm, tags: e.target.value})} className="w-1/2 bg-zinc-950/50 border border-white/10 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-lime-400 text-sm" />
-                <select value={postForm.type} onChange={e => setPostForm({...postForm, type: e.target.value})} className="w-1/2 bg-zinc-950/50 border border-white/10 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-lime-400 text-sm">
-                  <option value="static">Static</option>
-                  <option value="live">Live Video</option>
-                </select>
-              </div>
-              <div className="flex gap-4 pt-2">
-                <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 bg-zinc-800 text-white font-bold py-3 rounded-xl hover:bg-zinc-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 bg-lime-400 text-black font-bold py-3 rounded-xl shadow-[0_0_15px_rgba(204,255,0,0.3)] hover:scale-105 active:scale-95 transition-all">Share</button>
+              <input required type="text" placeholder="Post Title" value={postForm.title} onChange={e => setPostForm({...postForm, title: e.target.value})} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 transition-all outline-none" />
+              <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({...postForm, description: e.target.value})} className="w-full h-24 bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 resize-none outline-none"></textarea>
+              <input type="text" placeholder="Media URL (Image/MP4)" value={postForm.media_url} onChange={e => setPostForm({...postForm, media_url: e.target.value})} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 text-sm outline-none" />
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 bg-zinc-800 text-white font-bold py-4 rounded-2xl hover:bg-zinc-700 transition">Cancel</button>
+                <button type="submit" className="flex-1 bg-lime-400 text-black font-black py-4 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">Publish</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* COMMENTS MODAL BOTTOM SHEET */}
       {showCommentsModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setShowCommentsModal(null)}></div>
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setShowCommentsModal(null)}></div>
           <div className="relative bg-zinc-900 border-t border-white/10 w-full max-w-2xl h-[70vh] rounded-t-[32px] flex flex-col shadow-2xl animate-in slide-in-from-bottom-full duration-300">
-            <div className="p-4 flex flex-col items-center border-b border-white/5 sticky top-0 bg-zinc-900/90 z-10 backdrop-blur-md rounded-t-[32px]">
+            <div className="p-4 flex flex-col items-center border-b border-white/5 sticky top-0 bg-zinc-900/90 z-10">
               <div className="w-12 h-1 bg-white/20 rounded-full mb-3 cursor-pointer" onClick={() => setShowCommentsModal(null)}></div>
-              <h2 className="text-white font-headline-md uppercase text-center">Comments</h2>
+              <h2 className="text-white font-black uppercase text-sm tracking-widest">Post Comments</h2>
             </div>
             
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {loadingComments ? (
                 <div className="flex justify-center p-10"><span className="material-symbols-outlined animate-spin text-lime-400">refresh</span></div>
               ) : comments.length === 0 ? (
-                <div className="text-center text-zinc-500 font-label-bold uppercase text-[10px]">No comments yet</div>
+                <div className="text-center text-zinc-500 font-bold uppercase text-[9px] tracking-[0.3em] py-20">No Elite Feedback Yet</div>
               ) : (
                 comments.map((c, i) => (
                   <div key={i} className="flex gap-4">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-zinc-800 shrink-0">
-                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.username}`} className="w-full h-full object-cover" alt="User" />
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.username}`} className="w-full h-full" alt="User" />
                     </div>
                     <div className="flex-1">
-                      <div className="bg-zinc-800/50 rounded-2xl p-3 border border-white/5">
-                        <span className="text-zinc-400 font-bold text-xs">{c.username}</span>
-                        <p className="text-white text-sm mt-1">{c.comment}</p>
+                      <div className="bg-black/30 rounded-2xl p-4 border border-white/5 shadow-inner">
+                        <span className="text-lime-400 font-black text-[10px] uppercase tracking-widest">{c.username}</span>
+                        <p className="text-white text-sm mt-1 font-body-md leading-relaxed">{c.comment}</p>
                       </div>
-                      <span className="text-[10px] text-zinc-600 block mt-1 ml-2">{new Date(c.created_at).toLocaleString()}</span>
+                      <span className="text-[8px] text-zinc-600 font-bold uppercase tracking-widest mt-2 ml-2">{new Date(c.created_at).toLocaleString()}</span>
                     </div>
                   </div>
                 ))
               )}
             </div>
 
-            <div className="p-4 border-t border-white/5 bg-zinc-950">
-              <form onSubmit={postComment} className="flex gap-2">
+            <div className="p-6 border-t border-white/5 bg-zinc-950 pb-10">
+              <form onSubmit={postComment} className="flex gap-2 bg-zinc-900 rounded-full p-1 border border-white/10 ring-2 ring-transparent focus-within:ring-lime-400/20 transition-all">
                 <input 
                   type="text" 
                   value={newComment} 
                   onChange={e => setNewComment(e.target.value)} 
-                  placeholder="Drop a comment..." 
-                  className="flex-1 bg-zinc-900 border border-white/10 text-white rounded-full py-3 px-5 focus:outline-none focus:border-lime-400 transition-colors text-sm"
+                  placeholder="Share your thoughts..." 
+                  className="flex-1 bg-transparent text-white rounded-full py-3 px-6 outline-none text-sm"
                 />
-                <button type="submit" disabled={!newComment.trim()} className="w-12 h-12 bg-lime-400 text-black rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 active:scale-95 transition-transform hover:bg-lime-300">
-                  <span className="material-symbols-outlined">send</span>
+                <button type="submit" disabled={!newComment.trim()} className="w-12 h-12 bg-lime-400 text-black rounded-full flex items-center justify-center shrink-0 disabled:opacity-90 active:scale-90 transition-all">
+                  <span className="material-symbols-outlined font-black">send</span>
                 </button>
               </form>
             </div>
           </div>
         </div>
       )}
-
     </main>
   );
 }

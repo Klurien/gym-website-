@@ -39,27 +39,24 @@ module.exports = async (req, res) => {
     try {
         const pool = mysql.createPool(dbConfig);
         
-        // Count users
-        const [[{ total_users }]] = await pool.query("SELECT COUNT(*) as total_users FROM users WHERE role = 'user'");
+        // Count users (excluding self)
+        const [[{ totalUsers }]] = await pool.query("SELECT COUNT(*) as totalUsers FROM users WHERE role = 'user'");
         
-        // Count inquiries
-        const [[{ total_inquiries }]] = await pool.query('SELECT COUNT(*) as total_inquiries FROM client_info');
+        // Count unread messages for this coach
+        const [[{ unreadMessages }]] = await pool.query("SELECT COUNT(*) as unreadMessages FROM messages WHERE receiver_id = ? AND is_read = FALSE", [decoded.id]);
         
-        // Count total bookings
-        const [[{ total_bookings }]] = await pool.query("SELECT COUNT(*) as total_bookings FROM bookings WHERE status = 'booked'");
-
-        // Get recent log activity
-        const [recent_logs] = await pool.query(`
-            SELECT wl.log_date, wl.duration_minutes, wl.calories_burned, u.username
-            FROM workout_logs wl
-            JOIN users u ON wl.user_id = u.id
-            ORDER BY wl.log_date DESC
-            LIMIT 10
-        `);
+        // Count total social likes on trainer's posts
+        const [[{ totalLikes }]] = await pool.query(`
+            SELECT COUNT(*) as totalLikes 
+            FROM post_likes pl
+            JOIN posts p ON pl.post_id = p.id
+            WHERE p.trainer_id = ?
+        `, [decoded.id]);
 
         return res.status(200).json({ 
-            stats: { total_users, total_inquiries, total_bookings },
-            recentLogs: recent_logs
+            totalUsers,
+            unreadMessages,
+            totalLikes
         });
     } catch (err) {
         console.error(err);

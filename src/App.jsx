@@ -9,6 +9,7 @@ import Calendar from './pages/Calendar';
 import Tasks from './pages/Tasks';
 import Live from './pages/Live';
 import Auth from './pages/Auth';
+import AdminDashboard from './pages/AdminDashboard';
 
 function PageWrapper({ children }) {
   return (
@@ -50,6 +51,7 @@ function AnimatedRoutes() {
         <Route path="/tasks" element={<PageWrapper><Tasks /></PageWrapper>} />
         <Route path="/live" element={<PageWrapper><Live /></PageWrapper>} />
         <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
+        <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
         
         {/* Legacy Catch-alls to prevent loops */}
         <Route path="/login.html" element={<Navigate to="/auth" replace />} />
