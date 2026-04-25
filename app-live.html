@@ -1,123 +1,106 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
+<html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Kinetic TikTok Profile</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;700;800;900&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48; }
-        body { font-family: 'Lexend', sans-serif; background-color: #131313; min-height: max(884px, 100dvh); overflow: hidden;}
+        body { font-family: 'Lexend', sans-serif; background-color: #131313; overflow: hidden; }
 </style>
-<script id="tailwind-config">
-        tailwind.config = { darkMode: "class", theme: { extend: {} } }
-</script>
 </head>
-<body class="bg-[#131313] text-[#e5e2e1] min-h-screen overflow-hidden max-w-md mx-auto relative shadow-2xl">
-<header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 h-16 bg-zinc-900/80 backdrop-blur-xl rounded-2xl mt-4 mx-5 border border-white/10 shadow-[0px_10px_30px_rgba(204,255,0,0.15)] max-w-md md:mx-auto">
-<button class="text-lime-400 hover:scale-105 transition-transform duration-200 active:scale-95 transition-all">
-<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 24;">menu</span>
-</button>
+<body class="bg-background text-on-background min-h-screen overflow-hidden">
+<header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 h-16 bg-zinc-900/80 backdrop-blur-xl rounded-2xl mt-4 mx-5 border border-white/10 shadow-[0px_10px_30px_rgba(204,255,0,0.15)]">
+<button class="text-lime-400 hover:scale-105 active:scale-95 transition-all"><span class="material-symbols-outlined">arrow_back</span></button>
 <div class="flex flex-col items-center">
-<h1 class="text-xl font-black text-lime-400 font-lexend tracking-tighter uppercase">KINETIC</h1>
-<span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none" id="trainerNameHeader">Live Feed</span>
+<h1 class="text-xl font-black text-lime-400 font-lexend tracking-tighter uppercase">KINETIC LIVE</h1>
 </div>
 <div class="flex items-center gap-4">
-<button class="text-zinc-500 hover:scale-105 transition-transform duration-200 active:scale-95 transition-all">
-<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 24;">notifications</span>
-</button>
-<div class="w-8 h-8 rounded-full border border-lime-400 p-0.5">
-<img alt="Alex Rivers Profile" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDI78jpuz5J2KZljZzWgC2Who6C8LEy1GCLnpEszWJJ66p91fSTj4yxoyRXI1ZMvsgC3igyRbIXHfbBCm-7X1evQ8AA2aLdNzWEwikxonE241cGO5efBKxIF34XmHaaltyj_YREWK5F--Scp1NFdwIfOsP3dHAwfmiP6VcZ6JNh8On3T7Pu2AcUtHQBnLMBt4ScxZ1GfRUkbGy286Ahn1kFqNnfnTGVvBUKe_AtwgoOZ5DmCVeIPp_2kCe8z0wO8igOAJy0LSqetFlP"/>
+<div class="w-8 h-8 rounded-full border border-lime-400 p-0.5 overflow-hidden">
+<img class="w-full h-full rounded-full object-cover profile-pic" src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop"/>
 </div>
 </div>
 </header>
 <main class="h-screen w-full relative" id="liveContainer">
-    <div class="h-full w-full flex items-center justify-center">
-        <p class="text-zinc-500 animate-pulse">Connecting to live feed...</p>
+    <div class="absolute inset-0 flex items-center justify-center">
+        <p class="text-lime-400 font-bold animate-pulse text-lg">Loading Feed...</p>
     </div>
 </main>
+
+<nav class="fixed bottom-0 left-0 right-0 z-[60] flex justify-around items-center h-20 px-6 bg-zinc-900/90 backdrop-blur-2xl rounded-full mb-8 mx-10 border border-white/5 shadow-[0px_20px_50px_rgba(0,0,0,0.5)]">
+<button class="text-zinc-500 p-3 hover:text-lime-400 active:scale-90 transition-all" onclick="window.location.href='app-feed.html'"><span class="material-symbols-outlined">home</span></button>
+<button class="text-zinc-500 p-3 hover:text-lime-400 active:scale-90 transition-all" onclick="window.location.href='app-messages.html'"><span class="material-symbols-outlined">chat</span></button>
+<button class="text-zinc-500 p-3 hover:text-lime-400 active:scale-90 transition-all" onclick="window.location.href='app-calendar.html'"><span class="material-symbols-outlined">event_note</span></button>
+<button class="bg-lime-400 text-black rounded-full p-3 shadow-[0_0_20px_rgba(204,255,0,0.6)] active:scale-90 transition-all"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span></button>
+</nav>
+
 <script>
     const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (!token) window.location.href = 'login.html';
+    if(user.profile_pic) document.querySelector('.profile-pic').src = user.profile_pic;
 
-    async function loadLivePost() {
+    async function loadLiveFeed() {
         try {
-            const res = await fetch('/api/posts', {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const response = await fetch('/api/posts', {
+                headers: { 'Authorization': 'Bearer ' + token }
             });
-            if (res.ok) {
-                const posts = await res.json();
-                
-                // Get URL params to load specific ID
-                const urlParams = new URLSearchParams(window.location.search);
-                const id = urlParams.get('id');
-                
-                let post = null;
-                if (id) {
-                    post = posts.find(p => p.id == id);
-                } else {
-                    post = posts.find(p => p.type === 'live');
-                }
+            const allPosts = await response.json();
+            const posts = allPosts.filter(p => true); // In real app, filter where type='live'. Doing all for prototyping.
 
-                const container = document.getElementById('liveContainer');
-
-                if (post) {
-                    // Update header name
-                    document.getElementById('trainerNameHeader').innerText = post.trainer_name;
-
-                    container.innerHTML = `
-                        <div class="absolute inset-0 z-0">
-                            <img class="w-full h-full object-cover grayscale brightness-50 contrast-125" src="${post.media_url}" onerror="this.src='https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=1469&auto=format&fit=crop'"/>
-                            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60"></div>
-                        </div>
-                        <div class="relative h-full w-full flex flex-col justify-end p-6 pb-32">
-                            <div class="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-10">
-                                <div class="flex flex-col items-center group">
-                                    <button class="w-14 h-14 bg-zinc-900/60 backdrop-blur-md rounded-full flex flex-col items-center justify-center border border-white/10 active:scale-90 transition-all ${post.is_liked ? 'text-red-500' : 'text-white'}" onclick="toggleLike(${post.id}, this)">
-                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' ${post.is_liked ? 1 : 0}, 'opsz' 32;">favorite</span>
-                                        <span class="text-[10px] font-bold mt-1 likes-count">${post.likes_count || 0}</span>
-                                    </button>
-                                </div>
-                                <div class="flex flex-col items-center">
-                                    <button class="w-14 h-14 bg-zinc-900/60 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-90 transition-all" onclick="window.location.href='app-messages.html'">
-                                        <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'opsz' 32;">chat</span>
-                                    </button>
-                                </div>
-                                <div class="mt-4">
-                                    <div class="w-12 h-12 bg-lime-400 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(204,255,0,0.4)] animate-pulse">
-                                        <span class="material-symbols-outlined text-black" style="font-variation-settings: 'opsz' 32;">add</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="max-w-[70%] space-y-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="bg-lime-400 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter">Live Session</div>
-                                    <span class="text-white font-bold text-2xl">${post.title}</span>
-                                </div>
-                                <p class="text-zinc-300 text-sm line-clamp-2">${post.description}</p>
-                                <div class="flex gap-4 pt-2">
-                                    <div class="bg-zinc-900/40 backdrop-blur-md border border-white/10 p-2 rounded-2xl flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-lime-400" style="font-variation-settings: 'opsz' 20;">bolt</span>
-                                        <div>
-                                            <div class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">Tags</div>
-                                            <div class="text-white text-sm font-bold uppercase">${post.tags || 'General'}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="absolute bottom-24 left-6 right-6 h-1 bg-white/20 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-[#33FF00] to-[#CCFF00] w-[65%] shadow-[0_0_10px_rgba(204,255,0,0.8)]"></div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = '<div class="h-full w-full flex items-center justify-center"><p class="text-zinc-500">No live sessions found.</p></div>';
-                }
-            } else {
-                document.getElementById('liveContainer').innerHTML = '<div class="h-full w-full flex items-center justify-center"><p class="text-zinc-500">Failed to load feed.</p></div>';
+            if (posts.length === 0) {
+                document.getElementById('liveContainer').innerHTML = "<div class='h-full flex items-center justify-center text-zinc-500'>No active streams.</div>";
+                return;
             }
+
+            const post = posts[0];
+
+            document.getElementById('liveContainer').innerHTML = `
+            <div class="absolute inset-0 z-0">
+                <img class="w-full h-full object-cover grayscale brightness-50 contrast-125" src="${post.media_url || 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop'}"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60"></div>
+            </div>
+
+            <div class="relative h-full w-full flex flex-col justify-end p-6 pb-32">
+                <div class="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-10">
+                    <div class="flex flex-col items-center group">
+                        <button class="w-14 h-14 bg-zinc-900/60 backdrop-blur-md rounded-full flex flex-col items-center justify-center border border-white/10 active:scale-90 transition-all ${post.is_liked ? 'text-red-500' : 'text-white'}" onclick="toggleLike(${post.id}, this)">
+                            <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' ${post.is_liked ? 1 : 0}, 'opsz' 32;">favorite</span>
+                            <span class="text-[10px] font-bold mt-1 likes-count">${post.likes_count || 0}</span>
+                        </button>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <button class="w-14 h-14 bg-zinc-900/60 backdrop-blur-md rounded-full flex flex-col items-center justify-center text-white border border-white/10 active:scale-90 transition-all" onclick="window.location.href='app-messages.html'">
+                            <span class="material-symbols-outlined">chat</span>
+                            <span class="text-[10px] font-bold mt-1">${post.comments_count || 0}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="max-w-[70%] space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-lime-400 text-black px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">Live Session</div>
+                        <span class="text-white font-bold text-2xl">${post.title || 'Peak Velocity'}</span>
+                    </div>
+                    <p class="text-zinc-300 text-sm line-clamp-2">${post.description || 'Pushing past the threshold today.'}</p>
+                    
+                    <div class="flex gap-4 pt-2">
+                        <div class="bg-zinc-900/40 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3">
+                            <span class="material-symbols-outlined text-lime-400">timer</span>
+                            <div>
+                                <div class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">Duration</div>
+                                <div class="text-white text-sm font-bold">45:00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="absolute bottom-24 left-6 right-6 h-1 bg-white/20 rounded-full overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-[#33FF00] to-[#CCFF00] w-[65%] shadow-[0_0_10px_rgba(204,255,0,0.8)]"></div>
+                </div>
+            </div>`;
+            
         } catch (err) {
             console.error(err);
         }
@@ -149,24 +132,10 @@
                 }
             }
         } catch (e) {
-            console.error('Like logic failed', e);
+            console.error(e);
         }
     };
 
-    document.addEventListener('DOMContentLoaded', loadLivePost);
+    document.addEventListener('DOMContentLoaded', loadLiveFeed);
 </script>
-<nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center h-20 px-6 bg-zinc-900/90 backdrop-blur-2xl rounded-full mb-8 mx-5 border border-white/5 shadow-[0px_20px_50px_rgba(0,0,0,0.5)] max-w-md md:mx-auto">
-<button class="p-3 bg-lime-400 text-black rounded-full shadow-[0_0_20px_rgba(204,255,0,0.6)] active:scale-90 duration-150">
-<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 24;">home</span>
-</button>
-<button class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" onclick="window.location.href='app-messages.html'">
-<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 24;">chat</span>
-</button>
-<button class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" onclick="window.location.href='app-tasks.html'">
-<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 24;">event_note</span>
-</button>
-<button class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" onclick="window.location.href='app-calendar.html'">
-<span class="material-symbols-outlined" style="font-variation-settings: 'opsz' 24;">crisis_alert</span>
-</button>
-</nav>
 </body></html>
