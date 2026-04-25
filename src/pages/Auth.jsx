@@ -23,17 +23,42 @@ export default function Auth() {
       const data = await res.json();
 
       if (res.ok) {
-        setStatus({ success: 'Success! Redirecting...', error: '' });
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user || data.newUser));
-        
-        setTimeout(() => {
-          if (data.user?.role === 'admin' || data.newUser?.role === 'admin') {
-            window.location.href = '/admin.html';
-          } else {
-            navigate('/feed');
+        if (!isLogin) {
+          // Immediately log them in instead of just switching the UI
+          setStatus({ success: 'Registration complete! Logging in...', error: '' });
+          try {
+            const loginRes = await fetch('/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: formData.email, password: formData.password })
+            });
+            const loginData = await loginRes.json();
+            if (loginRes.ok) {
+              localStorage.setItem('token', loginData.token);
+              localStorage.setItem('user', JSON.stringify(loginData.user));
+              setTimeout(() => {
+                navigate('/feed');
+              }, 800);
+            } else {
+              setIsLogin(true);
+            }
+          } catch (e) {
+            setIsLogin(true);
           }
-        }, 800);
+        } else {
+          // Login successful
+          setStatus({ success: 'Success! Redirecting...', error: '' });
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          setTimeout(() => {
+            if (data.user?.role === 'admin') {
+              window.location.href = '/admin.html';
+            } else {
+              navigate('/feed');
+            }
+          }, 800);
+        }
       } else {
         setStatus({ error: data.error || 'Authentication failed', success: '' });
       }

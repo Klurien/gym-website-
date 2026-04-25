@@ -215,6 +215,13 @@ app.all('/api/posts',             wrap(require('./api/posts')));
 app.all('/api/posts_social',      wrap(require('./api/posts_social')));
 app.all('/api/profile',           wrap(require('./api/profile')));
 
+// ── Fallback for React SPA Routing ──
+const path = require('path');
+app.get('*', (req, res) => {
+    // Only intercept if it's a browser navigation request, not a file
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // Socket.IO Logic
 io.on('connection', (socket) => {
     let currentUserId = null;

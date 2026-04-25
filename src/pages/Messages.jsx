@@ -136,10 +136,10 @@ export default function Messages() {
             </div>
           ) : (
             messages.map((msg, idx) => {
-              const isMine = msg.sender_id === currentUserId;
+              const isMine = String(msg.sender_id) === String(currentUserId);
               return (
                 <div key={msg.id || idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[75%] p-4 rounded-3xl ${isMine ? 'bg-lime-400 text-black rounded-tr-sm shadow-[0_5px_15px_rgba(204,255,0,0.2)]' : 'bg-zinc-800/80 text-white rounded-tl-sm border border-white/5'}`}>
+                  <div className={`max-w-[75%] p-4 rounded-3xl ${isMine ? 'bg-lime-400 text-black rounded-br-sm shadow-[0_5px_15px_rgba(204,255,0,0.2)]' : 'bg-zinc-800 text-white rounded-bl-sm border border-white/5'}`}>
                    <p className="font-body-md text-sm">{msg.content}</p>
                    <span className={`block text-[9px] mt-2 font-bold uppercase tracking-widest ${isMine ? 'text-black/50' : 'text-zinc-500'}`}>
                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
