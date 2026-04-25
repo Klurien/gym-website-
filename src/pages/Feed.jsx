@@ -6,7 +6,12 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Morning';
+    if (hour < 18) return 'Afternoon';
+    return 'Evening';
+  };
   // Modals state
   const [showPostModal, setShowPostModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(null); // stores post_id or null
@@ -138,7 +143,7 @@ export default function Feed() {
       {/* Personalized Welcome Header */}
       <div className="mb-8 pl-1">
         <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
-          Morning, <span className="text-lime-400">{user.username || 'Member'}</span>
+          {greeting()}, <span className="text-lime-400">{user.username || 'Member'}</span>
         </h1>
         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.3em] mt-2">Your Daily Progress</p>
       </div>
@@ -157,10 +162,11 @@ export default function Feed() {
             alt="Live Workout" 
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSEjHP7QrRZn36afYXkYWwhYMzgsOeYHS1skaXUClEJrCEBYSXYPrCqtDIpKrZ7zQImqCZdnx2if-obOliXGrFkS-IhxiezKagtuXvacy978-LeN5yPBQe7EEbbsgd6H260sALF_bxu2HZMawJHmBZeHBUF-C3bTwHqd191HTZ9aus5dwyDHchV28CuBKMfY59RJ_oezS06FSoRbqb45me7-nWyy7nmFBJAxU196YIy1bvBirwGVLMRrEa2SZac5fXpi-DDtqdADiY"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-          <div className="absolute bottom-3 left-4">
-            <p className="font-label-bold text-label-bold text-lime-400">Live Workout</p>
-            <p className="font-label-sm text-label-sm text-white">Join Alex in 5 mins</p>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+          <div className="absolute top-4 left-4">
+            <span className="bg-lime-400 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">
+              Elite Content
+            </span>
           </div>
         </div>
       </div>

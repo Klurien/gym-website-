@@ -9,7 +9,7 @@ export default function Header() {
         </button>
         <div className="flex flex-col items-center">
           <h1 className="text-xl font-black text-lime-400 font-lexend tracking-tighter uppercase leading-none">KINETIC</h1>
-          <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest leading-none mt-0.5">Alex Rivers</span>
+          <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest leading-none mt-0.5">Global Elite Coach</span>
         </div>
       </div>
       <div className="flex items-center gap-4">

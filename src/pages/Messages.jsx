@@ -17,15 +17,58 @@ export default function Messages() {
   const currentUserId = JSON.parse(localStorage.getItem('user') || '{}')?.id;
 
   useEffect(() => {
-    if (!activeChat) {
-      fetchConversations();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.role === 'admin') {
+      if (!activeChat) {
+        fetchConversations();
+      } else {
+        fetchThread(activeChat.id);
+        const interval = setInterval(() => fetchThread(activeChat.id, true), 3000);
+        return () => clearInterval(interval);
+      }
     } else {
-      fetchThread(activeChat.id);
-      // Minimal interval poll for new messages (simulate socket if io not bound)
-      const interval = setInterval(() => fetchThread(activeChat.id, true), 3000);
-      return () => clearInterval(interval);
+      // Client mode: direct to trainer (assume ID 1 or the first trainer)
+      // For now, we'll fetch the conversations and pick the first one, or use a default
+      if (!activeChat) {
+        fetchDirectTrainer();
+      } else {
+        fetchThread(activeChat.id);
+        const interval = setInterval(() => fetchThread(activeChat.id, true), 3000);
+        return () => clearInterval(interval);
+      }
     }
   }, [activeChat]);
+
+  const fetchDirectTrainer = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return navigate('/auth');
+    try {
+      const res = await fetch('/api/messages?action=conversations', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const trainer = data.conversations?.[0];
+        if (trainer) {
+          setActiveChat({ id: trainer.other_id, username: trainer.other_name, role: trainer.other_role });
+        } else {
+          // Fallback if no conversation started yet, find an admin
+          const adminRes = await fetch('/api/messages?action=trainers', { 
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (adminRes.ok) {
+            const adminData = await adminRes.json();
+            if (adminData.trainers?.[0]) {
+              const t = adminData.trainers[0];
+              setActiveChat({ id: t.id, username: t.username, role: t.role });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -103,9 +146,11 @@ export default function Messages() {
       <main className="h-screen w-full flex flex-col bg-background">
         <header className="px-4 h-24 pt-10 pb-4 bg-zinc-900/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between shrink-0 sticky top-0 z-50">
           <div className="flex items-center gap-4">
-            <button onClick={() => setActiveChat(null)} className="w-10 h-10 flex items-center justify-center text-white active:scale-90 transition-transform">
-              <span className="material-symbols-outlined">arrow_back_ios_new</span>
-            </button>
+            {JSON.parse(localStorage.getItem('user') || '{}')?.role === 'admin' && (
+              <button onClick={() => setActiveChat(null)} className="w-10 h-10 flex items-center justify-center text-white active:scale-90 transition-transform">
+                <span className="material-symbols-outlined">arrow_back_ios_new</span>
+              </button>
+            )}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activeChat.username}`} className="w-full h-full object-cover" alt="User" />
