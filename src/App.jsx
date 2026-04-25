@@ -10,6 +10,8 @@ import Tasks from './pages/Tasks';
 import Live from './pages/Live';
 import Auth from './pages/Auth';
 import AdminDashboard from './pages/AdminDashboard';
+import Profile from './pages/Profile';
+import Notifications from './pages/Notifications';
 
 function PageWrapper({ children }) {
   return (
@@ -52,6 +54,8 @@ function AnimatedRoutes() {
         <Route path="/live" element={<PageWrapper><Live /></PageWrapper>} />
         <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
         <Route path="/admin" element={<PageWrapper><AdminDashboard /></PageWrapper>} />
+        <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
+        <Route path="/notifications" element={<PageWrapper><Notifications /></PageWrapper>} />
         
         {/* Legacy Catch-alls to prevent loops */}
         <Route path="/login.html" element={<Navigate to="/auth" replace />} />
