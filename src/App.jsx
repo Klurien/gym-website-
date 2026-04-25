@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'motion/react';
 import Navigation from './components/Navigation';
 import Header from './components/Header';
 import Feed from './pages/Feed';
@@ -7,6 +8,20 @@ import Messages from './pages/Messages';
 import Calendar from './pages/Calendar';
 import Tasks from './pages/Tasks';
 import Live from './pages/Live';
+
+function PageWrapper({ children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 15 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -15 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="w-full h-full"
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 function Layout({ children }) {
   const location = useLocation();
@@ -22,18 +37,27 @@ function Layout({ children }) {
   );
 }
 
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageWrapper><Feed /></PageWrapper>} />
+        <Route path="/feed" element={<PageWrapper><Feed /></PageWrapper>} />
+        <Route path="/messages" element={<PageWrapper><Messages /></PageWrapper>} />
+        <Route path="/calendar" element={<PageWrapper><Calendar /></PageWrapper>} />
+        <Route path="/tasks" element={<PageWrapper><Tasks /></PageWrapper>} />
+        <Route path="/live" element={<PageWrapper><Live /></PageWrapper>} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 export default function App() {
   return (
     <Router>
       <Layout>
-        <Routes>
-          <Route path="/" element={<Feed />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/live" element={<Live />} />
-        </Routes>
+        <AnimatedRoutes />
       </Layout>
     </Router>
   );
