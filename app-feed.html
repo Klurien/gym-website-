@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kinetic Home Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #131313;
+            font-family: 'Lexend', sans-serif;
+            min-height: max(884px, 100dvh);
+        }
+        .kinetic-glow {
+            box-shadow: 0px 10px 30px rgba(204, 255, 0, 0.15);
+        }
+        .glass-card {
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "background": "#131313",
+                      "on-background": "#e5e2e1"
+              },
+              "spacing": {
+                      "stack-md": "16px",
+                      "gutter": "16px",
+                      "edge-margin": "20px",
+                      "container-padding": "24px",
+                      "stack-lg": "32px",
+                      "stack-sm": "8px"
+              },
+              "fontFamily": {
+                      "lexend": ["Lexend"]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 h-16 bg-zinc-900/80 backdrop-blur-xl rounded-2xl mt-4 mx-5 border border-white/10 shadow-[0px_10px_30px_rgba(204,255,0,0.15)]">
+<div class="flex items-center gap-4">
+<button class="p-2 text-zinc-500 hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="text-xl font-black text-lime-400 font-lexend tracking-tighter uppercase">KINETIC</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-zinc-500 hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full border-2 border-lime-400 p-0.5 overflow-hidden">
+<img alt="Alex Rivers" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAe2e9c3Yveyt8CGXNhLeNd-5GgPeKT87A-h3rsDcbvRHkLLkPUX0m7HXRCD1Py5clnNkTXK_yOegXbBxk8rjNEFAS_CqiK1Wtwa1XBi8lwOp6XMoHPudpC9qNf_d5kkCtexV7iilVEwa5dSonIHuUZ6_9FfeeTfH4AUIqADI2GfGqu4-X00YvBpE4HV0GHbHMwuQih5Ke8tmqYr8Gij2wYOz7TNo4EiHEZjl3hKVWAGa-BaEf1GYFlungW3LryWulRS2dLZBVHZSI_"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="mt-28 px-edge-margin space-y-gutter max-w-2xl mx-auto">
+<div class="grid grid-cols-4 gap-stack-md h-24 mb-stack-lg">
+<div class="col-span-1 bg-zinc-900/40 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-1 hover:border-lime-400/50 transition-colors">
+<div class="w-12 h-12 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-zinc-400">add</span>
+</div>
+<span class="text-xs text-zinc-500">Post</span>
+</div>
+<div class="col-span-3 bg-zinc-900/40 rounded-2xl border border-white/5 overflow-hidden relative group">
+<img class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSEjHP7QrRZn36afYXkYWwhYMzgsOeYHS1skaXUClEJrCEBYSXYPrCqtDIpKrZ7zQImqCZdnx2if-obOliXGrFkS-IhxiezKagtuXvacy978-LeN5yPBQe7EEbbsgd6H260sALF_bxu2HZMawJHmBZeHBUF-C3bTwHqd191HTZ9aus5dwyDHchV28CuBKMfY59RJ_oezS06FSoRbqb45me7-nWyy7nmFBJAxU196YIy1bvBirwGVLMRrEa2SZac5fXpi-DDtqdADiY"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+<div class="absolute bottom-3 left-4">
+<p class="text-sm font-bold text-lime-400">Live Workout</p>
+<p class="text-xs text-white">Join Alex in 5 mins</p>
+</div>
+</div>
+</div>
+<div id="feedContainer" class="space-y-6">
+    <!-- Dynamic feed posts will be rendered here -->
+    <div class="text-center text-zinc-500 py-10" id="loadingFeed">Loading feed...</div>
+</div>
+</main>
+<script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!token) {
+        window.location.href = 'login.html';
+    }
+
+    async function fetchPosts() {
+        try {
+            const res = await fetch('/api/posts', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const posts = await res.json();
+                renderPosts(posts);
+            } else {
+                document.getElementById('loadingFeed').innerText = 'Failed to load feed.';
+            }
+        } catch (err) {
+            document.getElementById('loadingFeed').innerText = 'Network error.';
+        }
+    }
+
+    function renderPosts(posts) {
+        const container = document.getElementById('feedContainer');
+        if (posts.length === 0) {
+            container.innerHTML = '<div class="text-center text-zinc-500 py-10">No recent posts from your trainers.</div>';
+            return;
+        }
+
+        container.innerHTML = posts.map(post => `
+        <article class="bg-zinc-900/60 rounded-[24px] overflow-hidden border border-white/5 shadow-2xl relative group mb-6">
+            <div class="p-container-padding flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full border border-lime-400 bg-zinc-800 flex items-center justify-center font-bold text-lime-400">
+                        ${(post.trainer_name || 'T')[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">${post.trainer_name || 'Trainer'}</h3>
+                        <p class="text-xs text-zinc-500">${new Date(post.created_at).toLocaleString()}</p>
+                    </div>
+                </div>
+                <button class="text-zinc-500">
+                    <span class="material-symbols-outlined">more_vert</span>
+                </button>
+            </div>
+            
+            <div class="mx-4 relative ${post.type === 'live' ? 'aspect-[4/5]' : 'aspect-video'} rounded-[20px] overflow-hidden cursor-pointer" onclick="if('${post.type}'==='live') window.location.href='app-live.html?id=${post.id}'">
+                <img class="w-full h-full object-cover ${post.type === 'live' ? '' : 'brightness-75'}" src="${post.media_url}" onerror="this.src='https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop'"/>
+                
+                ${post.type === 'live' ? `
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-16 h-16 bg-lime-400/20 backdrop-blur-md rounded-full flex items-center justify-center border border-lime-400/50 hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-lime-400 text-4xl ml-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    </div>
+                </div>
+                <div class="absolute bottom-4 left-4 right-4 h-1 bg-white/20 rounded-full">
+                    <div class="w-1/3 h-full bg-lime-400 rounded-full kinetic-glow"></div>
+                </div>
+                ` : `
+                <div class="absolute top-4 right-4 bg-lime-400 text-black px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest kinetic-glow">
+                    ${post.tags || 'Update'}
+                </div>
+                `}
+            </div>
+            
+            <div class="p-container-padding space-y-3">
+                <h4 class="font-bold text-white">${post.title}</h4>
+                <p class="text-sm text-zinc-300 leading-relaxed">${post.description || ''}</p>
+                <div class="flex items-center justify-between pt-4">
+                    <div class="flex items-center gap-6">
+                        <button class="flex items-center gap-2 transition-colors ${post.is_liked ? 'text-red-500 hover:text-red-400' : 'text-zinc-400 hover:text-lime-400'}" onclick="toggleLike(${post.id}, this)">
+                            <span class="material-symbols-outlined" style="${post.is_liked ? "font-variation-settings: 'FILL' 1" : ""}">favorite</span>
+                            <span class="text-xs font-bold likes-count">${post.likes_count || 0}</span>
+                        </button>
+                        <button class="flex items-center gap-2 text-zinc-400 hover:text-lime-400 transition-colors" onclick="window.location.href='app-messages.html'">
+                            <span class="material-symbols-outlined">chat</span>
+                            <span class="text-xs font-bold">${post.comments_count || 0}</span>
+                        </button>
+                    </div>
+                    <button class="text-zinc-500 hover:text-white transition-colors">
+                        <span class="material-symbols-outlined">bookmark</span>
+                    </button>
+                </div>
+            </div>
+        </article>
+        `).join('');
+    }
+
+    window.toggleLike = async function(postId, btnEl) {
+        try {
+            const res = await fetch('/api/posts_social?action=like', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ post_id: postId })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const icon = btnEl.querySelector('.material-symbols-outlined');
+                const countSpan = btnEl.querySelector('.likes-count');
+                let count = parseInt(countSpan.innerText || "0");
+                
+                if (data.status === 'added') {
+                    btnEl.classList.remove('text-zinc-400', 'hover:text-lime-400');
+                    btnEl.classList.add('text-red-500', 'hover:text-red-400');
+                    icon.style.fontVariationSettings = "'FILL' 1";
+                    countSpan.innerText = count + 1;
+                } else {
+                    btnEl.classList.add('text-zinc-400', 'hover:text-lime-400');
+                    btnEl.classList.remove('text-red-500', 'hover:text-red-400');
+                    icon.style.fontVariationSettings = "'FILL' 0";
+                    countSpan.innerText = count - 1;
+                }
+            }
+        } catch (e) {
+            console.error('Like logic failed', e);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', fetchPosts);
+</script>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center h-20 px-6 bg-zinc-900/90 backdrop-blur-2xl rounded-full mb-8 mx-10 border border-white/5 shadow-[0px_20px_50px_rgba(0,0,0,0.5)]">
+<button class="bg-lime-400 text-black rounded-full p-3 shadow-[0_0_20px_rgba(204,255,0,0.6)] active:scale-90 duration-150 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+</button>
+<button class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" onclick="window.location.href='app-messages.html'">
+<span class="material-symbols-outlined">chat</span>
+</button>
+<button class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" onclick="window.location.href='app-calendar.html'">
+<span class="material-symbols-outlined">event_note</span>
+</button>
+<button class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" onclick="window.location.href='app-tasks.html'">
+<span class="material-symbols-outlined">assignment</span>
+</button>
+</nav>
+<button class="fixed bottom-32 right-8 w-14 h-14 bg-lime-400 text-black rounded-2xl shadow-[0_0_30px_rgba(204,255,0,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</body>
+</html>

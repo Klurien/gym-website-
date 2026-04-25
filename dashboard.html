@@ -156,10 +156,13 @@
             <div class="id-card" style="margin-bottom: 1.5rem;">
                 <div style="position: relative; z-index: 1;">
                     <div style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 2.5rem;">
-                        <div style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--color-red); background: url('https://lh3.googleusercontent.com/p/AF1QipN7yFxYsLSbfZEs9CjUQ1uxyQJU37yumhFiMoyC=s680-w680-h510') center/cover;"></div>
+                        <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+                        <div id="profilePicPreview" onclick="document.getElementById('profilePicInput').click()" style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--color-red); background: #222 center/cover; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;" title="Click to upload picture">
+                            <i class="fa-solid fa-camera" style="color: rgba(255,255,255,0.5); font-size: 1.2rem; position: absolute; z-index: 2;"></i>
+                        </div>
                         <div>
                             <h4 id="fullName" style="font-size: 1.2rem;">NAME</h4>
-                            <p style="font-size: 0.7rem; color: var(--color-text-muted);">ID: #LEGACY-026</p>
+                            <p id="uploadStatusMsg" style="font-size: 0.7rem; color: var(--color-text-muted);">ID: #LEGACY-026</p>
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 1.2rem;">
@@ -267,6 +270,46 @@
             e.preventDefault();
             localStorage.clear();
             window.location.href = 'login.html';
+        });
+
+        // Profile Picture Upload Logic
+        const profilePreview = document.getElementById('profilePicPreview');
+        if (user.profile_pic) {
+            profilePreview.style.backgroundImage = `url(${user.profile_pic})`;
+            profilePreview.querySelector('i').style.display = 'none';
+        }
+
+        document.getElementById('profilePicInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64String = reader.result;
+                profilePreview.style.backgroundImage = `url(${base64String})`;
+                profilePreview.querySelector('i').style.display = 'none';
+                document.getElementById('uploadStatusMsg').innerText = "UPLOADING...";
+
+                try {
+                    const res = await fetch('/api/profile', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ profile_pic: base64String })
+                    });
+                    if (res.ok) {
+                        document.getElementById('uploadStatusMsg').innerText = "PICTURE SAVED.";
+                        document.getElementById('uploadStatusMsg').style.color = "#4ade80";
+                        user.profile_pic = base64String;
+                        localStorage.setItem('user', JSON.stringify(user));
+                    } else {
+                        document.getElementById('uploadStatusMsg').innerText = "UPLOAD FAILED.";
+                        document.getElementById('uploadStatusMsg').style.color = "var(--color-red)";
+                    }
+                } catch (err) {
+                    document.getElementById('uploadStatusMsg').innerText = "NETWORK ERROR.";
+                }
+            };
+            reader.readAsDataURL(file);
         });
 
         // Fetch Classes and Bookings Logic

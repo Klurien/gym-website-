@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kinetic Tasks</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    body { background-color: #131313; color: #e5e2e1; font-family: 'Lexend', sans-serif; min-height: max(884px, 100dvh); }
+</style>
+<script id="tailwind-config">
+    tailwind.config = { darkMode: "class", theme: { extend: {} } }
+</script>
+</head>
+<body class="bg-[#131313] text-[#e5e2e1] min-h-screen pb-32">
+<header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 h-16 bg-zinc-900/80 backdrop-blur-xl rounded-2xl mt-4 mx-5 border border-white/10 shadow-[0px_10px_30px_rgba(204,255,0,0.15)]">
+<div class="flex items-center gap-3">
+<button class="text-lime-400 hover:scale-105 transition-transform duration-200 active:scale-95 transition-all">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-lexend font-black tracking-tighter uppercase text-xl text-lime-400">KINETIC</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-zinc-500 hover:scale-105 transition-transform duration-200 active:scale-95 transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full border border-lime-400/30 overflow-hidden">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW2Q0nBfn9Xx07pbIRfAc6Ghl9JwIrIJ53Gldh6ksdrpN0N8-jqzdazo_PCtQUytNT8Qacot3ON9SEPxKjzDwWxw7tfdPxP5eZXo4edUa0wVSpIWkIvOepsv1POU73Xar1LOG1iWAmNgG7qtlUFKLeTVMg3-zQ_WU_dMktXYKLlJOSt12xO5T0tUrgBT-nRuKgvdi67ylJ8cJbk4x-8gME8dMb5iYwVGyyaytejGrEqrH5g_LJmFsAwSBzoZcJen3EivlatL0tyHcM"/>
+</div>
+</div>
+</header>
+<main class="pt-28 px-5 space-y-8 max-w-2xl mx-auto">
+<section class="flex flex-col gap-2">
+<h2 class="text-4xl font-extrabold text-white tracking-tighter">DAILY TASKS</h2>
+<div class="flex items-center gap-3">
+<div class="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-lime-500 to-lime-300 w-[65%]"></div>
+</div>
+<span class="text-sm font-bold text-lime-400">65% DONE</span>
+</div>
+</section>
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-zinc-900/50 p-6 rounded-[24px] border border-white/5 shadow-2xl relative overflow-hidden group hover:border-lime-400/50 transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="bg-lime-400/10 text-lime-400 text-[10px] font-black px-2 py-1 rounded-full border border-lime-400/20 uppercase tracking-widest">High Energy</span>
+<h3 class="text-xl font-bold text-white mt-2 uppercase">Leg Day Session</h3>
+</div>
+<div class="w-12 h-12 rounded-xl bg-lime-400 flex items-center justify-center shadow-[0_0_20px_rgba(204,255,0,0.4)]">
+<span class="material-symbols-outlined text-black font-bold">fitness_center</span>
+</div>
+</div>
+<p class="text-sm text-zinc-400 mb-6">Heavy squats &amp; deadlifts. Focus on explosive power and form.</p>
+<div class="flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-zinc-900"><img class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuNtPePjL4zkxIhCKuNs175WACc-Pn5VP0KvbRTJ-peHSKzXE3DBx92KwGXEIlO2WfKSn-dzwh0NVQxJJvG2i7ZBGhdp6glYOds-Pj7jq2-J9usAXSBxJxnPw2jRGRaqj_lwdGx_2f3bdjh5gCPvMG_vUtdoeKuTYWZvd-NavFIrh1U45EndxpkYU-eBzGiNVR2sBDTUANQXSw70ZN4O-wQuqyy_YxL6dCqHxyJI5M1P9P3sRG0gC7AlIhj4FxDQartMYz8keiLWs3"/></div>
+<div class="w-8 h-8 rounded-full border-2 border-zinc-900 bg-zinc-800 flex items-center justify-center text-xs text-lime-400">+3</div>
+</div>
+<button class="bg-lime-400 text-black text-sm font-bold px-6 py-2 rounded-full hover:scale-105 active:scale-95 transition-all">COMPLETE</button>
+</div>
+</div>
+<div class="bg-zinc-900/50 p-6 rounded-[24px] border border-white/5 shadow-2xl group hover:border-lime-400/50 transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="bg-zinc-800 text-zinc-400 text-[10px] font-black px-2 py-1 rounded-full border border-white/5 uppercase tracking-widest">Nutrition</span>
+<h3 class="text-xl font-bold text-white mt-2 uppercase">Meal Prep</h3>
+</div>
+<div class="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-lime-400">restaurant</span>
+</div>
+</div>
+<p class="text-sm text-zinc-400 mb-6">Prepare high-protein containers for the next 3 days.</p>
+<div class="flex items-center gap-2">
+<div class="w-full bg-zinc-800 h-2 rounded-full">
+<div class="h-full bg-lime-400 w-1/3 rounded-full"></div>
+</div>
+<span class="text-xs text-zinc-500 whitespace-nowrap">2/6 items</span>
+</div>
+</div>
+<div class="md:col-span-2 bg-zinc-900/50 rounded-[24px] border border-white/5 overflow-hidden">
+<div class="p-6 border-b border-white/5 flex justify-between items-center">
+<h3 class="text-xl font-bold text-white uppercase">Active Checklist</h3>
+<span class="material-symbols-outlined text-zinc-500">more_horiz</span>
+</div>
+<div class="divide-y divide-white/5">
+<div class="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="w-6 h-6 rounded border-2 border-lime-400/50 flex items-center justify-center group-hover:bg-lime-400/10 transition-all">
+<span class="material-symbols-outlined text-lime-400 text-sm hidden group-hover:block">check</span>
+</div>
+<span class="text-sm flex-1">Morning Mobility Flow</span>
+<span class="text-xs text-zinc-500">08:00 AM</span>
+</div>
+<div class="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group bg-lime-400/5">
+<div class="w-6 h-6 rounded bg-lime-400 flex items-center justify-center">
+<span class="material-symbols-outlined text-black text-sm font-bold">check</span>
+</div>
+<span class="text-sm flex-1 line-through text-zinc-500">Hydration Goal: 4L</span>
+<span class="text-xs text-lime-400/50">DONE</span>
+</div>
+<div class="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="w-6 h-6 rounded border-2 border-zinc-700 flex items-center justify-center"></div>
+<span class="text-sm flex-1">Supplement Stack Check</span>
+<span class="text-xs text-zinc-500">09:30 PM</span>
+</div>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-zinc-900/50 p-4 rounded-[20px] border border-white/5 text-center">
+<p class="text-xs text-zinc-500 uppercase">Streak</p>
+<p class="text-[32px] font-extrabold text-lime-400">12</p>
+</div>
+<div class="bg-zinc-900/50 p-4 rounded-[20px] border border-white/5 text-center">
+<p class="text-xs text-zinc-500 uppercase">Calories</p>
+<p class="text-[32px] font-extrabold text-white" id="stat-calories">0</p>
+</div>
+<div class="bg-zinc-900/50 p-4 rounded-[20px] border border-white/5 text-center">
+<p class="text-xs text-zinc-500 uppercase">Active Time</p>
+<p class="text-[32px] font-extrabold text-white" id="stat-volume">0m</p>
+</div>
+<div class="bg-zinc-900/50 p-4 rounded-[20px] border border-white/5 text-center">
+<p class="text-xs text-zinc-500 uppercase">Sleep</p>
+<p class="text-[32px] font-extrabold text-white">7h</p>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center h-20 px-6 bg-zinc-900/90 backdrop-blur-2xl rounded-full mb-8 mx-10 border border-white/5 shadow-[0px_20px_50px_rgba(0,0,0,0.5)]">
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-feed.html">
+<span class="material-symbols-outlined">home</span></a>
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-messages.html">
+<span class="material-symbols-outlined">chat</span></a>
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-calendar.html">
+<span class="material-symbols-outlined">event_note</span></a>
+<a class="bg-lime-400 text-black rounded-full p-3 shadow-[0_0_20px_rgba(204,255,0,0.6)] active:scale-90 duration-150" href="app-tasks.html">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">assignment</span></a>
+</nav>
+<script>
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!token) window.location.href = 'login.html';
+
+    async function loadStats() {
+        try {
+            const res = await fetch('/api/workouts', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const req = await res.json();
+                const logs = req.logs || [];
+                let totalCals = 0;
+                let totalDuration = 0;
+                logs.forEach(l => {
+                    totalCals += (l.calories_burned || 0);
+                    totalDuration += (l.duration_minutes || 0);
+                });
+                
+                document.getElementById('stat-calories').innerText = totalCals > 1000 ? (totalCals/1000).toFixed(1) + 'k' : totalCals;
+                document.getElementById('stat-volume').innerText = totalDuration + 'm';
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadStats);
+</script>
+</body></html>

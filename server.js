@@ -5,6 +5,12 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
+const http = require('http');
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
@@ -41,9 +47,18 @@ async function initDB() {
                 email VARCHAR(100) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 role ENUM('user', 'admin') DEFAULT 'user',
+                profile_pic TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Safely add profile_pic if table already existed without it
+        try {
+            await pool.query("ALTER TABLE users ADD COLUMN profile_pic TEXT");
+        } catch (e) {
+            // Error code for duplicate column
+            if (e.code !== 'ER_DUP_FIELDNAME') console.error('Column check:', e.message);
+        }
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS client_info (
@@ -133,6 +148,40 @@ async function initDB() {
             )
         `);
 
+        // Posts feed
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS posts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                trainer_id INT NOT NULL,
+                media_url VARCHAR(1024),
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                tags VARCHAR(255),
+                type VARCHAR(50) DEFAULT 'static',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (trainer_id) REFERENCES users(id)
+            )
+        `);
+
+        // Posts Social interactions
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS post_likes (
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                PRIMARY KEY(post_id, user_id)
+            )
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS post_comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NOT NULL,
+                user_id INT NOT NULL,
+                comment TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         console.log('Database schema successfully initialized.');
     } catch (err) {
         console.error('Error connecting to TiDB:', err);
@@ -162,9 +211,35 @@ app.all('/api/analytics',         wrap(analyticsHandler));
 app.all('/api/classes',           wrap(classesHandler));
 app.all('/api/contact',           wrap(contactHandler));
 app.all('/api/admin/responses',   wrap(adminResponses));
+app.all('/api/posts',             wrap(require('./api/posts')));
+app.all('/api/posts_social',      wrap(require('./api/posts_social')));
+app.all('/api/profile',           wrap(require('./api/profile')));
+
+// Socket.IO Logic
+io.on('connection', (socket) => {
+    let currentUserId = null;
+    socket.on('authenticate', (token) => {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'gym-secret-2026');
+            currentUserId = decoded.id;
+            socket.join(`user_${currentUserId}`);
+            console.log(`User ${currentUserId} authenticated to sockets.`);
+        } catch (err) {
+            socket.disconnect();
+        }
+    });
+
+    socket.on('send_message_ping', ({ receiver_id }) => {
+        io.to(`user_${receiver_id}`).emit('new_message_ping');
+    });
+
+    socket.on('disconnect', () => {
+        if (currentUserId) console.log(`User ${currentUserId} disconnected.`);
+    });
+});
 
 initDB().then(() => {
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         console.log(`\n  ✅ COMRADES GYM SERVER RUNNING`);
         console.log(`  ➜  http://localhost:${PORT}\n`);
     });

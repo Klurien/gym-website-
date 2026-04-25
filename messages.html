@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messages | Comrades Gym</title>
+    <script src="/socket.io/socket.io.js"></script>
     <meta name="description" content="Stay connected with your trainer — in-app messaging for Comrades Gym members.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -598,8 +599,15 @@
         const isAdmin = user?.role === 'admin';
         let activeConvId = null;  // other user's id
         let activeConvName = '';
-        let pollInterval  = null;
         let allConversations = [];
+
+        // Setup Socket
+        const socket = io();
+        socket.emit('authenticate', token);
+        socket.on('new_message_ping', () => {
+            if (activeConvId) fetchThread();
+            loadConversations();
+        });
 
         // ── Helpers ─────────────────────────────────────────────────────────────
         function initials(name = '') {
@@ -738,9 +746,7 @@
 
             await fetchThread();
 
-            // Start polling
-            if (pollInterval) clearInterval(pollInterval);
-            pollInterval = setInterval(fetchThread, 3000);
+            await fetchThread();
         }
 
         // ── Fetch & render thread ──────────────────────────────────────────────
@@ -809,6 +815,7 @@
                 if (res.ok) {
                     input.value = '';
                     input.style.height = 'auto';
+                    socket.emit('send_message_ping', { receiver_id: activeConvId });
                     await fetchThread();
                 } else {
                     const err = await res.json();

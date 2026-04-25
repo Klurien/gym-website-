@@ -31,14 +31,14 @@ module.exports = async (req, res) => {
         if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
 
         const token = jwt.sign(
-            { id: user.id, role: user.role, username: user.username },
+            { id: user.id, role: user.role, username: user.username, profile_pic: user.profile_pic },
             process.env.JWT_SECRET || 'gym-secret-2026',
             { expiresIn: '1d' }
         );
 
         res.status(200).json({ 
             token, 
-            user: { id: user.id, username: user.username, role: user.role } 
+            user: { id: user.id, username: user.username, role: user.role, profile_pic: user.profile_pic } 
         });
     } catch (err) {
         console.error(err);
