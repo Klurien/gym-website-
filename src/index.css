@@ -1,45 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Lexend", ui-sans-serif, system-ui, sans-serif;
-  --font-lexend: "Lexend", sans-serif;
+  --color-primary: #ffffff;
+  --color-background: #131313;
+  --color-[on-background]: #e5e2e1;
+  
+  --spacing-[stack-md]: 16px;
+  --spacing-gutter: 16px;
+  --spacing-[edge-margin]: 20px;
+  --spacing-unit: 4px;
+  --spacing-[container-padding]: 24px;
+  --spacing-[stack-lg]: 32px;
+  --spacing-[stack-sm]: 8px;
 
-  --color-kinetic-lime: #c3f400;
-  --color-kinetic-bg: #131313;
-  --color-kinetic-surface: rgba(26, 26, 26, 0.8);
-  --color-kinetic-card: rgba(32, 31, 31, 0.6);
-
-  --shadow-kinetic-glow: 0px 10px 30px rgba(204, 255, 0, 0.15);
-}
-
-@layer base {
-  body {
-    @apply bg-kinetic-bg text-zinc-100 font-sans antialiased;
-  }
-}
-
-.kinetic-glass {
-  background: rgba(26, 26, 26, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.kinetic-gradient-glow {
-    box-shadow: 0px 10px 40px rgba(195, 244, 0, 0.2);
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #131313;
-}
-::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  --font-[label-sm]: Lexend, sans-serif;
+  --font-[headline-md]: Lexend, sans-serif;
+  --font-[headline-lg]: Lexend, sans-serif;
+  --font-[body-md]: Lexend, sans-serif;
+  --font-[label-bold]: Lexend, sans-serif;
+  --font-[display-xl]: Lexend, sans-serif;
+  --font-[body-lg]: Lexend, sans-serif;
 }

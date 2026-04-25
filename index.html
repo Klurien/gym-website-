@@ -4,42 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kinetic App</title>
-    <!-- Tailwind via CDN for quick prototype styling like the snippets -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Tailwind via Vite instead of CDN for production -->
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#ffffff",
-                        "background": "#131313",
-                        "on-background": "#e5e2e1"
-                    },
-                    spacing: {
-                        "stack-md": "16px",
-                        "gutter": "16px",
-                        "edge-margin": "20px",
-                        "unit": "4px",
-                        "container-padding": "24px",
-                        "stack-lg": "32px",
-                        "stack-sm": "8px"
-                    },
-                    fontFamily: {
-                        "label-sm": ["Lexend"],
-                        "headline-md": ["Lexend"],
-                        "headline-lg": ["Lexend"],
-                        "body-md": ["Lexend"],
-                        "label-bold": ["Lexend"],
-                        "display-xl": ["Lexend"],
-                        "body-lg": ["Lexend"]
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
