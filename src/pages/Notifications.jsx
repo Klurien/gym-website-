@@ -5,8 +5,8 @@ export default function Notifications() {
     { type: 'like', text: 'Coach Alex Rivers liked your morning HIIT session.', time: '2m ago', icon: 'favorite' },
     { type: 'call', text: 'Missed Elite Call from Performance Lab.', time: '1h ago', icon: 'call_missed' },
     { type: 'comment', text: 'Coach Alex Rivers replied to your form check query.', time: '3h ago', icon: 'chat' },
-    { type: 'system', text: 'Global Leaderboard updated. You are now #128.', time: '5h ago', icon: 'military_tech' },
-    { type: 'like', text: 'Your transform clip is trending in the Global Feed.', time: '12h ago', icon: 'bolt' },
+    { type: 'system', text: 'Daily streak goal met: 42 Days of Consistency.', time: '5h ago', icon: 'auto_graph' },
+    { type: 'system', text: 'Personal milestone: 150 sessions completed.', time: '12h ago', icon: 'workspace_premium' },
   ];
 
   return (
