@@ -48,21 +48,13 @@ export default function Messages() {
       });
       if (res.ok) {
         const data = await res.json();
-        const trainer = data.conversations?.[0];
+        const trainer = data.conversations?.[0] || data.availableTrainers?.[0];
         if (trainer) {
-          setActiveChat({ id: trainer.other_id, username: trainer.other_name, role: trainer.other_role });
-        } else {
-          // Fallback if no conversation started yet, find an admin
-          const adminRes = await fetch('/api/messages?action=trainers', { 
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (adminRes.ok) {
-            const adminData = await adminRes.json();
-            if (adminData.trainers?.[0]) {
-              const t = adminData.trainers[0];
-              setActiveChat({ id: t.id, username: t.username, role: t.role });
-            }
-          }
+          // If it's from availableTrainers, it might have id instead of other_id
+          const trainerId = trainer.other_id || trainer.id;
+          const trainerName = trainer.other_name || trainer.username;
+          const trainerRole = trainer.other_role || trainer.role;
+          setActiveChat({ id: trainerId, username: trainerName, role: trainerRole });
         }
       }
     } catch (e) {

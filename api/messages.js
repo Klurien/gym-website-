@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
     }
 
     const pool = mysql.createPool(dbConfig);
-    const userId = decoded.userId;
+    const userId = decoded.id; // Corrected from decoded.userId
     const isAdmin = decoded.role === 'admin';
 
     // Ensure table exists (idempotent)
