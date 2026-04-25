@@ -3,6 +3,23 @@ import React, { useState, useEffect } from 'react';
 export default function Tasks() {
   const [logs, setLogs] = useState([]);
   const [stats, setStats] = useState({ calories: 0, streak: 12, volume: '8.2t', sleep: '7h' });
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem('kinetic_tasks_list');
+    if (saved) return JSON.parse(saved);
+    return [
+      { id: 1, text: 'Morning Mobility Flow', time: '08:00 AM', done: false },
+      { id: 2, text: 'Hydration Goal: 4L', time: 'Ongoing', done: true },
+      { id: 3, text: 'Supplement Stack Check', time: '09:30 PM', done: false }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('kinetic_tasks_list', JSON.stringify(tasks));
+  }, [tasks]);
+
+  const toggleTask = (id) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  };
 
   useEffect(() => {
     fetchWorkouts();
@@ -96,25 +113,29 @@ export default function Tasks() {
             <span className="material-symbols-outlined text-zinc-500 cursor-pointer hover:text-white">more_horiz</span>
           </div>
           <div className="divide-y divide-white/5">
-            <div className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group">
-              <div className="w-6 h-6 rounded border-2 border-lime-400/50 flex items-center justify-center group-hover:bg-lime-400/10 transition-all">
-                <span className="material-symbols-outlined text-lime-400 text-sm hidden group-hover:block">check</span>
+            {tasks.map(task => (
+              <div 
+                key={task.id} 
+                onClick={() => toggleTask(task.id)}
+                className={`p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group select-none ${task.done ? 'bg-lime-400/5' : ''}`}
+              >
+                <div className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
+                  task.done 
+                    ? 'bg-lime-400 border border-lime-400' 
+                    : 'border-2 border-zinc-700 group-hover:border-lime-400/50 group-hover:bg-lime-400/10'
+                }`}>
+                  <span className={`material-symbols-outlined text-sm font-bold ${
+                    task.done ? 'text-black block' : 'text-lime-400 hidden group-hover:block'
+                  }`}>check</span>
+                </div>
+                <span className={`font-body-md text-body-md flex-1 ${task.done ? 'line-through text-zinc-500' : 'text-zinc-300'}`}>
+                  {task.text}
+                </span>
+                <span className={`font-label-sm text-label-sm ${task.done ? 'text-lime-400/50 font-black' : 'text-zinc-500'}`}>
+                  {task.done ? 'DONE' : task.time}
+                </span>
               </div>
-              <span className="font-body-md text-body-md flex-1">Morning Mobility Flow</span>
-              <span className="font-label-sm text-label-sm text-zinc-500">08:00 AM</span>
-            </div>
-            <div className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group bg-lime-400/5">
-              <div className="w-6 h-6 rounded bg-lime-400 flex items-center justify-center">
-                <span className="material-symbols-outlined text-black text-sm font-bold">check</span>
-              </div>
-              <span className="font-body-md text-body-md flex-1 line-through text-zinc-500">Hydration Goal: 4L</span>
-              <span className="font-label-sm text-label-sm text-lime-400/50">DONE</span>
-            </div>
-            <div className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group">
-              <div className="w-6 h-6 rounded border-2 border-zinc-700 flex items-center justify-center"></div>
-              <span className="font-body-md text-body-md flex-1">Supplement Stack Check</span>
-              <span className="font-label-sm text-label-sm text-zinc-500">09:30 PM</span>
-            </div>
+            ))}
           </div>
         </div>
       </section>

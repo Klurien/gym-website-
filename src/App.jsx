@@ -8,6 +8,7 @@ import Messages from './pages/Messages';
 import Calendar from './pages/Calendar';
 import Tasks from './pages/Tasks';
 import Live from './pages/Live';
+import Auth from './pages/Auth';
 
 function PageWrapper({ children }) {
   return (
@@ -25,8 +26,8 @@ function PageWrapper({ children }) {
 
 function Layout({ children }) {
   const location = useLocation();
-  // Don't show header/nav on immersive screens like Live
-  const isImmersive = location.pathname.includes('/live');
+  // Don't show header/nav on immersive screens like Live or Auth
+  const isImmersive = location.pathname.includes('/live') || location.pathname.includes('/auth');
 
   return (
     <div className="relative">
@@ -48,6 +49,7 @@ function AnimatedRoutes() {
         <Route path="/calendar" element={<PageWrapper><Calendar /></PageWrapper>} />
         <Route path="/tasks" element={<PageWrapper><Tasks /></PageWrapper>} />
         <Route path="/live" element={<PageWrapper><Live /></PageWrapper>} />
+        <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
