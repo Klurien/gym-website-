@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import Navigation from './components/Navigation';
 import Header from './components/Header';
@@ -50,6 +50,15 @@ function AnimatedRoutes() {
         <Route path="/tasks" element={<PageWrapper><Tasks /></PageWrapper>} />
         <Route path="/live" element={<PageWrapper><Live /></PageWrapper>} />
         <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
+        
+        {/* Legacy Catch-alls to prevent loops */}
+        <Route path="/login.html" element={<Navigate to="/auth" replace />} />
+        <Route path="/register.html" element={<Navigate to="/auth" replace />} />
+        <Route path="/dashboard.html" element={<Navigate to="/feed" replace />} />
+        <Route path="/index.html" element={<Navigate to="/" replace />} />
+        
+        {/* Wildcard catch-all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
   );

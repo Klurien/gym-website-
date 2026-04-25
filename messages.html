@@ -521,7 +521,7 @@
         <button id="backToList" class="nav-btn back" onclick="showSidebar()">
             <i class="fa-solid fa-arrow-left"></i> Back
         </button>
-        <a href="dashboard.html" class="nav-btn">
+        <a href="/feed" class="nav-btn">
             <i class="fa-solid fa-gauge-high"></i> Dashboard
         </a>
         <button id="logoutBtn" class="nav-btn">
@@ -594,7 +594,7 @@
         // ── Auth ────────────────────────────────────────────────────────────────
         const token = localStorage.getItem('token');
         const user  = JSON.parse(localStorage.getItem('user') || 'null');
-        if (!token || !user) { window.location.href = 'login.html'; }
+        if (!token || !user) { window.location.href = '/auth'; }
 
         const isAdmin = user?.role === 'admin';
         let activeConvId = null;  // other user's id
@@ -853,7 +853,7 @@
 
         // ── Logout ────────────────────────────────────────────────────────────
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.clear(); window.location.href = 'login.html';
+            localStorage.clear(); window.location.href = '/auth';
         });
 
         // ── Mobile helpers ────────────────────────────────────────────────────

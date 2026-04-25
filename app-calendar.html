@@ -130,7 +130,7 @@ tailwind.config={darkMode:"class",theme:{extend:{"colors":{"primary":"#ffffff","
 
 <script>
     const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'login.html';
+    if (!token) window.location.href = '/auth';
 
     async function loadBookings() {
         try {
