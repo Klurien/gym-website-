@@ -1,229 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COMRADES GYM | Forge Your Legacy</title>
-    <meta name="description" content="Ruiru's most advanced fitness sanctuary. Experience elite training, state-of-the-art tech, and a relentless community.">
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
-
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css">
-</head>
-
-<body>
-
-    <!-- Navigation -->
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <a href="#" class="logo">
-                <span class="logo-red">COMRADES</span> GYM
-            </a>
-            <div class="nav-links">
-                <a href="index.html" class="nav-link active">HOME</a>
-                <a href="about.html" class="nav-link">ABOUT</a>
-                <a href="services.html" class="nav-link">SERVICES</a>
-                <a href="contact.html" class="nav-link">CONTACT</a>
-                <!-- Messages link — shown when logged in -->
-                <a href="messages.html" class="nav-link" id="messagesNavLink" style="display:none; position:relative;">
-                    <i class="fa-solid fa-comment-dots"></i> MESSAGES
-                    <span id="navUnreadBadge" style="
-                        display:none; position:absolute; top:-6px; right:-8px;
-                        background:#E8294A; color:#fff; font-size:0.55rem; font-weight:700;
-                        padding:2px 5px; border-radius:20px; line-height:1.4;
-                    "></span>
-                </a>
-                <a id="profileLink" href="login.html" class="nav-profile-icon" title="Member Portal">
-                    <i class="fa-solid fa-circle-user"></i>
-                </a>
-                <a href="register.html" class="btn-primary" style="padding: 0.8rem 1.5rem; font-size: 0.7rem;">JOIN NOW</a>
-            </div>
-            
-            <button class="mobile-menu-btn" id="mobile-menu-btn">
-                <i class="fa-solid fa-bars-staggered"></i>
-            </button>
-        </div>
-    </nav>
-
-    <!-- Mobile Menu Overlay -->
-    <div class="mobile-menu" id="mobile-menu">
-        <button class="close-menu" id="close-menu"><i class="fa-solid fa-xmark"></i></button>
-        <div class="mobile-links">
-            <a href="index.html">HOME</a>
-            <a href="about.html">ABOUT</a>
-            <a href="services.html">SERVICES</a>
-            <a href="contact.html">CONTACT</a>
-            <a href="login.html">LOGIN</a>
-        </div>
-    </div>
-
-    <!-- Hero Section -->
-    <header class="hero" id="home">
-        <div class="hero-background"></div>
-        <div class="hero-content">
-            <div class="section-badge">EST. 2026 • RUIRU CBD</div>
-            <h1 class="hero-title">FORGE<br>YOUR<br><span class="logo-red">LEGACY.</span></h1>
-            <p class="hero-description">
-                Transcend your limits at Comrades Gym. We provide the iron, the expertise, and the fire. You provide the soul.
-            </p>
-            <div class="hero-actions">
-                <a href="#classes" class="btn-primary">EXPLORE PROGRAMS <i class="fa-solid fa-bolt"></i></a>
-                <a href="https://www.facebook.com/benson.mapesa/" target="_blank" class="btn-secondary">THE COMMUNITY</a>
-            </div>
-        </div>
-        <div class="scroll-indicator">
-            <p>EVOLVE</p>
-            <div class="line"></div>
-        </div>
-    </header>
-
-    <!-- Marquee -->
-    <div class="marquee-container">
-        <div class="marquee">
-            <span>UNLEASH POWER • BREAK LIMITS • DEFINE YOURSELF • UNLEASH POWER • BREAK LIMITS • DEFINE YOURSELF • </span>
-            <span>UNLEASH POWER • BREAK LIMITS • DEFINE YOURSELF • UNLEASH POWER • BREAK LIMITS • DEFINE YOURSELF • </span>
-        </div>
-    </div>
-
-    <!-- Stats / About Peek -->
-    <section class="about" id="about">
-        <div class="container about-grid">
-            <div class="about-text">
-                <div class="section-badge">THE SANCTUARY</div>
-                <h2 class="section-title">ELITE GEAR.<br>HARD <span class="logo-red">TRUTH.</span></h2>
-                <p class="section-description">
-                    Comrades Gym isn't just a facility; it's an engineering lab for the human body. Located in the heart of Ruiru, we've built a sanctuary for those who refuse to settle.
-                </p>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3 class="stat-number">15+</h3>
-                        <p class="stat-label">ELITE TRAINERS</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 class="stat-number">24/7</h3>
-                        <p class="stat-label">DEDICATION</p>
-                    </div>
-                </div>
-                <a href="about.html" class="btn-secondary" style="margin-top: 3rem;">OUR STORY</a>
-            </div>
-            <div class="about-image-wrapper">
-                <img src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwepUQzbN8dKuJhEv6hxomxfbImpx1a6wYsAyPLesRDF9Lf0U7oq75IxVd4-Qq1kF3SqAJJ_8EehSTRCLVrejndWUCC9jqBB_m6A3aXXHnPmWttXmPfTE1bCYYOJdesR-ginyvyYV1_Yuzds=s677-k-no" alt="Gym Interior" class="about-img" style="border-radius: 20px;">
-            </div>
-        </div>
-    </section>
-
-    <!-- Classes Section -->
-    <section class="classes" id="classes">
-        <div class="container">
-            <div class="section-header">
-                <div class="section-badge">BATTLEGROUNDS</div>
-                <h2 class="section-title">CHOOSE YOUR <span class="logo-red">PATH.</span></h2>
-            </div>
-
-            <div class="classes-grid">
-                <!-- Class 1 -->
-                <div class="class-card">
-                    <img src="https://lh3.googleusercontent.com/p/AF1QipN7yFxYsLSbfZEs9CjUQ1uxyQJU37yumhFiMoyC=s680-w680-h510" alt="Strength" class="class-bg">
-                    <div class="class-content">
-                        <div class="class-time">STRENGTH & CONDITIONING</div>
-                        <h3 class="class-title">TITAN FORCE</h3>
-                        <a href="strength.html" class="btn-primary" style="padding: 0.8rem; border-radius: 50%; width: 50px; height: 50px;"><i class="fa-solid fa-arrow-right"></i></a>
-                    </div>
-                </div>
-                <!-- Class 2 -->
-                <div class="class-card">
-                    <img src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwep8td_Hta5wycFMCAEIBCtWgs0MlaVhRyqgLa0e3XCwibY8g36CMIsPIKnY53zZvjRp4yh8D5IODFrrgwJClC6J8l9EoaikOLqWsvBrIUlxzKF1H13q3XHn8uCyk0YowsVO1bigU7JfpuY=w203-h360-k-no" alt="Aerobics" class="class-bg">
-                    <div class="class-content">
-                        <div class="class-time">HIIT / CARDIO</div>
-                        <h3 class="class-title">AERO-BLAST</h3>
-                        <a href="aerobics.html" class="btn-primary" style="padding: 0.8rem; border-radius: 50%; width: 50px; height: 50px;"><i class="fa-solid fa-arrow-right"></i></a>
-                    </div>
-                </div>
-                <!-- Class 3 -->
-                <div class="class-card">
-                    <img src="https://lh3.googleusercontent.com/p/AF1QipN7yFxYsLSbfZEs9CjUQ1uxyQJU37yumhFiMoyC=s680-w680-h510" alt="Zumba" class="class-bg">
-                    <div class="class-content">
-                        <div class="class-time">DANCE FITNESS</div>
-                        <h3 class="class-title">NEON RHYTHM</h3>
-                        <a href="zumba.html" class="btn-primary" style="padding: 0.8rem; border-radius: 50%; width: 50px; height: 50px;"><i class="fa-solid fa-arrow-right"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Benefits Section -->
-    <section class="facilities">
-        <div class="container">
-            <div class="section-badge">AMENITIES</div>
-            <h2 class="section-title">WARRIOR <span class="logo-red">FUEL.</span></h2>
-            
-            <div class="benefits-list">
-                <div class="benefit-item">
-                    <i class="fa-solid fa-blender benefit-icon"></i>
-                    <div class="benefit-text">
-                        <h4>SMOOTHIE BAR</h4>
-                        <p>Post-workout recovery with high-protein, zero-sugar fuels.</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <i class="fa-solid fa-user-shield benefit-icon"></i>
-                    <div class="benefit-text">
-                        <h4>PRIVATE LOCKERS</h4>
-                        <p>Secure, biometric-enabled storage for your gear.</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <i class="fa-solid fa-heart-pulse benefit-icon"></i>
-                    <div class="benefit-text">
-                        <h4>BIO-TRACKING</h4>
-                        <p>Advanced metrics to monitor and optimize your progress.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <a href="#" class="logo footer-logo"><span class="logo-red">COMRADES</span> GYM</a>
-                    <p class="footer-desc">The ultimate destination for those who dare to transform. Forge your spirit, build your body.</p>
-                </div>
-                <div class="footer-nav">
-                    <h3 class="footer-heading">NAVIGATION</h3>
-                    <ul class="contact-list" style="display: block;">
-                        <li><a href="about.html">ABOUT US</a></li>
-                        <li><a href="services.html">SERVICES</a></li>
-                        <li><a href="contact.html">CONTACT</a></li>
-                    </ul>
-                </div>
-                <div class="footer-info">
-                    <h3 class="footer-heading">HEADQUARTERS</h3>
-                    <ul class="contact-list" style="display: block;">
-                        <li>Ruiru Town, Kenya</li>
-                        <li>+254 726 619421</li>
-                        <li>info@comradesgym.ke</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 COMRADES GYM. THE LEGACY CONTINUES.</p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="script.js"></script>
-</body>
-
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kinetic App</title>
+    <!-- Tailwind via CDN for quick prototype styling like the snippets -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ffffff",
+                        "background": "#131313",
+                        "on-background": "#e5e2e1"
+                    },
+                    spacing: {
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "edge-margin": "20px",
+                        "unit": "4px",
+                        "container-padding": "24px",
+                        "stack-lg": "32px",
+                        "stack-sm": "8px"
+                    },
+                    fontFamily: {
+                        "label-sm": ["Lexend"],
+                        "headline-md": ["Lexend"],
+                        "headline-lg": ["Lexend"],
+                        "body-md": ["Lexend"],
+                        "label-bold": ["Lexend"],
+                        "display-xl": ["Lexend"],
+                        "body-lg": ["Lexend"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            font-family: 'Lexend', sans-serif;
+            min-height: max(884px, 100dvh);
+            overflow-x: hidden;
+        }
+    </style>
+  </head>
+  <body class="bg-background text-on-background min-h-screen">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

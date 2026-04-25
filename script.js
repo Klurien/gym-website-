@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = JSON.parse(localStorage.getItem('user'));
         
         if (token && user) {
-            profileLink.href = user.role === 'admin' ? 'admin.html' : 'app-feed.html';
+            profileLink.href = user.role === 'admin' ? 'admin.html' : '/';
             profileLink.title = `Dashboard (${user.username})`;
             profileLink.classList.add('logged-in');
 

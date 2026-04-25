@@ -60,7 +60,7 @@
                     localStorage.setItem('user', JSON.stringify(result.user));
                     msg.innerHTML = "Login successful! Redirecting...";
                     msg.className = "status-msg success";
-                    window.location.href = result.user.role === 'admin' ? 'admin.html' : 'app-feed.html';
+                    window.location.href = result.user.role === 'admin' ? 'admin.html' : '/';
                 } else {
                     msg.innerHTML = result.error;
                     msg.className = "status-msg error";

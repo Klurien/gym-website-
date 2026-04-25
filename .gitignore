@@ -1,10 +1,8 @@
 node_modules/
-.env
+build/
+dist/
+coverage/
 .DS_Store
-*.mp4
-*.m4v
-# Or keep mp4 if you want to push to github as requested
-# The user said "then push to github", and video files are already pushed.
-# I'll only exclude .env and node_modules for now.
-.vercel
-.env*.local
+*.log
+.env*
+!.env.example
