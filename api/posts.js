@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'gym-secret-2026';
 
 // Database config
 const dbConfig = {
@@ -11,7 +11,7 @@ const dbConfig = {
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 4000,
     ssl: {
-        rejectUnauthorized: true
+        rejectUnauthorized: false
     }
 };
 
