@@ -4,18 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comrades Gym | The Ultimate Fitness Destination</title>
-    <meta name="description"
-        content="Elevate your fitness in Ruiru Town at Comrades Gym. State-of-the-art machines, highly skilled trainers like Marcus Trainer, aerobics, zumba, cardio and more.">
+    <title>COMRADES GYM | Forge Your Legacy</title>
+    <meta name="description" content="Ruiru's most advanced fitness sanctuary. Experience elite training, state-of-the-art tech, and a relentless community.">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=Syncopate:wght@700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&family=Syncopate:wght@700&display=swap" rel="stylesheet">
 
-    <!-- FontAwesome for Icons -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Custom CSS -->
@@ -33,16 +30,25 @@
             <div class="nav-links">
                 <a href="index.html" class="nav-link active">HOME</a>
                 <a href="about.html" class="nav-link">ABOUT</a>
+                <a href="services.html" class="nav-link">SERVICES</a>
                 <a href="contact.html" class="nav-link">CONTACT</a>
+                <!-- Messages link — shown when logged in -->
+                <a href="messages.html" class="nav-link" id="messagesNavLink" style="display:none; position:relative;">
+                    <i class="fa-solid fa-comment-dots"></i> MESSAGES
+                    <span id="navUnreadBadge" style="
+                        display:none; position:absolute; top:-6px; right:-8px;
+                        background:#E8294A; color:#fff; font-size:0.55rem; font-weight:700;
+                        padding:2px 5px; border-radius:20px; line-height:1.4;
+                    "></span>
+                </a>
+                <a id="profileLink" href="login.html" class="nav-profile-icon" title="Member Portal">
+                    <i class="fa-solid fa-circle-user"></i>
+                </a>
+                <a href="register.html" class="btn-primary" style="padding: 0.8rem 1.5rem; font-size: 0.7rem;">JOIN NOW</a>
             </div>
             
-            <a id="profileLink" href="login.html" class="nav-profile-icon" title="Member Dashboard">
-                <i class="fa-solid fa-user"></i>
-            </a>
-
-            <a href="register.html" class="btn-primary join-btn">JOIN NOW <i class="fa-solid fa-arrow-right"></i></a>
             <button class="mobile-menu-btn" id="mobile-menu-btn">
-                <i class="fa-solid fa-bars"></i>
+                <i class="fa-solid fa-bars-staggered"></i>
             </button>
         </div>
     </nav>
@@ -51,10 +57,11 @@
     <div class="mobile-menu" id="mobile-menu">
         <button class="close-menu" id="close-menu"><i class="fa-solid fa-xmark"></i></button>
         <div class="mobile-links">
-            <a href="#about">ABOUT</a>
-            <a href="#classes">CLASSES</a>
-            <a href="#facilities">FACILITIES</a>
-            <a href="#contact">CONTACT</a>
+            <a href="index.html">HOME</a>
+            <a href="about.html">ABOUT</a>
+            <a href="services.html">SERVICES</a>
+            <a href="contact.html">CONTACT</a>
+            <a href="login.html">LOGIN</a>
         </div>
     </div>
 
@@ -62,20 +69,18 @@
     <header class="hero" id="home">
         <div class="hero-background"></div>
         <div class="hero-content">
-            <h2 class="hero-subtitle">WELCOME TO RUIRU CBD'S BEATING HEART</h2>
-            <h1 class="hero-title">FORGE<br>YOUR<br><span class="text-red">LEGACY.</span></h1>
+            <div class="section-badge">EST. 2026 • RUIRU CBD</div>
+            <h1 class="hero-title">FORGE<br>YOUR<br><span class="logo-red">LEGACY.</span></h1>
             <p class="hero-description">
-                The ultimate destination for your well-being. State-of-the-art machines, passionate trainers, and a
-                relentless community. Stop waiting. Start grinding.
+                Transcend your limits at Comrades Gym. We provide the iron, the expertise, and the fire. You provide the soul.
             </p>
             <div class="hero-actions">
-                <a href="#classes" class="btn-primary">DISCOVER CLASSES</a>
-                <a href="https://www.facebook.com/benson.mapesa/" target="_blank" class="btn-secondary"><i
-                        class="fa-brands fa-facebook"></i> OUR COMMUNITY</a>
+                <a href="#classes" class="btn-primary">EXPLORE PROGRAMS <i class="fa-solid fa-bolt"></i></a>
+                <a href="https://www.facebook.com/benson.mapesa/" target="_blank" class="btn-secondary">THE COMMUNITY</a>
             </div>
         </div>
         <div class="scroll-indicator">
-            <p>SCROLL</p>
+            <p>EVOLVE</p>
             <div class="line"></div>
         </div>
     </header>
@@ -83,217 +88,141 @@
     <!-- Marquee -->
     <div class="marquee-container">
         <div class="marquee">
-            <span>AEROBICS • STRENGTH TRAINING • CARDIO WORKOUTS • ZUMBA • BOXING • DIET PLANNING • </span>
-            <span>AEROBICS • STRENGTH TRAINING • CARDIO WORKOUTS • ZUMBA • BOXING • DIET PLANNING • </span>
+            <span>UNLEASH POWER • BREAK LIMITS • DEFINE YOURSELF • UNLEASH POWER • BREAK LIMITS • DEFINE YOURSELF • </span>
+            <span>UNLEASH POWER • BREAK LIMITS • DEFINE YOURSELF • UNLEASH POWER • BREAK LIMITS • DEFINE YOURSELF • </span>
         </div>
     </div>
 
-    <!-- About Section -->
+    <!-- Stats / About Peek -->
     <section class="about" id="about">
         <div class="container about-grid">
             <div class="about-text">
-                <div class="section-badge">ABOUT US</div>
-                <h2 class="section-title">NO EXCUSES.<br>JUST <span class="text-red">RESULTS.</span></h2>
+                <div class="section-badge">THE SANCTUARY</div>
+                <h2 class="section-title">ELITE GEAR.<br>HARD <span class="logo-red">TRUTH.</span></h2>
                 <p class="section-description">
-                    Comrades Gym is the ultimate destination for anyone looking to elevate their fitness and overall
-                    well-being. Located in Ruiru, we offer a welcoming environment equipped with state-of-the-art
-                    machines.
-                </p>
-                <p class="section-description">
-                    Whether you’re working towards weight loss, muscle building, or improved endurance, our highly
-                    skilled trainers provide personalized programs tailored for you.
+                    Comrades Gym isn't just a facility; it's an engineering lab for the human body. Located in the heart of Ruiru, we've built a sanctuary for those who refuse to settle.
                 </p>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <h3 class="stat-number">10+</h3>
-                        <p class="stat-label">EXPERT TRAINERS</p>
+                        <h3 class="stat-number">15+</h3>
+                        <p class="stat-label">ELITE TRAINERS</p>
                     </div>
                     <div class="stat-card">
-                        <h3 class="stat-number">20+</h3>
-                        <p class="stat-label">WEEKLY CLASSES</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 class="stat-number">100%</h3>
-                        <p class="stat-label">COMMITMENT</p>
+                        <h3 class="stat-number">24/7</h3>
+                        <p class="stat-label">DEDICATION</p>
                     </div>
                 </div>
+                <a href="about.html" class="btn-secondary" style="margin-top: 3rem;">OUR STORY</a>
             </div>
             <div class="about-image-wrapper">
-                <img src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwepUQzbN8dKuJhEv6hxomxfbImpx1a6wYsAyPLesRDF9Lf0U7oq75IxVd4-Qq1kF3SqAJJ_8EehSTRCLVrejndWUCC9jqBB_m6A3aXXHnPmWttXmPfTE1bCYYOJdesR-ginyvyYV1_Yuzds=s677-k-no"
-                    alt="Comrades Gym weights" class="about-img">
-                <div class="img-accent"></div>
+                <img src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwepUQzbN8dKuJhEv6hxomxfbImpx1a6wYsAyPLesRDF9Lf0U7oq75IxVd4-Qq1kF3SqAJJ_8EehSTRCLVrejndWUCC9jqBB_m6A3aXXHnPmWttXmPfTE1bCYYOJdesR-ginyvyYV1_Yuzds=s677-k-no" alt="Gym Interior" class="about-img" style="border-radius: 20px;">
             </div>
         </div>
     </section>
 
-    <!-- Classes/Services Section -->
+    <!-- Classes Section -->
     <section class="classes" id="classes">
         <div class="container">
-            <div class="section-header center">
-                <div class="section-badge">OUR PROGRAMS</div>
-                <h2 class="section-title">CHOOSE YOUR <span class="text-red">BATTLEFILE.</span></h2>
+            <div class="section-header">
+                <div class="section-badge">BATTLEGROUNDS</div>
+                <h2 class="section-title">CHOOSE YOUR <span class="logo-red">PATH.</span></h2>
             </div>
 
             <div class="classes-grid">
                 <!-- Class 1 -->
                 <div class="class-card">
-                    <img src="https://lh3.googleusercontent.com/p/AF1QipN7yFxYsLSbfZEs9CjUQ1uxyQJU37yumhFiMoyC=s680-w680-h510"
-                        alt="Weight Training" class="class-bg">
+                    <img src="https://lh3.googleusercontent.com/p/AF1QipN7yFxYsLSbfZEs9CjUQ1uxyQJU37yumhFiMoyC=s680-w680-h510" alt="Strength" class="class-bg">
                     <div class="class-content">
-                        <h3 class="class-title">STRENGTH</h3>
-                        <p class="class-time">DAILY ACCESS</p>
-                        <p class="class-desc">Facilities equipped for various strength-building exercises.</p>
-                        <a href="strength.html" class="class-link"><i class="fa-solid fa-arrow-right"></i></a>
+                        <div class="class-time">STRENGTH & CONDITIONING</div>
+                        <h3 class="class-title">TITAN FORCE</h3>
+                        <a href="strength.html" class="btn-primary" style="padding: 0.8rem; border-radius: 50%; width: 50px; height: 50px;"><i class="fa-solid fa-arrow-right"></i></a>
                     </div>
                 </div>
                 <!-- Class 2 -->
                 <div class="class-card">
-                    <img src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwep8td_Hta5wycFMCAEIBCtWgs0MlaVhRyqgLa0e3XCwibY8g36CMIsPIKnY53zZvjRp4yh8D5IODFrrgwJClC6J8l9EoaikOLqWsvBrIUlxzKF1H13q3XHn8uCyk0YowsVO1bigU7JfpuY=w203-h360-k-no"
-                        alt="Aerobics" class="class-bg">
+                    <img src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwep8td_Hta5wycFMCAEIBCtWgs0MlaVhRyqgLa0e3XCwibY8g36CMIsPIKnY53zZvjRp4yh8D5IODFrrgwJClC6J8l9EoaikOLqWsvBrIUlxzKF1H13q3XHn8uCyk0YowsVO1bigU7JfpuY=w203-h360-k-no" alt="Aerobics" class="class-bg">
                     <div class="class-content">
-                        <h3 class="class-title">AEROBICS</h3>
-                        <p class="class-time">6:00 AM - 8:00 AM / 5:30 PM - 7:30 PM</p>
-                        <p class="class-desc">Energizing routines for cardiovascular health and weight management.</p>
-                        <a href="aerobics.html" class="class-link"><i class="fa-solid fa-arrow-right"></i></a>
+                        <div class="class-time">HIIT / CARDIO</div>
+                        <h3 class="class-title">AERO-BLAST</h3>
+                        <a href="aerobics.html" class="btn-primary" style="padding: 0.8rem; border-radius: 50%; width: 50px; height: 50px;"><i class="fa-solid fa-arrow-right"></i></a>
                     </div>
                 </div>
                 <!-- Class 3 -->
                 <div class="class-card">
-                    <img src="https://lh3.googleusercontent.com/p/AF1QipN7yFxYsLSbfZEs9CjUQ1uxyQJU37yumhFiMoyC=s680-w680-h510"
-                        alt="Zumba" class="class-bg">
+                    <img src="https://lh3.googleusercontent.com/p/AF1QipN7yFxYsLSbfZEs9CjUQ1uxyQJU37yumhFiMoyC=s680-w680-h510" alt="Zumba" class="class-bg">
                     <div class="class-content">
-                        <h3 class="class-title">ZUMBA</h3>
-                        <p class="class-time">EVENING SESSIONS</p>
-                        <p class="class-desc">High-energy, dance-based fitness sessions to keep you moving.</p>
-                        <a href="zumba.html" class="class-link"><i class="fa-solid fa-arrow-right"></i></a>
-                    </div>
-                </div>
-                <!-- Class 4 -->
-                <div class="class-card">
-                    <img src="https://lh3.googleusercontent.com/gps-cs-s/AHVAwepUQzbN8dKuJhEv6hxomxfbImpx1a6wYsAyPLesRDF9Lf0U7oq75IxVd4-Qq1kF3SqAJJ_8EehSTRCLVrejndWUCC9jqBB_m6A3aXXHnPmWttXmPfTE1bCYYOJdesR-ginyvyYV1_Yuzds=s677-k-no"
-                        alt="Boxing" class="class-bg">
-                    <div class="class-content">
-                        <h3 class="class-title">BOXING</h3>
-                        <p class="class-time">SPECIALIZED</p>
-                        <p class="class-desc">Intense programs designed for boxing enthusiasts to build speed and power.
-                        </p>
-                        <a href="boxing.html" class="class-link"><i class="fa-solid fa-arrow-right"></i></a>
+                        <div class="class-time">DANCE FITNESS</div>
+                        <h3 class="class-title">NEON RHYTHM</h3>
+                        <a href="zumba.html" class="btn-primary" style="padding: 0.8rem; border-radius: 50%; width: 50px; height: 50px;"><i class="fa-solid fa-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Facilities/Benefits -->
-    <section class="facilities" id="facilities">
+    <!-- Benefits Section -->
+    <section class="facilities">
         <div class="container">
-            <div class="section-header">
-                <div class="section-badge">AMENITIES</div>
-                <h2 class="section-title">BEYOND <span class="text-red">THE IRON.</span></h2>
-            </div>
-
+            <div class="section-badge">AMENITIES</div>
+            <h2 class="section-title">WARRIOR <span class="logo-red">FUEL.</span></h2>
+            
             <div class="benefits-list">
                 <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fa-solid fa-blender"></i></div>
+                    <i class="fa-solid fa-blender benefit-icon"></i>
                     <div class="benefit-text">
-                        <h4><a href="amenities.html#smoothie">SMOOTHIE BAR</a></h4>
-                        <p>On-site smoothie bar with healthy refreshments for post-workout recovery.</p>
+                        <h4>SMOOTHIE BAR</h4>
+                        <p>Post-workout recovery with high-protein, zero-sugar fuels.</p>
                     </div>
                 </div>
                 <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fa-solid fa-apple-whole"></i></div>
+                    <i class="fa-solid fa-user-shield benefit-icon"></i>
                     <div class="benefit-text">
-                        <h4><a href="amenities.html#nutrition">NUTRITION</a></h4>
-                        <p>Nutritional guidance and meal planning support to fuel your gains.</p>
+                        <h4>PRIVATE LOCKERS</h4>
+                        <p>Secure, biometric-enabled storage for your gear.</p>
                     </div>
                 </div>
                 <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fa-solid fa-om"></i></div>
+                    <i class="fa-solid fa-heart-pulse benefit-icon"></i>
                     <div class="benefit-text">
-                        <h4><a href="amenities.html#yoga">YOGA & PILATES</a></h4>
-                        <p>Dedicated zones for mindfulness, stretching, and flexibility.</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fa-solid fa-chart-line"></i></div>
-                    <div class="benefit-text">
-                        <h4><a href="amenities.html#tech">TECH TRACKING</a></h4>
-                        <p>High-tech fitness tracking systems to monitor your ongoing progress.</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fa-solid fa-tree"></i></div>
-                    <div class="benefit-text">
-                        <h4><a href="amenities.html#outdoor">OUTDOOR AREA</a></h4>
-                        <p>Outdoor training area for varied and intense workout routines.</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fa-solid fa-lock"></i></div>
-                    <div class="benefit-text">
-                        <h4><a href="amenities.html#lockers">SECURE LOCKERS</a></h4>
-                        <p>Locker rooms with secure storage and modern amenities.</p>
+                        <h4>BIO-TRACKING</h4>
+                        <p>Advanced metrics to monitor and optimize your progress.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Join Banner -->
-    <section class="join-banner">
-        <div class="banner-content">
-            <h2 class="banner-title">READY TO COMMIT?</h2>
-            <p class="banner-desc">Affordable membership packages tailored for your lifestyle. Join Comrades Gym today.
-            </p>
-            <a href="#contact" class="btn-primary banner-btn">START YOUR JOURNEY</a>
-        </div>
-    </section>
-
-    <!-- Contact & Footer -->
-    <footer class="footer" id="contact">
-        <div class="container footer-grid">
-            <div class="footer-info">
-                <a href="#" class="logo footer-logo">
-                    <span class="logo-red">COMRADES</span> GYM
-                </a>
-                <p class="footer-desc">
-                    Your fitness goals start here. Discover a healthier, more active lifestyle in a fun, safe, and
-                    supportive setting.
-                </p>
-                <div class="social-links">
-                    <a href="https://www.facebook.com/benson.mapesa/" target="_blank" aria-label="Facebook"><i
-                            class="fa-brands fa-facebook-f"></i></a>
-                    <a href="https://www.instagram.com/benson.mapesa/" target="_blank" aria-label="Instagram"><i
-                            class="fa-brands fa-instagram"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="#" class="logo footer-logo"><span class="logo-red">COMRADES</span> GYM</a>
+                    <p class="footer-desc">The ultimate destination for those who dare to transform. Forge your spirit, build your body.</p>
+                </div>
+                <div class="footer-nav">
+                    <h3 class="footer-heading">NAVIGATION</h3>
+                    <ul class="contact-list" style="display: block;">
+                        <li><a href="about.html">ABOUT US</a></li>
+                        <li><a href="services.html">SERVICES</a></li>
+                        <li><a href="contact.html">CONTACT</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <h3 class="footer-heading">HEADQUARTERS</h3>
+                    <ul class="contact-list" style="display: block;">
+                        <li>Ruiru Town, Kenya</li>
+                        <li>+254 726 619421</li>
+                        <li>info@comradesgym.ke</li>
+                    </ul>
                 </div>
             </div>
-
-            <div class="footer-contact">
-                <h3 class="footer-heading">CONTACT US</h3>
-                <ul class="contact-list">
-                    <li><i class="fa-solid fa-location-dot text-red"></i> RXX9+G3 Ruiru, Kenya</li>
-                    <li><i class="fa-solid fa-phone text-red"></i> 0726 619421</li>
-                    <li><i class="fa-solid fa-envelope text-red"></i> info@comradesgym.co.ke</li>
-                </ul>
+            <div class="footer-bottom">
+                <p>&copy; 2026 COMRADES GYM. THE LEGACY CONTINUES.</p>
             </div>
-
-            <div class="footer-hours">
-                <h3 class="footer-heading">OPERATING HOURS</h3>
-                <ul class="hours-list">
-                    <li><span>Monday - Friday</span> <span>5:30 AM - 10:00 PM</span></li>
-                    <li><span>Saturday</span> <span>6:00 AM - 8:00 PM</span></li>
-                    <li><span>Public Holidays</span> <span>6:00 AM - 8:00 PM</span></li>
-                    <li><span>Sunday</span> <span class="text-red">CLOSED</span></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 Comrades Gym. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- Scripts -->
     <script src="script.js"></script>
 </body>
 

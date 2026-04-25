@@ -56,27 +56,116 @@ async function initDB() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Advanced Gym Platform Tables
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS classes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                instructor VARCHAR(100),
+                time DATETIME NOT NULL,
+                capacity INT DEFAULT 30,
+                location VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS bookings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                class_id INT NOT NULL,
+                status ENUM('booked', 'cancelled') DEFAULT 'booked',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (class_id) REFERENCES classes(id)
+            )
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS workout_logs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                log_date DATE NOT NULL,
+                duration_minutes INT,
+                calories_burned INT,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS memberships (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                tier ENUM('basic', 'premium', 'elite') DEFAULT 'basic',
+                start_date DATE NOT NULL,
+                end_date DATE,
+                status ENUM('active', 'expired', 'cancelled') DEFAULT 'active',
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        `);
+
+        // Messaging System Table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS messages (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                sender_id INT NOT NULL,
+                receiver_id INT NOT NULL,
+                content TEXT NOT NULL,
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (sender_id) REFERENCES users(id),
+                FOREIGN KEY (receiver_id) REFERENCES users(id)
+            )
+        `);
+
+        // Trainer–Member Assignments
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS trainer_assignments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                trainer_id INT NOT NULL,
+                member_id INT NOT NULL UNIQUE,
+                assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (trainer_id) REFERENCES users(id),
+                FOREIGN KEY (member_id) REFERENCES users(id)
+            )
+        `);
+
+        console.log('Database schema successfully initialized.');
     } catch (err) {
         console.error('Error connecting to TiDB:', err);
     }
 }
 
-app.post('/api/contact', async (req, res) => {
-    const { name, email, phone, interests, message } = req.body;
-    try {
-        const [result] = await pool.query(
-            'INSERT INTO client_info (name, email, phone, interests, message) VALUES (?, ?, ?, ?, ?)',
-            [name, email, phone, interests, message]
-        );
-        res.status(201).json({ message: 'Information saved successfully!', id: result.insertId });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to save information' });
-    }
-});
+// ── Mount Vercel serverless functions as local Express routes ─────────────────
+const registerHandler  = require('./api/register');
+const loginHandler     = require('./api/login');
+const bookingsHandler  = require('./api/bookings');
+const workoutsHandler  = require('./api/workouts');
+const messagesHandler  = require('./api/messages');
+const analyticsHandler = require('./api/analytics');
+const classesHandler   = require('./api/classes');
+const contactHandler   = require('./api/contact');
+const adminResponses   = require('./api/admin/responses');
+
+// Wrap serverless handlers (they use req.method internally)
+const wrap = (handler) => (req, res) => handler(req, res);
+
+app.all('/api/register',          wrap(registerHandler));
+app.all('/api/login',             wrap(loginHandler));
+app.all('/api/bookings',          wrap(bookingsHandler));
+app.all('/api/workouts',          wrap(workoutsHandler));
+app.all('/api/messages',          wrap(messagesHandler));
+app.all('/api/analytics',         wrap(analyticsHandler));
+app.all('/api/classes',           wrap(classesHandler));
+app.all('/api/contact',           wrap(contactHandler));
+app.all('/api/admin/responses',   wrap(adminResponses));
 
 initDB().then(() => {
     app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+        console.log(`\n  ✅ COMRADES GYM SERVER RUNNING`);
+        console.log(`  ➜  http://localhost:${PORT}\n`);
     });
 });

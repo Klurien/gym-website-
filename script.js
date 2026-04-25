@@ -12,8 +12,25 @@ document.addEventListener('DOMContentLoaded', () => {
             profileLink.href = user.role === 'admin' ? 'admin.html' : 'dashboard.html';
             profileLink.title = `Dashboard (${user.username})`;
             profileLink.classList.add('logged-in');
+
+            // Show Messages nav link for logged-in users
+            const msgLink = document.getElementById('messagesNavLink');
+            if (msgLink) msgLink.style.display = 'flex';
+
+            // Fetch unread message count for nav badge
+            fetch('/api/messages?action=conversations', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(r => r.json()).then(data => {
+                const count = data.total_unread || 0;
+                const badge = document.getElementById('navUnreadBadge');
+                if (badge && count > 0) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = count > 9 ? '9+' : count;
+                }
+            }).catch(() => {});
         }
     }
+
 
     // Mobile Menu Toggle
     const mobileMenuBtn = document.getElementById('mobile-menu-btn');
