@@ -138,11 +138,15 @@ export default function Messages() {
       <main className="h-screen w-full flex flex-col bg-background">
         <header className="px-4 h-24 pt-10 pb-4 bg-zinc-900/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between shrink-0 sticky top-0 z-50">
           <div className="flex items-center gap-4">
-            {JSON.parse(localStorage.getItem('user') || '{}')?.role === 'admin' && (
-              <button onClick={() => setActiveChat(null)} className="w-10 h-10 flex items-center justify-center text-white active:scale-90 transition-transform">
-                <span className="material-symbols-outlined">arrow_back_ios_new</span>
-              </button>
-            )}
+            <button onClick={() => {
+               if (JSON.parse(localStorage.getItem('user') || '{}')?.role === 'admin') {
+                 setActiveChat(null);
+               } else {
+                 navigate('/feed');
+               }
+            }} className="w-10 h-10 flex items-center justify-center text-white active:scale-90 transition-transform">
+              <span className="material-symbols-outlined">arrow_back_ios_new</span>
+            </button>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activeChat.username}`} className="w-full h-full object-cover" alt="User" />
@@ -189,16 +193,16 @@ export default function Messages() {
           <div ref={chatEndRef}></div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-zinc-950/80 backdrop-blur-xl border-t border-white/5 pb-8">
+        <div className="fixed bottom-[104px] left-0 right-0 p-4 bg-zinc-950/20 backdrop-blur-md pb-4 z-[70]">
           <form onSubmit={sendMessage} className="flex gap-2 max-w-2xl mx-auto">
             <input 
               type="text" 
               value={textInput}
               onChange={e => setTextInput(e.target.value)}
               placeholder="Send a message..." 
-              className="flex-1 bg-zinc-900 border border-white/10 text-white rounded-full py-4 px-6 focus:outline-none focus:border-lime-400 focus:bg-zinc-800 transition-all text-sm font-body-md"
+              className="flex-1 bg-zinc-900/90 border border-white/10 text-white rounded-full py-4 px-6 focus:outline-none focus:border-lime-400 focus:bg-zinc-800 transition-all text-sm font-body-md shadow-2xl"
             />
-            <button type="submit" disabled={!textInput.trim()} className="w-14 h-14 bg-lime-400 text-black rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 active:scale-90 transition-transform shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+            <button type="submit" disabled={!textInput.trim()} className="w-14 h-14 bg-lime-400 text-black rounded-full flex items-center justify-center shrink-0 disabled:opacity-50 active:scale-90 transition-transform shadow-[0_0_20px_rgba(204,255,0,0.4)]">
               <span className="material-symbols-outlined font-bold">send</span>
             </button>
           </form>
