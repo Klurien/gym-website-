@@ -5,190 +5,90 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        body {
-            background-color: #131313;
-            color: #e5e2e1;
-            font-family: 'Lexend', sans-serif;
-        }
-    </style>
 <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-primary-fixed-variant": "#3c4d00",
-                        "on-primary-fixed": "#161e00",
-                        "outline": "#8e9379",
-                        "on-tertiary-fixed": "#022100",
-                        "on-surface": "#e5e2e1",
-                        "on-error": "#690005",
-                        "tertiary": "#ffffff",
-                        "primary-fixed-dim": "#abd600",
-                        "on-primary-container": "#556d00",
-                        "tertiary-fixed": "#79ff5a",
-                        "tertiary-container": "#79ff5a",
-                        "surface-tint": "#abd600",
-                        "surface-container": "#201f1f",
-                        "on-surface-variant": "#c4c9ac",
-                        "outline-variant": "#444933",
-                        "on-secondary-fixed-variant": "#474746",
-                        "secondary-fixed-dim": "#c8c6c5",
-                        "secondary-container": "#474746",
-                        "surface-variant": "#353534",
-                        "on-tertiary-container": "#137500",
-                        "on-tertiary-fixed-variant": "#0b5300",
-                        "secondary": "#c8c6c5",
-                        "on-secondary": "#313030",
-                        "primary": "#ffffff",
-                        "inverse-on-surface": "#313030",
-                        "surface-container-highest": "#353534",
-                        "on-background": "#e5e2e1",
-                        "error": "#ffb4ab",
-                        "error-container": "#93000a",
-                        "primary-fixed": "#c3f400",
-                        "on-secondary-fixed": "#1c1b1b",
-                        "inverse-primary": "#506600",
-                        "primary-container": "#c3f400",
-                        "inverse-surface": "#e5e2e1",
-                        "secondary-fixed": "#e5e2e1",
-                        "surface-container-high": "#2a2a2a",
-                        "surface": "#131313",
-                        "on-error-container": "#ffdad6",
-                        "tertiary-fixed-dim": "#2de500",
-                        "on-tertiary": "#053900",
-                        "on-primary": "#283500",
-                        "background": "#131313",
-                        "surface-container-lowest": "#0e0e0e",
-                        "surface-dim": "#131313",
-                        "surface-bright": "#3a3939",
-                        "on-secondary-container": "#b7b5b4",
-                        "surface-container-low": "#1c1b1b"
-                    },
-                    "fontFamily": {
-                        "label-sm": ["Lexend"],
-                        "headline-md": ["Lexend"],
-                        "headline-lg": ["Lexend"],
-                        "body-md": ["Lexend"],
-                        "label-bold": ["Lexend"],
-                        "display-xl": ["Lexend"],
-                        "body-lg": ["Lexend"]
-                    },
-                    "fontSize": {
-                        "label-sm": ["12px", {"lineHeight": "1.2", "fontWeight": "500"}],
-                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
-                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "700"}],
-                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
-                        "label-bold": ["14px", {"lineHeight": "1.2", "fontWeight": "700"}],
-                        "display-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
-                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
-                    }
-                }
-            }
-        }
-    </script>
+    tailwind.config={darkMode:"class",theme:{extend:{"colors":{"primary":"#ffffff"},"fontFamily":{"display-xl":["Lexend"]}}}}
+</script>
 <style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-background text-on-background min-h-screen">
-<!-- TopAppBar -->
+    body { background-color: #131313; color: #e5e2e1; font-family: 'Lexend', sans-serif; min-height: max(884px, 100dvh); }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; display: inline-block; line-height: 1; }
+</style>
+</head>
+<body class="bg-[#131313] text-[#e5e2e1] min-h-screen">
 <header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 h-16 bg-zinc-900/80 backdrop-blur-xl rounded-2xl mt-4 mx-5 border border-white/10 shadow-[0px_10px_30px_rgba(204,255,0,0.15)]">
 <div class="flex items-center gap-3">
-<button class="text-lime-400 hover:scale-105 transition-transform duration-200 active:scale-95 transition-all">
-<span class="material-symbols-outlined">menu</span>
-</button>
+<button class="text-lime-400 hover:scale-105 transition-transform duration-200 active:scale-95 transition-all"><span class="material-symbols-outlined">menu</span></button>
 <h1 class="font-lexend font-black tracking-tighter uppercase text-xl text-lime-400">KINETIC</h1>
 </div>
 <div class="flex items-center gap-4">
-<button class="text-zinc-500 hover:scale-105 transition-transform duration-200 active:scale-95 transition-all">
-<span class="material-symbols-outlined">notifications</span>
-</button>
-<div class="w-8 h-8 rounded-full border border-lime-400/30 overflow-hidden">
-<img alt="Profile" class="w-full h-full object-cover profile-pic" data-alt="Close-up portrait of a professional athletic trainer with a determined expression in a dark high-tech gym setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW2Q0nBfn9Xx07pbIRfAc6Ghl9JwIrIJ53Gldh6ksdrpN0N8-jqzdazo_PCtQUytNT8Qacot3ON9SEPxKjzDwWxw7tfdPxP5eZXo4edUa0wVSpIWkIvOepsv1POU73Xar1LOG1iWAmNgG7qtlUFKLeTVMg3-zQ_WU_dMktXYKLlJOSt12xO5T0tUrgBT-nRuKgvdi67ylJ8cJbk4x-8gME8dMb5iYwVGyyaytejGrEqrH5g_LJmFsAwSBzoZcJen3EivlatL0tyHcM"/>
-</div>
+<button class="text-zinc-500 hover:scale-105 transition-transform duration-200 active:scale-95 transition-all"><span class="material-symbols-outlined">notifications</span></button>
+<div class="w-8 h-8 rounded-full border border-lime-400/30 overflow-hidden"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW2Q0nBfn9Xx07pbIRfAc6Ghl9JwIrIJ53Gldh6ksdrpN0N8-jqzdazo_PCtQUytNT8Qacot3ON9SEPxKjzDwWxw7tfdPxP5eZXo4edUa0wVSpIWkIvOepsv1POU73Xar1LOG1iWAmNgG7qtlUFKLeTVMg3-zQ_WU_dMktXYKLlJOSt12xO5T0tUrgBT-nRuKgvdi67ylJ8cJbk4x-8gME8dMb5iYwVGyyaytejGrEqrH5g_LJmFsAwSBzoZcJen3EivlatL0tyHcM"/></div>
 </div>
 </header>
-<main class="pt-28 pb-32 px-edge-margin space-y-stack-lg max-w-5xl mx-auto">
-<!-- Header Section -->
+<main class="pt-28 pb-32 px-5 space-y-8 max-w-5xl mx-auto">
 <section class="flex flex-col gap-2">
-<h2 class="font-display-xl text-display-xl text-primary tracking-tighter">DAILY TASKS</h2>
+<h2 class="font-display-xl text-4xl font-bold tracking-tighter text-white">DAILY TASKS</h2>
 <div class="flex items-center gap-3">
 <div class="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">
 <div class="h-full bg-gradient-to-r from-lime-500 to-lime-300 w-[65%]"></div>
 </div>
-<span class="font-label-bold text-label-bold text-lime-400">65% DONE</span>
+<span class="text-xs font-bold text-lime-400">65% DONE</span>
 </div>
 </section>
-<!-- Bento Grid Tasks -->
-<section class="grid grid-cols-1 md:grid-cols-2 gap-gutter" id="workoutsDataArea">
-
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4" id="workoutsDataArea">
+    <!-- User Layout preserved in dynamic mapping -->
 </section>
-<!-- Active Checklist -->
-<div class="md:col-span-2 bg-zinc-900/50 rounded-[24px] border border-white/5 overflow-hidden mt-8">
-<div class="p-container-padding border-b border-white/5 flex justify-between items-center">
-<h3 class="font-headline-md text-headline-md text-primary uppercase">Active Checklist</h3>
+<div class="md:col-span-2 bg-zinc-900/50 rounded-[24px] border border-white/5 overflow-hidden">
+<div class="p-6 border-b border-white/5 flex justify-between items-center">
+<h3 class="text-xl font-bold uppercase text-white">Active Checklist</h3>
 <span class="material-symbols-outlined text-zinc-500">more_horiz</span>
 </div>
 <div class="divide-y divide-white/5">
 <div class="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group">
-<div class="w-6 h-6 rounded border-2 border-lime-400/50 flex items-center justify-center group-hover:bg-lime-400/10 transition-all">
-<span class="material-symbols-outlined text-lime-400 text-sm hidden group-hover:block">check</span>
-</div>
+<div class="w-6 h-6 rounded border-2 border-lime-400/50 flex items-center justify-center group-hover:bg-lime-400/10 transition-all"><span class="material-symbols-outlined text-lime-400 text-sm hidden group-hover:block">check</span></div>
 <span class="font-body-md text-body-md flex-1">Morning Mobility Flow</span>
 <span class="font-label-sm text-label-sm text-zinc-500">08:00 AM</span>
 </div>
+<div class="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group bg-lime-400/5">
+<div class="w-6 h-6 rounded bg-lime-400 flex items-center justify-center"><span class="material-symbols-outlined text-black text-sm font-bold">check</span></div>
+<span class="font-body-md text-body-md flex-1 line-through text-zinc-500">Hydration Goal: 4L</span>
+<span class="font-label-sm text-label-sm text-lime-400/50">DONE</span>
+</div>
+<div class="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="w-6 h-6 rounded border-2 border-zinc-700 flex items-center justify-center"></div>
+<span class="font-body-md text-body-md flex-1">Supplement Stack Check</span>
+<span class="font-label-sm text-label-sm text-zinc-500">09:30 PM</span>
 </div>
 </div>
-</section>
-<!-- Stats Overview -->
-<section class="grid grid-cols-2 md:grid-cols-4 gap-gutter mt-8">
-<div class="bg-zinc-900/50 p-stack-md rounded-[20px] border border-white/5 text-center">
-<p class="font-label-sm text-label-sm text-zinc-500 uppercase">Streak</p>
-<p class="font-display-xl text-[32px] text-lime-400">12</p>
 </div>
-<div class="bg-zinc-900/50 p-stack-md rounded-[20px] border border-white/5 text-center">
-<p class="font-label-sm text-label-sm text-zinc-500 uppercase">Distance</p>
-<p class="font-display-xl text-[32px] text-white" id="stat-dist">0km</p>
+<section class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+<div class="bg-zinc-900/50 p-4 rounded-[20px] border border-white/5 text-center">
+<p class="text-xs text-zinc-500 uppercase font-medium">Streak</p>
+<p class="text-[32px] font-black tracking-tighter text-lime-400">12</p>
 </div>
-<div class="bg-zinc-900/50 p-stack-md rounded-[20px] border border-white/5 text-center">
-<p class="font-label-sm text-label-sm text-zinc-500 uppercase">Calories</p>
-<p class="font-display-xl text-[32px] text-white" id="stat-cals">0k</p>
+<div class="bg-zinc-900/50 p-4 rounded-[20px] border border-white/5 text-center">
+<p class="text-xs text-zinc-500 uppercase font-medium">Distance</p>
+<p class="text-[32px] font-black tracking-tighter text-white" id="stat-dist">0km</p>
 </div>
-<div class="bg-zinc-900/50 p-stack-md rounded-[20px] border border-white/5 text-center">
-<p class="font-label-sm text-label-sm text-zinc-500 uppercase">Sleep</p>
-<p class="font-display-xl text-[32px] text-white">7h</p>
+<div class="bg-zinc-900/50 p-4 rounded-[20px] border border-white/5 text-center">
+<p class="text-xs text-zinc-500 uppercase font-medium">Calories</p>
+<p class="text-[32px] font-black tracking-tighter text-white" id="stat-cals">0k</p>
+</div>
+<div class="bg-zinc-900/50 p-4 rounded-[20px] border border-white/5 text-center">
+<p class="text-xs text-zinc-500 uppercase font-medium">Sleep</p>
+<p class="text-[32px] font-black tracking-tighter text-white">7h</p>
 </div>
 </section>
 </main>
-<!-- BottomNavBar -->
 <nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-around items-center h-20 px-6 bg-zinc-900/90 backdrop-blur-2xl rounded-full mb-8 mx-10 border border-white/5 shadow-[0px_20px_50px_rgba(0,0,0,0.5)]">
-<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-feed.html">
-<span class="material-symbols-outlined">home</span>
-</a>
-<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-messages.html">
-<span class="material-symbols-outlined">chat</span>
-</a>
-<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-calendar.html">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">event_note</span>
-</a>
-<a class="bg-lime-400 text-black rounded-full p-3 shadow-[0_0_20px_rgba(204,255,0,0.6)] active:scale-90 duration-150" href="app-tasks.html">
-<span class="material-symbols-outlined">crisis_alert</span>
-</a>
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-feed.html"><span class="material-symbols-outlined">home</span></a>
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-messages.html"><span class="material-symbols-outlined">chat</span></a>
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-calendar.html"><span class="material-symbols-outlined">event_note</span></a>
+<a class="bg-lime-400 text-black rounded-full p-3 shadow-[0_0_20px_rgba(204,255,0,0.6)] active:scale-90 duration-150" href="app-tasks.html"><span class="material-symbols-outlined">crisis_alert</span></a>
 </nav>
 
 <script>
     const token = localStorage.getItem('token');
     if (!token) window.location.href = 'login.html';
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if(user.profile_pic) document.querySelector('.profile-pic').src = user.profile_pic;
 
     async function loadWorkouts() {
         try {
@@ -203,25 +103,37 @@
                 const container = document.getElementById('workoutsDataArea');
                 
                 if (workouts.length === 0) {
-                    container.innerHTML = '<p class="text-zinc-400 col-span-2">No active tasks today.</p>';
+                    container.innerHTML = '<p class="text-zinc-400 col-span-2 text-center">No active tasks today.</p>';
                 } else {
-                    container.innerHTML = workouts.map(w => {
+                    container.innerHTML = workouts.map((w, i) => {
                         totalDist += (w.distance || 0); totalCals += (w.calories_burned || 0);
+                        const isHighEnergy = i === 0;
                         return `
-                        <div class="bg-zinc-900/50 p-container-padding rounded-[24px] border border-white/5 shadow-2xl relative overflow-hidden group hover:border-lime-400/50 transition-all duration-300">
+                        <div class="bg-zinc-900/50 p-6 rounded-[24px] border border-white/5 shadow-2xl relative overflow-hidden group hover:border-lime-400/50 transition-all duration-300">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <span class="bg-lime-400/10 text-lime-400 text-[10px] font-black px-2 py-1 rounded-full border border-lime-400/20 uppercase tracking-widest">${w.metric_type || 'Training'}</span>
-                                    <h3 class="font-headline-md text-headline-md text-primary mt-2 uppercase">${w.name || 'Workout'}</h3>
+                                    <span class="${isHighEnergy ? 'bg-lime-400/10 text-lime-400 border-lime-400/20' : 'bg-zinc-800 text-zinc-400 border-white/5'} text-[10px] font-black px-2 py-1 rounded-full border uppercase tracking-widest">${w.metric_type || 'Training'}</span>
+                                    <h3 class="text-xl font-bold text-white mt-2 uppercase">${w.name || 'Workout'}</h3>
                                 </div>
-                                <div class="w-12 h-12 rounded-xl bg-lime-400 flex items-center justify-center shadow-[0_0_20px_rgba(204,255,0,0.4)]">
-                                    <span class="material-symbols-outlined text-black font-bold">fitness_center</span>
+                                <div class="w-12 h-12 rounded-xl ${isHighEnergy ? 'bg-lime-400 shadow-[0_0_20px_rgba(204,255,0,0.4)]' : 'bg-zinc-800 border border-white/10'} flex items-center justify-center">
+                                    <span class="material-symbols-outlined ${isHighEnergy ? 'text-black font-bold' : 'text-lime-400'}">${isHighEnergy ? 'fitness_center' : 'restaurant'}</span>
                                 </div>
                             </div>
-                            <p class="font-body-md text-body-md text-zinc-400 mb-6">Duration: ${w.duration}m | Calories: ${w.calories_burned}</p>
+                            <p class="text-zinc-400 text-sm mb-6">${w.duration}m | ${w.calories_burned} Calories | Focus on explosive power.</p>
+                            ${isHighEnergy ? `
                             <div class="flex items-center justify-between">
-                                <button class="bg-lime-400 text-black font-label-bold text-label-bold px-6 py-2 rounded-full hover:scale-105 active:scale-95 transition-all">COMPLETE</button>
-                            </div>
+                                <div class="flex -space-x-2">
+                                    <div class="w-8 h-8 rounded-full border-2 border-zinc-900"><img class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuNtPePjL4zkxIhCKuNs175WACc-Pn5VP0KvbRTJ-peHSKzXE3DBx92KwGXEIlO2WfKSn-dzwh0NVQxJJvG2i7ZBGhdp6glYOds-Pj7jq2-J9usAXSBxJxnPw2jRGRaqj_lwdGx_2f3bdjh5gCPvMG_vUtdoeKuTYWZvd-NavFIrh1U45EndxpkYU-eBzGiNVR2sBDTUANQXSw70ZN4O-wQuqyy_YxL6dCqHxyJI5M1P9P3sRG0gC7AlIhj4FxDQartMYz8keiLWs3"/></div>
+                                    <div class="w-8 h-8 rounded-full border-2 border-zinc-900 bg-zinc-800 flex items-center justify-center text-xs text-lime-400">+3</div>
+                                </div>
+                                <button class="bg-lime-400 text-black font-bold text-xs px-6 py-2 rounded-full hover:scale-105 active:scale-95 transition-all">COMPLETE</button>
+                            </div>` : `
+                            <div class="flex items-center gap-2">
+                                <div class="w-full bg-zinc-800 h-2 rounded-full">
+                                    <div class="h-full bg-lime-400 w-1/3 rounded-full"></div>
+                                </div>
+                                <span class="text-xs text-zinc-500 whitespace-nowrap">2/6 items</span>
+                            </div>`}
                         </div>
                         `;
                     }).join('');
@@ -230,9 +142,7 @@
                 document.getElementById('stat-dist').innerText = totalDist.toFixed(1) + 'km';
                 document.getElementById('stat-cals').innerText = (totalCals > 999 ? (totalCals/1000).toFixed(1) + 'k' : totalCals);
             }
-        } catch (err) {
-            console.error(err);
-        }
+        } catch (err) { console.error(err); }
     }
     document.addEventListener('DOMContentLoaded', loadWorkouts);
 </script>

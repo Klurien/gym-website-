@@ -3,107 +3,106 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config={darkMode:"class",theme:{extend:{"colors":{"primary":"#ffffff"},"fontFamily":{"display-xl":["Lexend"]}}}}
+</script>
 <style>
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48; }
-        body { font-family: 'Lexend', sans-serif; background-color: #131313; overflow: hidden; }
+    body { background-color: #131313; font-family: 'Lexend', sans-serif; overflow: hidden; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
 </style>
 </head>
-<body class="bg-background text-on-background min-h-screen overflow-hidden">
-<header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 h-16 bg-zinc-900/80 backdrop-blur-xl rounded-2xl mt-4 mx-5 border border-white/10 shadow-[0px_10px_30px_rgba(204,255,0,0.15)]">
-<button class="text-lime-400 hover:scale-105 active:scale-95 transition-all"><span class="material-symbols-outlined">arrow_back</span></button>
-<div class="flex flex-col items-center">
-<h1 class="text-xl font-black text-lime-400 font-lexend tracking-tighter uppercase">KINETIC LIVE</h1>
+<body class="bg-black text-white h-[100dvh] w-screen overflow-hidden">
+<header class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 h-16 bg-zinc-900/40 backdrop-blur-xl rounded-2xl mt-4 mx-5 border border-white/10 shadow-[0px_10px_30px_rgba(0,0,0,0.5)]">
+<button class="active:scale-95 transition-all text-lime-400" onclick="window.history.back()"><span class="material-symbols-outlined">menu</span></button>
+<div class="flex flex-col items-center justify-center leading-none mt-1">
+<h1 class="text-xl font-black text-lime-400 font-lexend tracking-tighter uppercase mb-0.5">KINETIC</h1>
+<p class="text-[9px] text-zinc-400 uppercase tracking-widest font-bold">Alex Rivers</p>
 </div>
 <div class="flex items-center gap-4">
-<div class="w-8 h-8 rounded-full border border-lime-400 p-0.5 overflow-hidden">
-<img class="w-full h-full rounded-full object-cover profile-pic" src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop"/>
-</div>
+<button class="text-zinc-400"><span class="material-symbols-outlined">notifications</span></button>
+<div class="w-8 h-8 rounded-full border border-lime-400 overflow-hidden"><img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW2Q0nBfn9Xx07pbIRfAc6Ghl9JwIrIJ53Gldh6ksdrpN0N8-jqzdazo_PCtQUytNT8Qacot3ON9SEPxKjzDwWxw7tfdPxP5eZXo4edUa0wVSpIWkIvOepsv1POU73Xar1LOG1iWAmNgG7qtlUFKLeTVMg3-zQ_WU_dMktXYKLlJOSt12xO5T0tUrgBT-nRuKgvdi67ylJ8cJbk4x-8gME8dMb5iYwVGyyaytejGrEqrH5g_LJmFsAwSBzoZcJen3EivlatL0tyHcM"/></div>
 </div>
 </header>
-<main class="h-screen w-full relative" id="liveContainer">
-    <div class="absolute inset-0 flex items-center justify-center">
-        <p class="text-lime-400 font-bold animate-pulse text-lg">Loading Feed...</p>
-    </div>
+<main class="h-full w-full relative" id="liveContainer">
+<!-- Dynamic feed will inject here -->
 </main>
-
-<nav class="fixed bottom-0 left-0 right-0 z-[60] flex justify-around items-center h-20 px-6 bg-zinc-900/90 backdrop-blur-2xl rounded-full mb-8 mx-10 border border-white/5 shadow-[0px_20px_50px_rgba(0,0,0,0.5)]">
-<button class="text-zinc-500 p-3 hover:text-lime-400 active:scale-90 transition-all" onclick="window.location.href='app-feed.html'"><span class="material-symbols-outlined">home</span></button>
-<button class="text-zinc-500 p-3 hover:text-lime-400 active:scale-90 transition-all" onclick="window.location.href='app-messages.html'"><span class="material-symbols-outlined">chat</span></button>
-<button class="text-zinc-500 p-3 hover:text-lime-400 active:scale-90 transition-all" onclick="window.location.href='app-calendar.html'"><span class="material-symbols-outlined">event_note</span></button>
-<button class="bg-lime-400 text-black rounded-full p-3 shadow-[0_0_20px_rgba(204,255,0,0.6)] active:scale-90 transition-all"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span></button>
+<nav class="fixed bottom-0 left-0 right-0 z-[60] flex justify-around items-center h-20 px-6 bg-zinc-900/90 backdrop-blur-2xl rounded-full mb-8 mx-10 border border-white/5 shadow-[0px_20px_50px_rgba(0,0,0,0.5)] flex-none">
+<a class="bg-lime-400 text-black rounded-full p-3 shadow-[0_0_20px_rgba(204,255,0,0.6)] active:scale-90 duration-150" href="app-feed.html"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span></a>
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-messages.html"><span class="material-symbols-outlined">chat</span></a>
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-calendar.html"><span class="material-symbols-outlined">event_note</span></a>
+<a class="text-zinc-500 p-3 hover:text-lime-400 transition-colors active:scale-90 duration-150" href="app-tasks.html"><span class="material-symbols-outlined">crisis_alert</span></a>
 </nav>
 
 <script>
     const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (!token) window.location.href = 'login.html';
-    if(user.profile_pic) document.querySelector('.profile-pic').src = user.profile_pic;
 
     async function loadLiveFeed() {
         try {
-            const response = await fetch('/api/posts', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+            const response = await fetch('/api/posts', { headers: { 'Authorization': 'Bearer ' + token } });
             const allPosts = await response.json();
-            const posts = allPosts.filter(p => true); // In real app, filter where type='live'. Doing all for prototyping.
-
-            if (posts.length === 0) {
-                document.getElementById('liveContainer').innerHTML = "<div class='h-full flex items-center justify-center text-zinc-500'>No active streams.</div>";
-                return;
-            }
+            const posts = allPosts.filter(p => true); 
+            if (posts.length === 0) return;
 
             const post = posts[0];
-
             document.getElementById('liveContainer').innerHTML = `
-            <div class="absolute inset-0 z-0">
-                <img class="w-full h-full object-cover grayscale brightness-50 contrast-125" src="${post.media_url || 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop'}"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60"></div>
+            <div class="absolute inset-0 z-0 h-[100dvh]">
+                <img class="w-full h-full object-cover grayscale brightness-[0.35] contrast-125" src="${post.media_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBSEjHP7QrRZn36afYXkYWwhYMzgsOeYHS1skaXUClEJrCEBYSXYPrCqtDIpKrZ7zQImqCZdnx2if-obOliXGrFkS-IhxiezKagtuXvacy978-LeN5yPBQe7EEbbsgd6H260sALF_bxu2HZMawJHmBZeHBUF-C3bTwHqd191HTZ9aus5dwyDHchV28CuBKMfY59RJ_oezS06FSoRbqb45me7-nWyy7nmFBJAxU196YIy1bvBirwGVLMRrEa2SZac5fXpi-DDtqdADiY'}"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent h-[100dvh]"></div>
             </div>
-
             <div class="relative h-full w-full flex flex-col justify-end p-6 pb-32">
-                <div class="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-10">
+                <div class="absolute right-4 bottom-32 flex flex-col items-center gap-6 z-10 w-16">
                     <div class="flex flex-col items-center group">
-                        <button class="w-14 h-14 bg-zinc-900/60 backdrop-blur-md rounded-full flex flex-col items-center justify-center border border-white/10 active:scale-90 transition-all ${post.is_liked ? 'text-red-500' : 'text-white'}" onclick="toggleLike(${post.id}, this)">
-                            <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' ${post.is_liked ? 1 : 0}, 'opsz' 32;">favorite</span>
-                            <span class="text-[10px] font-bold mt-1 likes-count">${post.likes_count || 0}</span>
+                        <button class="w-14 h-14 bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-full flex flex-col items-center justify-center active:scale-90 transition-all ${post.is_liked ? 'text-red-500' : 'text-white'}" onclick="toggleLike(${post.id}, this)">
+                            <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' ${post.is_liked ? 1 : 1}">favorite</span>
                         </button>
+                        <span class="text-[11px] font-bold mt-2 shadow-black drop-shadow-md likes-count">${post.likes_count || '42.8K'}</span>
                     </div>
                     <div class="flex flex-col items-center">
-                        <button class="w-14 h-14 bg-zinc-900/60 backdrop-blur-md rounded-full flex flex-col items-center justify-center text-white border border-white/10 active:scale-90 transition-all" onclick="window.location.href='app-messages.html'">
-                            <span class="material-symbols-outlined">chat</span>
-                            <span class="text-[10px] font-bold mt-1">${post.comments_count || 0}</span>
+                        <button class="w-14 h-14 bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-full flex flex-col items-center justify-center text-white active:scale-90 transition-all font-bold" onclick="window.location.href='app-messages.html'">
+                            <span class="material-symbols-outlined text-[28px]">chat</span>
                         </button>
+                        <span class="text-[11px] font-bold mt-2 shadow-black drop-shadow-md">1.2K</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <button class="w-14 h-14 bg-zinc-900/40 backdrop-blur-xl border border-white/10 rounded-full flex flex-col items-center justify-center text-white active:scale-90 transition-all font-bold">
+                            <span class="material-symbols-outlined text-[28px]">share</span>
+                        </button>
+                        <span class="text-[11px] font-bold mt-2 shadow-black drop-shadow-md capitalize">Share</span>
                     </div>
                 </div>
 
-                <div class="max-w-[70%] space-y-4">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-lime-400 text-black px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">Live Session</div>
-                        <span class="text-white font-bold text-2xl">${post.title || 'Peak Velocity'}</span>
+                <div class="max-w-[75%] space-y-4 mb-4">
+                    <div class="flex flex-col gap-3">
+                        <div class="bg-lime-400 text-black px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter inline-flex w-max shadow-[0_0_15px_rgba(204,255,0,0.5)]">Live Session</div>
+                        <h2 class="text-white font-display-xl text-5xl font-bold leading-tight tracking-tighter">${post.title || 'Peak Velocity Squats'}</h2>
                     </div>
-                    <p class="text-zinc-300 text-sm line-clamp-2">${post.description || 'Pushing past the threshold today.'}</p>
-                    
-                    <div class="flex gap-4 pt-2">
+                    <p class="text-zinc-300 text-base leading-snug line-clamp-2">${post.description || 'Pushing past the threshold today. Focus on explosive...'}</p>
+                    <div class="flex gap-4 pt-2 pb-6">
                         <div class="bg-zinc-900/40 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3">
-                            <span class="material-symbols-outlined text-lime-400">timer</span>
+                            <span class="material-symbols-outlined text-lime-400" style="font-variation-settings: 'FILL' 1;">timer</span>
                             <div>
-                                <div class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">Duration</div>
-                                <div class="text-white text-sm font-bold">45:00</div>
+                                <div class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest leading-none">Duration</div>
+                                <div class="text-white text-base font-bold leading-none mt-1">45:00</div>
+                            </div>
+                        </div>
+                        <div class="bg-zinc-900/40 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3 hidden md:flex">
+                            <span class="material-symbols-outlined text-lime-400" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                            <div>
+                                <div class="text-zinc-500 text-[10px] uppercase font-bold tracking-widest leading-none">Intensity</div>
+                                <div class="text-white text-base font-bold leading-none mt-1">X-9</div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="absolute bottom-24 left-6 right-6 h-1 bg-white/20 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-[#33FF00] to-[#CCFF00] w-[65%] shadow-[0_0_10px_rgba(204,255,0,0.8)]"></div>
+                <div class="absolute bottom-28 left-6 right-[90px] h-1 bg-white/20 rounded-full overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-lime-500 to-lime-300 w-[20%] shadow-[0_0_10px_rgba(204,255,0,0.8)] rounded-full"></div>
                 </div>
             </div>`;
-            
-        } catch (err) {
-            console.error(err);
-        }
+        } catch (e) {}
     }
 
     window.toggleLike = async function(postId, btnEl) {
@@ -116,24 +115,18 @@
             if (res.ok) {
                 const data = await res.json();
                 const icon = btnEl.querySelector('.material-symbols-outlined');
-                const countSpan = btnEl.querySelector('.likes-count');
-                let count = parseInt(countSpan.innerText || "0");
-                
-                if (data.status === 'added') {
-                    btnEl.classList.remove('text-white');
-                    btnEl.classList.add('text-red-500');
-                    icon.style.fontVariationSettings = "'FILL' 1, 'opsz' 32";
-                    countSpan.innerText = count + 1;
-                } else {
-                    btnEl.classList.add('text-white');
-                    btnEl.classList.remove('text-red-500');
-                    icon.style.fontVariationSettings = "'FILL' 0, 'opsz' 32";
-                    countSpan.innerText = count - 1;
+                const countSpan = btnEl.parentElement.querySelector('.likes-count');
+                let countStr = countSpan.innerText;
+                if(countStr.includes('K')) { countSpan.innerText = countStr; } else {
+                    let count = parseInt(countStr || "0");
+                    if (data.status === 'added') {
+                        btnEl.classList.remove('text-white'); btnEl.classList.add('text-red-500'); countSpan.innerText = count + 1;
+                    } else {
+                        btnEl.classList.add('text-white'); btnEl.classList.remove('text-red-500'); countSpan.innerText = count - 1;
+                    }
                 }
             }
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) {}
     };
 
     document.addEventListener('DOMContentLoaded', loadLiveFeed);
