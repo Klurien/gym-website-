@@ -1,6 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const getEmbedUrl = (url) => {
+  if (!url) return null;
+  
+  // YouTube
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  
+  // TikTok
+  const ttMatch = url.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/v2\/)(\d+)/);
+  if (ttMatch) return `https://www.tiktok.com/embed/v2/${ttMatch[1]}`;
+  
+  // Instagram
+  const igMatch = url.match(/instagram\.com\/(?:p|reels|reel)\/([\w-]+)/);
+  if (igMatch) return `https://www.instagram.com/reels/${igMatch[1]}/embed`;
+
+  return null;
+};
+
 export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -204,6 +222,14 @@ export default function Feed() {
                     loop 
                     muted 
                     playsInline
+                  />
+                ) : getEmbedUrl(post.media_url) ? (
+                  <iframe 
+                    src={getEmbedUrl(post.media_url)}
+                    className="w-full h-full absolute inset-0 rounded-none"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
                   />
                 ) : (
                   <img 
