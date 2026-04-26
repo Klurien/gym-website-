@@ -164,7 +164,7 @@ export default function Feed() {
             <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-zinc-900 flex flex-col">
               {/* Media Background */}
               <div className="absolute inset-0 z-0">
-                {post.type === 'video' ? (
+                {post.media_url?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
                   <video 
                     src={post.media_url} 
                     className="w-full h-full object-cover"
@@ -252,13 +252,13 @@ export default function Feed() {
           <div className="relative bg-zinc-900 border border-white/10 rounded-[32px] p-6 w-full max-w-sm shadow-2xl">
             <h2 className="text-xl font-black text-white mb-6 uppercase tracking-tighter">New Global Post</h2>
             <form onSubmit={handleCreatePost} className="space-y-4">
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setPostForm({...postForm, type: 'static'})} className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${postForm.type === 'static' ? 'bg-lime-400 text-black border-lime-400' : 'bg-black/40 text-zinc-500 border-white/5'}`}>Image</button>
-                <button type="button" onClick={() => setPostForm({...postForm, type: 'video'})} className={`flex-1 py-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${postForm.type === 'video' ? 'bg-lime-400 text-black border-lime-400' : 'bg-black/40 text-zinc-500 border-white/5'}`}>Video</button>
-              </div>
               <input required type="text" placeholder="Post Title" value={postForm.title} onChange={e => setPostForm({...postForm, title: e.target.value})} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 transition-all outline-none" />
               <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({...postForm, description: e.target.value})} className="w-full h-24 bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 resize-none outline-none"></textarea>
-              <input type="text" placeholder={postForm.type === 'video' ? "MP4 Video URL" : "Image URL"} value={postForm.media_url} onChange={e => setPostForm({...postForm, media_url: e.target.value})} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 text-sm outline-none" />
+              <input type="text" placeholder="Media URL (Image or Video)" value={postForm.media_url} onChange={e => {
+                const url = e.target.value;
+                const type = url.match(/\.(mp4|webm|ogg|mov)$|video/i) ? 'video' : 'static';
+                setPostForm({...postForm, media_url: url, type});
+              }} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 text-sm outline-none" />
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 bg-zinc-800 text-white font-bold py-4 rounded-2xl hover:bg-zinc-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 bg-lime-400 text-black font-black py-4 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">Publish</button>
