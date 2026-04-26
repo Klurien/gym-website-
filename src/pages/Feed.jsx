@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 const getEmbedUrl = (url) => {
   if (!url) return null;
   
-  // YouTube
-  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  // YouTube (supports watch, embed, v, shorts, live, and youtu.be)
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|live\/|.+\?v=))([\w-]{11})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&playlist=${ytMatch[1]}&loop=1`;
   
-  // TikTok
-  const ttMatch = url.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/v2\/)(\d+)/);
+  // TikTok (supports @user/video, embed/v2, and mobile links where ID is present)
+  const ttMatch = url.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/v2\/|v\/)([\d]+)/);
   if (ttMatch) return `https://www.tiktok.com/embed/v2/${ttMatch[1]}`;
   
   // Instagram
