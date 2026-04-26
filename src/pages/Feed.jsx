@@ -3,16 +3,15 @@ import { useNavigate } from 'react-router-dom';
 
 const getEmbedUrl = (url) => {
   if (!url) return null;
-  
-  // YouTube (supports watch, embed, v, shorts, live, and youtu.be)
-  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|live\/|.+\?v=))([\w-]{11})/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&playlist=${ytMatch[1]}&loop=1&rel=0&modestbranding=1`;
-  
-  // TikTok (supports @user/video, embed/v2, and mobile links where ID is present)
-  // Matching numeric IDs (standard) or alphanumeric IDs (if they exist)
+
+  // YouTube (supports watch, embed, shorts, youtu.be)
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|live\/))([\w-]{11})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&loop=1&playlist=${ytMatch[1]}&modestbranding=1&rel=0`;
+
+  // TikTok (supports @user/video, embed/v2, etc.)
   const ttMatch = url.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/v2\/|v\/|t\/)([\d\w]+)/);
   if (ttMatch) return `https://www.tiktok.com/embed/v2/${ttMatch[1]}`;
-  
+
   // Instagram
   const igMatch = url.match(/instagram\.com\/(?:p|reels|reel)\/([\w-]+)/);
   if (igMatch) return `https://www.instagram.com/reels/${igMatch[1]}/embed`;
@@ -53,7 +52,7 @@ export default function Feed() {
       navigate('/auth');
       return;
     }
-    
+
     try {
       const res = await fetch('/api/posts', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -121,15 +120,15 @@ export default function Feed() {
       console.error(e);
     }
   };
-  
+
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     setUploading(true);
     const formData = new FormData();
     formData.append('file', file);
-    
+
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -137,10 +136,10 @@ export default function Feed() {
       });
       if (res.ok) {
         const data = await res.json();
-        setPostForm(prev => ({ 
-          ...prev, 
-          media_url: data.url, 
-          type: file.type.startsWith('video/') ? 'video' : 'static' 
+        setPostForm(prev => ({
+          ...prev,
+          media_url: data.url,
+          type: file.type.startsWith('video/') ? 'video' : 'static'
         }));
       } else {
         alert('Upload failed');
@@ -207,58 +206,58 @@ export default function Feed() {
           </div>
         ) : posts.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold gap-4">
-             <span className="material-symbols-outlined text-4xl opacity-30">movie_filter</span>
-             No Elite Clips Yet
+            <span className="material-symbols-outlined text-4xl opacity-30">movie_filter</span>
+            No Elite Clips Yet
           </div>
         ) : (
           posts.map(post => (
             <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-zinc-900 flex flex-col">
               {/* Media Background */}
               <div className="absolute inset-0 z-0 bg-black">
-                {/* Gradient behind media for contrast fallback */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-0 pointer-events-none"></div>
-                
                 {post.media_url?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
-                  <video 
-                    src={post.media_url} 
-                    className="relative z-10 w-full h-full object-cover"
-                    autoPlay 
-                    loop 
-                    muted 
+                  <video
+                    src={post.media_url}
+                    className="w-full h-full object-cover relative z-0"
+                    autoPlay
+                    loop
+                    muted
                     playsInline
                   />
                 ) : getEmbedUrl(post.media_url) ? (
-                  <iframe 
+                  <iframe
                     src={getEmbedUrl(post.media_url)}
-                    className="relative z-10 w-full h-full border-0"
+                    className="w-full h-full absolute inset-0 border-0 z-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
+                    title="Social Video"
                   />
                 ) : (
-                  <img 
-                    src={post.media_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"} 
-                    className="relative z-10 w-full h-full object-cover"
+                  <img
+                    src={post.media_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"}
+                    className="w-full h-full object-cover relative z-0"
                     alt={post.title}
                   />
                 )}
+                {/* Visual Gradient (pointer-events-none to let clicks through to video) */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10 pointer-events-none"></div>
               </div>
 
-              {/* Branding & Tags Overlay */}
+              {/* Branding & Tags Overlay (z-20 to be on top but pointer-events-none) */}
               <div className="absolute top-6 left-6 z-20 flex flex-col gap-2 pointer-events-none">
                 <div className="flex items-center gap-2 pointer-events-auto">
-                   <div className="w-8 h-8 rounded-full border border-lime-400/50 overflow-hidden shadow-xl">
-                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.trainer_name}`} className="w-full h-full" alt="Trainer" />
-                   </div>
-                   <span className="text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">@{post.trainer_name || 'Coach'}</span>
+                  <div className="w-8 h-8 rounded-full border border-lime-400/50 overflow-hidden shadow-xl">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.trainer_name}`} className="w-full h-full" alt="Trainer" />
+                  </div>
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">@{post.trainer_name || 'Coach'}</span>
                 </div>
                 {post.tags && (
-                   <span className="bg-white/10 backdrop-blur-md text-white px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-white/10 w-fit pointer-events-auto">
-                     #{post.tags}
-                   </span>
+                  <span className="bg-white/10 backdrop-blur-md text-white px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-white/10 w-fit pointer-events-auto">
+                    #{post.tags}
+                  </span>
                 )}
               </div>
 
-              {/* Description Overlay */}
+              {/* Description Overlay (z-20 but pointer-events-none) */}
               <div className="absolute bottom-8 left-6 right-20 z-20 pointer-events-none">
                 <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg pointer-events-auto">{post.title}</h2>
                 <p className="text-xs text-zinc-300 line-clamp-3 font-body-md opacity-90 drop-shadow-lg pointer-events-auto">{post.description}</p>
@@ -267,7 +266,7 @@ export default function Feed() {
               {/* Side Action Bar (Vertical) */}
               <div className="absolute right-4 bottom-12 z-20 flex flex-col gap-6 items-center">
                 <div className="flex flex-col items-center gap-1">
-                  <button 
+                  <button
                     onClick={() => handleLike(post.id, post.is_liked)}
                     className={`w-12 h-12 rounded-full backdrop-blur-xl flex items-center justify-center transition-all active:scale-75 shadow-2xl ${post.is_liked ? 'bg-lime-400 text-black shadow-lime-400/30' : 'bg-black/40 text-white border border-white/10'}`}
                   >
@@ -277,7 +276,7 @@ export default function Feed() {
                 </div>
 
                 <div className="flex flex-col items-center gap-1">
-                  <button 
+                  <button
                     onClick={() => openComments(post.id)}
                     className="w-12 h-12 bg-black/40 backdrop-blur-xl text-white rounded-full flex items-center justify-center border border-white/10 shadow-2xl active:scale-75"
                   >
@@ -297,8 +296,8 @@ export default function Feed() {
 
       {/* Floating Create Post Button */}
       {user.role === 'admin' && (
-        <button 
-          onClick={() => setShowPostModal(true)} 
+        <button
+          onClick={() => setShowPostModal(true)}
           className="fixed bottom-32 right-6 w-14 h-14 bg-lime-400 text-black rounded-2xl shadow-[0_10px_40px_rgba(204,255,0,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40"
         >
           <span className="material-symbols-outlined text-3xl font-bold">add</span>
@@ -312,16 +311,16 @@ export default function Feed() {
           <div className="relative bg-zinc-900 border border-white/10 rounded-[32px] p-6 w-full max-w-sm shadow-2xl">
             <h2 className="text-xl font-black text-white mb-6 uppercase tracking-tighter">New Global Post</h2>
             <form onSubmit={handleCreatePost} className="space-y-4">
-              <input required type="text" placeholder="Post Title" value={postForm.title} onChange={e => setPostForm({...postForm, title: e.target.value})} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 transition-all outline-none" />
-              <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({...postForm, description: e.target.value})} className="w-full h-24 bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 resize-none outline-none"></textarea>
+              <input required type="text" placeholder="Post Title" value={postForm.title} onChange={e => setPostForm({ ...postForm, title: e.target.value })} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 transition-all outline-none" />
+              <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({ ...postForm, description: e.target.value })} className="w-full h-24 bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 resize-none outline-none"></textarea>
               <div className="relative group">
                 <input type="text" placeholder="Media URL (Image or Video)" value={postForm.media_url} onChange={e => {
                   const url = e.target.value;
                   const type = url.match(/\.(mp4|webm|ogg|mov)$|video/i) ? 'video' : 'static';
-                  setPostForm({...postForm, media_url: url, type});
+                  setPostForm({ ...postForm, media_url: url, type });
                 }} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 pr-12 focus:border-lime-400 text-sm outline-none" />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   disabled={uploading}
                   onClick={() => fileInputRef.current.click()}
                   className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 text-lime-400 flex items-center justify-center hover:bg-lime-400 hover:text-black transition-all"
@@ -349,7 +348,7 @@ export default function Feed() {
               <div className="w-12 h-1 bg-white/20 rounded-full mb-3 cursor-pointer" onClick={() => setShowCommentsModal(null)}></div>
               <h2 className="text-white font-black uppercase text-sm tracking-widest">Post Comments</h2>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {loadingComments ? (
                 <div className="flex justify-center p-10"><span className="material-symbols-outlined animate-spin text-lime-400">refresh</span></div>
@@ -375,11 +374,11 @@ export default function Feed() {
 
             <div className="p-6 border-t border-white/5 bg-zinc-950 pb-10">
               <form onSubmit={postComment} className="flex gap-2 bg-zinc-900 rounded-full p-1 border border-white/10 ring-2 ring-transparent focus-within:ring-lime-400/20 transition-all">
-                <input 
-                  type="text" 
-                  value={newComment} 
-                  onChange={e => setNewComment(e.target.value)} 
-                  placeholder="Share your thoughts..." 
+                <input
+                  type="text"
+                  value={newComment}
+                  onChange={e => setNewComment(e.target.value)}
+                  placeholder="Share your thoughts..."
                   className="flex-1 bg-transparent text-white rounded-full py-3 px-6 outline-none text-sm"
                 />
                 <button type="submit" disabled={!newComment.trim()} className="w-12 h-12 bg-lime-400 text-black rounded-full flex items-center justify-center shrink-0 disabled:opacity-90 active:scale-90 transition-all">
