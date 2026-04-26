@@ -6,10 +6,11 @@ const getEmbedUrl = (url) => {
   
   // YouTube (supports watch, embed, v, shorts, live, and youtu.be)
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|live\/|.+\?v=))([\w-]{11})/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&playlist=${ytMatch[1]}&loop=1`;
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&playlist=${ytMatch[1]}&loop=1&rel=0&modestbranding=1`;
   
   // TikTok (supports @user/video, embed/v2, and mobile links where ID is present)
-  const ttMatch = url.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/v2\/|v\/)([\d]+)/);
+  // Matching numeric IDs (standard) or alphanumeric IDs (if they exist)
+  const ttMatch = url.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/v2\/|v\/|t\/)([\d\w]+)/);
   if (ttMatch) return `https://www.tiktok.com/embed/v2/${ttMatch[1]}`;
   
   // Instagram
@@ -213,11 +214,14 @@ export default function Feed() {
           posts.map(post => (
             <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-zinc-900 flex flex-col">
               {/* Media Background */}
-              <div className="absolute inset-0 z-0">
+              <div className="absolute inset-0 z-0 bg-black">
+                {/* Gradient behind media for contrast fallback */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-0 pointer-events-none"></div>
+                
                 {post.media_url?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
                   <video 
                     src={post.media_url} 
-                    className="w-full h-full object-cover"
+                    className="relative z-10 w-full h-full object-cover"
                     autoPlay 
                     loop 
                     muted 
@@ -226,40 +230,38 @@ export default function Feed() {
                 ) : getEmbedUrl(post.media_url) ? (
                   <iframe 
                     src={getEmbedUrl(post.media_url)}
-                    className="w-full h-full absolute inset-0 rounded-none"
-                    frameBorder="0"
+                    className="relative z-10 w-full h-full border-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                   />
                 ) : (
                   <img 
                     src={post.media_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"} 
-                    className="w-full h-full object-cover"
+                    className="relative z-10 w-full h-full object-cover"
                     alt={post.title}
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
               </div>
 
               {/* Branding & Tags Overlay */}
-              <div className="absolute top-6 left-6 z-10 flex flex-col gap-2">
-                <div className="flex items-center gap-2">
+              <div className="absolute top-6 left-6 z-20 flex flex-col gap-2 pointer-events-none">
+                <div className="flex items-center gap-2 pointer-events-auto">
                    <div className="w-8 h-8 rounded-full border border-lime-400/50 overflow-hidden shadow-xl">
                       <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.trainer_name}`} className="w-full h-full" alt="Trainer" />
                    </div>
                    <span className="text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">@{post.trainer_name || 'Coach'}</span>
                 </div>
                 {post.tags && (
-                   <span className="bg-white/10 backdrop-blur-md text-white px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-white/10 w-fit">
+                   <span className="bg-white/10 backdrop-blur-md text-white px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-white/10 w-fit pointer-events-auto">
                      #{post.tags}
                    </span>
                 )}
               </div>
 
               {/* Description Overlay */}
-              <div className="absolute bottom-8 left-6 right-20 z-10">
-                <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg">{post.title}</h2>
-                <p className="text-xs text-zinc-300 line-clamp-3 font-body-md opacity-90 drop-shadow-lg">{post.description}</p>
+              <div className="absolute bottom-8 left-6 right-20 z-20 pointer-events-none">
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg pointer-events-auto">{post.title}</h2>
+                <p className="text-xs text-zinc-300 line-clamp-3 font-body-md opacity-90 drop-shadow-lg pointer-events-auto">{post.description}</p>
               </div>
 
               {/* Side Action Bar (Vertical) */}
