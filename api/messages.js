@@ -45,6 +45,7 @@ module.exports = async (req, res) => {
             receiver_id INT NOT NULL,
             content TEXT NOT NULL,
             is_read BOOLEAN DEFAULT FALSE,
+            is_delivered BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (sender_id) REFERENCES users(id),
             FOREIGN KEY (receiver_id) REFERENCES users(id)
@@ -134,7 +135,7 @@ module.exports = async (req, res) => {
                 if (isNaN(otherId)) return res.status(400).json({ error: 'Invalid user id' });
 
                 const [messages] = await pool.query(
-                    `SELECT m.id, m.sender_id, m.receiver_id, m.content, m.is_read, m.created_at,
+                    `SELECT m.id, m.sender_id, m.receiver_id, m.content, m.is_read, m.is_delivered, m.created_at,
                             u.username as sender_name
                      FROM messages m
                      JOIN users u ON m.sender_id = u.id

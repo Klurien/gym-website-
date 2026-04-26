@@ -26,8 +26,32 @@ export default function Messages() {
         setIsOtherTyping(isTyping);
       }
     });
+
+    socket.on('message_status_update', ({ message_id, sender_id, status }) => {
+      setMessages(prev => prev.map(m => {
+        if (message_id && m.id === message_id) {
+          return { ...m, is_delivered: status === 'delivered' || m.is_delivered, is_read: status === 'seen' || m.is_read };
+        }
+        if (sender_id && String(m.receiver_id) === String(sender_id)) {
+           return { ...m, is_read: status === 'seen' || m.is_read };
+        }
+        return m;
+      }));
+    });
+
+    socket.on('new_message_ping', ({ sender_id, message_id }) => {
+      if (activeChat && String(activeChat.id) === String(sender_id)) {
+        fetchThread(activeChat.id, true);
+        socket.emit('message_seen', { sender_id: activeChat.id });
+      } else {
+        socket.emit('message_delivered', { message_id, sender_id });
+      }
+    });
+
     return () => {
       socket.off('typing_status');
+      socket.off('message_status_update');
+      socket.off('new_message_ping');
     };
   }, [activeChat]);
 
@@ -113,6 +137,9 @@ export default function Messages() {
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages || []);
+        if (!isPolling && data.messages?.length > 0) {
+           socket.emit('message_seen', { sender_id: userId });
+        }
       }
     } catch (e) {
       console.error(e);
@@ -148,11 +175,15 @@ export default function Messages() {
 
     const token = localStorage.getItem('token');
     try {
-      await fetch('/api/messages', {
+      const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ receiver_id: activeChat.id, content })
       });
+      if (res.ok) {
+        const data = await res.json();
+        socket.emit('send_message_ping', { receiver_id: activeChat.id, message_id: data.id });
+      }
       fetchThread(activeChat.id, true);
     } catch (err) {
       console.error('Message send failed');
@@ -223,10 +254,23 @@ export default function Messages() {
               return (
                 <div key={msg.id || idx} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[75%] p-4 rounded-3xl ${isMine ? 'bg-lime-400 text-black rounded-br-sm shadow-[0_5px_15px_rgba(204,255,0,0.2)]' : 'bg-zinc-800 text-white rounded-bl-sm border border-white/5'}`}>
-                   <p className="font-body-md text-sm">{msg.content}</p>
-                   <span className={`block text-[9px] mt-2 font-bold uppercase tracking-widest ${isMine ? 'text-black/50' : 'text-zinc-500'}`}>
-                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                   </span>
+                    <p className="font-body-md text-sm">{msg.content}</p>
+                    <div className="flex items-center justify-between gap-4 mt-2">
+                      <span className={`block text-[9px] font-bold uppercase tracking-widest ${isMine ? 'text-black/50' : 'text-zinc-500'}`}>
+                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      {isMine && (
+                        <div className="flex items-center">
+                          {msg.is_read ? (
+                            <span className="material-symbols-outlined text-[14px] text-lime-900 font-bold">done_all</span>
+                          ) : msg.is_delivered ? (
+                            <span className="material-symbols-outlined text-[14px] text-black/40">done_all</span>
+                          ) : (
+                            <span className="material-symbols-outlined text-[14px] text-black/40">done</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

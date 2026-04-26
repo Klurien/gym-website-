@@ -130,11 +130,15 @@ async function initDB() {
                 receiver_id INT NOT NULL,
                 content TEXT NOT NULL,
                 is_read BOOLEAN DEFAULT FALSE,
+                is_delivered BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (sender_id) REFERENCES users(id),
                 FOREIGN KEY (receiver_id) REFERENCES users(id)
             )
         `);
+
+        // Safely add is_delivered if table already existed
+        try { await pool.query("ALTER TABLE messages ADD COLUMN is_delivered BOOLEAN DEFAULT FALSE"); } catch (e) {}
 
         // Trainer–Member Assignments
         await pool.query(`
@@ -236,8 +240,8 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('send_message_ping', ({ receiver_id }) => {
-        io.to(`user_${receiver_id}`).emit('new_message_ping');
+    socket.on('send_message_ping', ({ receiver_id, message_id }) => {
+        io.to(`user_${receiver_id}`).emit('new_message_ping', { sender_id: currentUserId, message_id });
     });
     
     socket.on('typing', ({ receiver_id }) => {
@@ -246,6 +250,20 @@ io.on('connection', (socket) => {
 
     socket.on('stop_typing', ({ receiver_id }) => {
         io.to(`user_${receiver_id}`).emit('typing_status', { userId: currentUserId, isTyping: false });
+    });
+
+    socket.on('message_delivered', async ({ message_id, sender_id }) => {
+        try {
+            await pool.query('UPDATE messages SET is_delivered = 1 WHERE id = ?', [message_id]);
+            io.to(`user_${sender_id}`).emit('message_status_update', { message_id, status: 'delivered' });
+        } catch (err) { console.error(err); }
+    });
+
+    socket.on('message_seen', async ({ sender_id }) => {
+        try {
+            await pool.query('UPDATE messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?', [sender_id, currentUserId]);
+            io.to(`user_${sender_id}`).emit('message_status_update', { sender_id: currentUserId, status: 'seen' });
+        } catch (err) { console.error(err); }
     });
 
     socket.on('disconnect', () => {
