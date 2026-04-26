@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { connectSocket } from '../services/socket';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -36,6 +37,7 @@ export default function Auth() {
             if (loginRes.ok) {
               localStorage.setItem('token', loginData.token);
               localStorage.setItem('user', JSON.stringify(loginData.user));
+              connectSocket(loginData.token);
               setStatus({ success: `Welcome, ${loginData.user.username}! Tuning your feed...`, error: '' });
               setTimeout(() => {
                 navigate('/feed');
@@ -50,6 +52,7 @@ export default function Auth() {
           // Login successful
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
+          connectSocket(data.token);
           setStatus({ success: `Welcome back, ${data.user.username}!`, error: '' });
           
           setTimeout(() => {

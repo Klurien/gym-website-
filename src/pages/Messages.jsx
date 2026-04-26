@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { socket } from '../services/socket';
 
 export default function Messages() {
   const [conversations, setConversations] = useState([]);
@@ -20,16 +21,14 @@ export default function Messages() {
 
   useEffect(() => {
     // Socket Typing Listeners
-    if (window.socket) {
-      window.socket.on('typing_status', ({ userId, isTyping }) => {
-        if (activeChat && activeChat.id === userId) {
-          setIsOtherTyping(isTyping);
-        }
-      });
-      return () => {
-        window.socket.off('typing_status');
-      };
-    }
+    socket.on('typing_status', ({ userId, isTyping }) => {
+      if (activeChat && activeChat.id === userId) {
+        setIsOtherTyping(isTyping);
+      }
+    });
+    return () => {
+      socket.off('typing_status');
+    };
   }, [activeChat]);
 
   useEffect(() => {
@@ -124,11 +123,11 @@ export default function Messages() {
 
   const handleInputChange = (e) => {
     setTextInput(e.target.value);
-    if (window.socket && activeChat) {
-      window.socket.emit('typing', { receiver_id: activeChat.id });
+    if (activeChat) {
+      socket.emit('typing', { receiver_id: activeChat.id });
       if (typingTimeout) clearTimeout(typingTimeout);
       setTypingTimeout(setTimeout(() => {
-        window.socket.emit('stop_typing', { receiver_id: activeChat.id });
+        socket.emit('stop_typing', { receiver_id: activeChat.id });
       }, 1500));
     }
   };
@@ -138,7 +137,7 @@ export default function Messages() {
     if (!textInput.trim() || !activeChat) return;
     
     // Stop typing on send
-    if (window.socket) window.socket.emit('stop_typing', { receiver_id: activeChat.id });
+    socket.emit('stop_typing', { receiver_id: activeChat.id });
     if (typingTimeout) clearTimeout(typingTimeout);
 
     const content = textInput;
@@ -234,9 +233,11 @@ export default function Messages() {
             })
           )}
           {isOtherTyping && (
-            <div className="flex items-center gap-2 px-2 py-4 animate-pulse">
-              <div className="bg-zinc-800 text-zinc-400 text-[10px] font-bold px-4 py-2 rounded-2xl rounded-bl-none italic">
-                {activeChat.username} is typing...
+            <div className="flex items-center gap-2 px-2 py-4">
+              <div className="bg-zinc-800 p-4 rounded-2xl rounded-bl-none border border-white/5 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-typing-bounce" style={{ animationDelay: '0s' }}></div>
+                <div className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-typing-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-1.5 h-1.5 bg-lime-400 rounded-full animate-typing-bounce" style={{ animationDelay: '0.4s' }}></div>
               </div>
             </div>
           )}

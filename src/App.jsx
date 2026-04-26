@@ -12,6 +12,7 @@ import Auth from './pages/Auth';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
+import { connectSocket, disconnectSocket } from './services/socket';
 
 function PageWrapper({ children }) {
   return (
@@ -71,6 +72,15 @@ function AnimatedRoutes() {
 }
 
 export default function App() {
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (token && user.id) {
+      connectSocket(token);
+    }
+    return () => disconnectSocket();
+  }, []);
+
   return (
     <Router>
       <Layout>
