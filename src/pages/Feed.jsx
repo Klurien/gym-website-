@@ -288,23 +288,51 @@ export default function Feed() {
             <form onSubmit={handleCreatePost} className="space-y-4">
               <input required type="text" placeholder="Post Title" value={postForm.title} onChange={e => setPostForm({ ...postForm, title: e.target.value })} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 transition-all outline-none" />
               <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({ ...postForm, description: e.target.value })} className="w-full h-24 bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 resize-none outline-none"></textarea>
-              <div className="relative group">
-                <input type="text" placeholder="Media URL (Image or Video)" value={postForm.media_url} onChange={e => {
-                  const url = e.target.value;
-                  const type = url.match(/\.(mp4|webm|ogg|mov)$|video/i) ? 'video' : 'static';
-                  setPostForm({ ...postForm, media_url: url, type });
-                }} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 pr-12 focus:border-lime-400 text-sm outline-none" />
-                <button
-                  type="button"
-                  disabled={uploading}
+              {/* Redesigned Media Selection Area */}
+              <div className="space-y-4">
+                <div 
+                  className={`flex flex-col items-center justify-center border-2 border-dashed rounded-[24px] p-8 transition-all group cursor-pointer ${postForm.media_url && !uploading ? 'border-lime-400 bg-lime-400/5' : 'border-white/10 bg-black/20 hover:border-lime-400/50'}`}
                   onClick={() => fileInputRef.current.click()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 text-lime-400 flex items-center justify-center hover:bg-lime-400 hover:text-black transition-all"
                 >
-                  <span className={`material-symbols-outlined text-sm ${uploading && 'animate-spin'}`}>
-                    {uploading ? 'refresh' : 'upload_file'}
-                  </span>
-                </button>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
+                  {uploading ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <span className="material-symbols-outlined animate-spin text-4xl text-lime-400">refresh</span>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Processing...</span>
+                    </div>
+                  ) : postForm.media_url ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <span className="material-symbols-outlined text-4xl text-lime-400">check_circle</span>
+                      <span className="text-[10px] font-black text-lime-400 uppercase tracking-widest">Media Attached</span>
+                      <span className="text-[8px] text-zinc-500 truncate max-w-[200px]">{postForm.media_url.split('/').pop()}</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <span className="material-symbols-outlined text-4xl text-zinc-500 group-hover:text-lime-400 transition-colors">add_a_photo</span>
+                      <div className="text-center">
+                        <span className="block text-[10px] font-black text-white uppercase tracking-widest">Choose Elite Media</span>
+                        <span className="block text-[8px] text-zinc-500 uppercase tracking-widest mt-1">Tap to upload from device</span>
+                      </div>
+                    </div>
+                  )}
+                  <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                     <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">OR</span>
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="External Media URL..." 
+                    value={postForm.media_url} 
+                    onChange={e => {
+                      const url = e.target.value;
+                      const type = url.match(/\.(mp4|webm|ogg|mov)$|video/i) ? 'video' : 'static';
+                      setPostForm({ ...postForm, media_url: url, type });
+                    }} 
+                    className="w-full bg-black/40 border border-white/10 text-white rounded-2xl py-4 pl-12 pr-4 focus:border-lime-400 text-xs outline-none transition-all" 
+                  />
+                </div>
               </div>
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 bg-zinc-800 text-white font-bold py-4 rounded-2xl hover:bg-zinc-700 transition">Cancel</button>
