@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Feed() {
@@ -18,6 +18,8 @@ export default function Feed() {
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Post form state
   const [postForm, setPostForm] = useState({ title: '', description: '', media_url: '', tags: '', type: 'static' });
@@ -98,6 +100,36 @@ export default function Feed() {
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+  
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPostForm(prev => ({ 
+          ...prev, 
+          media_url: data.url, 
+          type: file.type.startsWith('video/') ? 'video' : 'static' 
+        }));
+      } else {
+        alert('Upload failed');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -254,11 +286,24 @@ export default function Feed() {
             <form onSubmit={handleCreatePost} className="space-y-4">
               <input required type="text" placeholder="Post Title" value={postForm.title} onChange={e => setPostForm({...postForm, title: e.target.value})} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 transition-all outline-none" />
               <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({...postForm, description: e.target.value})} className="w-full h-24 bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 resize-none outline-none"></textarea>
-              <input type="text" placeholder="Media URL (Image or Video)" value={postForm.media_url} onChange={e => {
-                const url = e.target.value;
-                const type = url.match(/\.(mp4|webm|ogg|mov)$|video/i) ? 'video' : 'static';
-                setPostForm({...postForm, media_url: url, type});
-              }} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 text-sm outline-none" />
+              <div className="relative group">
+                <input type="text" placeholder="Media URL (Image or Video)" value={postForm.media_url} onChange={e => {
+                  const url = e.target.value;
+                  const type = url.match(/\.(mp4|webm|ogg|mov)$|video/i) ? 'video' : 'static';
+                  setPostForm({...postForm, media_url: url, type});
+                }} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 pr-12 focus:border-lime-400 text-sm outline-none" />
+                <button 
+                  type="button" 
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current.click()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 text-lime-400 flex items-center justify-center hover:bg-lime-400 hover:text-black transition-all"
+                >
+                  <span className={`material-symbols-outlined text-sm ${uploading && 'animate-spin'}`}>
+                    {uploading ? 'refresh' : 'upload_file'}
+                  </span>
+                </button>
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
+              </div>
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 bg-zinc-800 text-white font-bold py-4 rounded-2xl hover:bg-zinc-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 bg-lime-400 text-black font-black py-4 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">Publish</button>

@@ -218,6 +218,10 @@ app.all('/api/admin/responses',   wrap(adminResponses));
 app.all('/api/posts',             wrap(require('./api/posts')));
 app.all('/api/posts_social',      wrap(require('./api/posts_social')));
 app.all('/api/profile',           wrap(require('./api/profile')));
+app.all('/api/upload',            wrap(require('./api/upload')));
+
+// Static Files
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ── Fallback for React SPA Routing ──
 const path = require('path');
