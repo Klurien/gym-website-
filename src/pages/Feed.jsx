@@ -290,9 +290,9 @@ export default function Feed() {
               <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({ ...postForm, description: e.target.value })} className="w-full h-24 bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 resize-none outline-none"></textarea>
               {/* Redesigned Media Selection Area */}
               <div className="space-y-4">
-                <div 
+                <label 
+                  htmlFor="media-upload" 
                   className={`flex flex-col items-center justify-center border-2 border-dashed rounded-[24px] p-8 transition-all group cursor-pointer ${postForm.media_url && !uploading ? 'border-lime-400 bg-lime-400/5' : 'border-white/10 bg-black/20 hover:border-lime-400/50'}`}
-                  onClick={() => fileInputRef.current.click()}
                 >
                   {uploading ? (
                     <div className="flex flex-col items-center gap-3">
@@ -310,12 +310,12 @@ export default function Feed() {
                       <span className="material-symbols-outlined text-4xl text-zinc-500 group-hover:text-lime-400 transition-colors">add_a_photo</span>
                       <div className="text-center">
                         <span className="block text-[10px] font-black text-white uppercase tracking-widest">Choose Elite Media</span>
-                        <span className="block text-[8px] text-zinc-500 uppercase tracking-widest mt-1">Tap to upload from device</span>
+                        <span className="block text-[8px] text-zinc-500 uppercase tracking-widest mt-1 text-zinc-500/80">Tap to browse gallery</span>
                       </div>
                     </div>
                   )}
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
-                </div>
+                  <input id="media-upload" type="file" onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
+                </label>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
