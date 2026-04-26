@@ -3,17 +3,21 @@ import { useNavigate } from 'react-router-dom';
 
 const getEmbedUrl = (url) => {
   if (!url) return null;
+  
+  // Ensure we have a protocol for the regex to work reliably
+  let target = url.trim();
+  if (!target.startsWith('http')) target = 'https://' + target;
 
-  // YouTube (supports watch, embed, shorts, youtu.be)
-  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|live\/))([\w-]{11})/);
-  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&loop=1&playlist=${ytMatch[1]}&modestbranding=1&rel=0`;
+  // YouTube
+  const ytMatch = target.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|live\/))([\w-]{11})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&playlist=${ytMatch[1]}&loop=1&rel=0`;
 
-  // TikTok (supports @user/video, embed/v2, etc.)
-  const ttMatch = url.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/v2\/|v\/|t\/)([\d\w]+)/);
+  // TikTok
+  const ttMatch = target.match(/tiktok\.com\/(?:@[\w.-]+\/video\/|embed\/v2\/|v\/|t\/)([\d\w]+)/);
   if (ttMatch) return `https://www.tiktok.com/embed/v2/${ttMatch[1]}`;
 
   // Instagram
-  const igMatch = url.match(/instagram\.com\/(?:p|reels|reel)\/([\w-]+)/);
+  const igMatch = target.match(/instagram\.com\/(?:p|reels|reel)\/([\w-]+)/);
   if (igMatch) return `https://www.instagram.com/reels/${igMatch[1]}/embed`;
 
   return null;
@@ -212,12 +216,12 @@ export default function Feed() {
         ) : (
           posts.map(post => (
             <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-zinc-900 flex flex-col">
-              {/* Media Background */}
-              <div className="absolute inset-0 z-0 bg-black">
+              {/* Media Background Layer */}
+              <div className="absolute inset-0 z-0 bg-stone-950">
                 {post.media_url?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
                   <video
-                    src={post.media_url}
-                    className="w-full h-full object-cover relative z-0"
+                    src={post.media_url.startsWith('http') ? post.media_url : `https://${post.media_url}`}
+                    className="w-full h-full object-cover relative z-10"
                     autoPlay
                     loop
                     muted
@@ -226,41 +230,42 @@ export default function Feed() {
                 ) : getEmbedUrl(post.media_url) ? (
                   <iframe
                     src={getEmbedUrl(post.media_url)}
-                    className="w-full h-full absolute inset-0 border-0 z-0"
+                    className="w-full h-full relative z-10 border-0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
-                    title="Social Video"
+                    title="Feed Content"
                   />
                 ) : (
                   <img
                     src={post.media_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"}
-                    className="w-full h-full object-cover relative z-0"
+                    className="w-full h-full object-cover relative z-10"
                     alt={post.title}
                   />
                 )}
-                {/* Visual Gradient (pointer-events-none to let clicks through to video) */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10 pointer-events-none"></div>
+                {/* Fixed Overlay: Ensure it doesn't block the video layer */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-20 pointer-events-none"></div>
               </div>
 
-              {/* Branding & Tags Overlay (z-20 to be on top but pointer-events-none) */}
-              <div className="absolute top-6 left-6 z-20 flex flex-col gap-2 pointer-events-none">
-                <div className="flex items-center gap-2 pointer-events-auto">
-                  <div className="w-8 h-8 rounded-full border border-lime-400/50 overflow-hidden shadow-xl">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.trainer_name}`} className="w-full h-full" alt="Trainer" />
+              {/* Interaction Layer: Branding & Text (z-30) */}
+              <div className="absolute inset-0 z-30 pointer-events-none p-6 flex flex-col justify-end">
+                <div className="mb-24 flex flex-col gap-3">
+                  <div className="flex items-center gap-2 pointer-events-auto w-fit">
+                    <div className="w-9 h-9 rounded-full border-2 border-lime-400 overflow-hidden shadow-2xl">
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.trainer_name}`} className="w-full h-full" alt="Trainer" />
+                    </div>
+                    <span className="text-xs font-black text-white uppercase tracking-wider drop-shadow-lg">@{post.trainer_name || 'Elite'}</span>
                   </div>
-                  <span className="text-[10px] font-black text-white uppercase tracking-widest drop-shadow-md">@{post.trainer_name || 'Coach'}</span>
+                  
+                  <div className="max-w-[80%] pointer-events-auto">
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-2xl">{post.title}</h2>
+                    <p className="text-[11px] text-zinc-300 font-medium leading-relaxed line-clamp-2 drop-shadow-xl">{post.description}</p>
+                    {post.tags && (
+                      <span className="inline-block mt-2 bg-lime-400/20 text-lime-400 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border border-lime-400/30">
+                        #{post.tags}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                {post.tags && (
-                  <span className="bg-white/10 backdrop-blur-md text-white px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest border border-white/10 w-fit pointer-events-auto">
-                    #{post.tags}
-                  </span>
-                )}
-              </div>
-
-              {/* Description Overlay (z-20 but pointer-events-none) */}
-              <div className="absolute bottom-8 left-6 right-20 z-20 pointer-events-none">
-                <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-2 drop-shadow-lg pointer-events-auto">{post.title}</h2>
-                <p className="text-xs text-zinc-300 line-clamp-3 font-body-md opacity-90 drop-shadow-lg pointer-events-auto">{post.description}</p>
               </div>
 
               {/* Side Action Bar (Vertical) */}
