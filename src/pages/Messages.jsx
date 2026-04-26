@@ -14,6 +14,7 @@ export default function Messages() {
   const [textInput, setTextInput] = useState('');
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(null); 
   const chatEndRef = useRef(null);
 
   const navigate = useNavigate();
@@ -48,10 +49,25 @@ export default function Messages() {
       }
     });
 
+    socket.on('incoming_call', ({ fromUserId, fromUserName, roomName }) => {
+      setIncomingCall({ fromUserId, fromUserName, roomName });
+    });
+
+    socket.on('call_cancelled', () => {
+      setIncomingCall(null);
+    });
+
+    socket.on('call_rejected', () => {
+      alert("Recipient is currently busy or declined the call.");
+    });
+
     return () => {
       socket.off('typing_status');
       socket.off('message_status_update');
       socket.off('new_message_ping');
+      socket.off('incoming_call');
+      socket.off('call_cancelled');
+      socket.off('call_rejected');
     };
   }, [activeChat]);
 
@@ -190,6 +206,21 @@ export default function Messages() {
     }
   };
 
+  const getRoomName = (id1, id2) => {
+    const sorted = [String(id1), String(id2)].sort();
+    return `KineticElite_Room_${sorted[0]}_${sorted[1]}`;
+  };
+
+  const startCall = () => {
+    if (!activeChat) return;
+    const roomName = getRoomName(currentUserId, activeChat.id);
+    const callerName = JSON.parse(localStorage.getItem('user') || '{}')?.username || 'Member';
+    
+    socket.emit('initiate_call', { receiver_id: activeChat.id, roomName, callerName });
+    alert("Requesting Elite Call connection...");
+    window.open(`https://meet.jit.si/${roomName}`, '_blank');
+  };
+
   const filteredConversations = conversations.filter(c => 
     c.other_name.toLowerCase().includes(search.toLowerCase())
   );
@@ -226,10 +257,7 @@ export default function Messages() {
           </div>
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => {
-                alert("Initializing Elite Call via Jitsi Meet...");
-                window.open(`https://meet.jit.si/KineticElite_${activeChat.id}_${JSON.parse(localStorage.getItem('user') || '{}')?.id}`, '_blank');
-              }}
+              onClick={startCall}
               className="w-10 h-10 rounded-full bg-zinc-800/80 flex items-center justify-center text-lime-400 hover:bg-lime-400 hover:text-black transition-all shadow-xl active:scale-90"
             >
               <span className="material-symbols-outlined font-bold">call</span>
@@ -302,6 +330,41 @@ export default function Messages() {
             </button>
           </form>
         </div>
+        
+        {incomingCall && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-6">
+            <div className="absolute inset-0 bg-black/90 backdrop-blur-3xl animate-in fade-in duration-500"></div>
+            <div className="relative w-full max-w-sm bg-zinc-900 border border-white/5 rounded-[40px] p-10 flex flex-col items-center text-center shadow-2xl animate-in zoom-in duration-300">
+              <div className="w-24 h-24 rounded-full bg-zinc-800 border-4 border-lime-400 p-2 mb-8 relative">
+                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${incomingCall.fromUserName}`} className="w-full h-full rounded-full" alt="Caller" />
+                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-lime-400 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">LIVE</div>
+              </div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">{incomingCall.fromUserName}</h2>
+              <p className="text-[10px] font-bold text-lime-400 uppercase tracking-[0.3em] mb-10 animate-pulse">Incoming Elite Protocol...</p>
+              
+              <div className="w-full flex gap-4">
+                <button 
+                  onClick={() => {
+                    socket.emit('reject_call', { caller_id: incomingCall.fromUserId });
+                    setIncomingCall(null);
+                  }}
+                  className="flex-1 h-16 bg-red-500/10 border border-red-500/20 text-red-500 rounded-3xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all group"
+                >
+                  <span className="material-symbols-outlined font-black group-active:scale-75 transition-transform">call_end</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    window.open(`https://meet.jit.si/${incomingCall.roomName}`, '_blank');
+                    setIncomingCall(null);
+                  }}
+                  className="flex-1 h-16 bg-lime-400 text-black rounded-3xl flex items-center justify-center shadow-[0_0_40px_rgba(204,255,0,0.4)] hover:bg-lime-300 transition-all group"
+                >
+                  <span className="material-symbols-outlined font-black group-active:scale-125 transition-transform">call</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     );
   }

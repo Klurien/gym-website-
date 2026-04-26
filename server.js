@@ -266,6 +266,19 @@ io.on('connection', (socket) => {
         } catch (err) { console.error(err); }
     });
 
+    // Calling Events
+    socket.on('initiate_call', ({ receiver_id, roomName, callerName }) => {
+        io.to(`user_${receiver_id}`).emit('incoming_call', { fromUserId: currentUserId, fromUserName: callerName, roomName });
+    });
+
+    socket.on('reject_call', ({ caller_id }) => {
+        io.to(`user_${caller_id}`).emit('call_rejected', { fromUserId: currentUserId });
+    });
+
+    socket.on('cancel_call', ({ receiver_id }) => {
+        io.to(`user_${receiver_id}`).emit('call_cancelled', { fromUserId: currentUserId });
+    });
+
     socket.on('disconnect', () => {
         if (currentUserId) console.log(`User ${currentUserId} disconnected.`);
     });
