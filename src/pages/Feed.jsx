@@ -14,11 +14,12 @@ export default function Feed() {
   };
   // Modals state
   const [showPostModal, setShowPostModal] = useState(false);
-  const [showCommentsModal, setShowCommentsModal] = useState(null); // stores post_id or null
+  const [showCommentsModal, setShowCommentsModal] = useState(null);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [shareModal, setShareModal] = useState(null);
   const fileInputRef = useRef(null);
 
   // Post form state
@@ -91,6 +92,29 @@ export default function Feed() {
     } catch (e) {
       fetchPosts();
     }
+  };
+
+  const handleShare = (post) => {
+    setShareModal(post);
+  };
+
+  const doNativeShare = async (post) => {
+    try {
+      await navigator.share({
+        title: post.title,
+        text: `${post.description || post.title} - KINETIC`,
+        url: window.location.origin + '/feed'
+      });
+    } catch {
+      copyLink(post);
+    }
+    setShareModal(null);
+  };
+
+  const copyLink = (post) => {
+    navigator.clipboard.writeText(`${window.location.origin}/feed\n\n${post.title}: ${post.description || ''}`);
+    alert('Link copied!');
+    setShareModal(null);
   };
 
   const handleCreatePost = async (e) => {
@@ -275,9 +299,36 @@ export default function Feed() {
                   <span className="text-[10px] font-black text-white tracking-widest drop-shadow-md opacity-70">{post.comments_count || 0}</span>
                 </div>
 
-                <button className="w-14 h-14 bg-black/40 backdrop-blur-xl text-white rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl active:scale-75 kinetic-hover hover:bg-white/10">
-                  <span className="material-symbols-outlined font-black text-2xl">share</span>
-                </button>
+                <button 
+                    onClick={() => handleShare(post)}
+                    className="w-14 h-14 bg-black/40 backdrop-blur-xl text-white rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl active:scale-75 kinetic-hover hover:bg-white/10"
+                  >
+                    <span className="material-symbols-outlined font-black text-2xl">share</span>
+                  </button>
+
+                  {shareModal && (
+                    <div className="fixed inset-0 z-[100] flex items-end">
+                      <div className="absolute inset-0 bg-black/80" onClick={() => setShareModal(null)}></div>
+                      <div className="relative w-full bg-zinc-900 rounded-t-[30px] p-6 animate-slide-up">
+                        <h3 className="text-lg font-black text-white uppercase mb-6">Share Post</h3>
+                        <div className="grid grid-cols-4 gap-4 mb-6">
+                          <button onClick={() => doNativeShare(post)} className="flex flex-col items-center gap-2">
+                            <div className="w-14 h-14 bg-lime-400 rounded-full flex items-center justify-center">
+                              <span className="material-symbols-outlined text-black text-2xl">share</span>
+                            </div>
+                            <span className="text-xs text-white">Apps</span>
+                          </button>
+                          <button onClick={() => copyLink(post)} className="flex flex-col items-center gap-2">
+                            <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center">
+                              <span className="material-symbols-outlined text-white text-2xl">link</span>
+                            </div>
+                            <span className="text-xs text-white">Copy</span>
+                          </button>
+                        </div>
+                        <button onClick={() => setShareModal(null)} className="w-full bg-zinc-800 text-white font-bold py-4 rounded-full">Cancel</button>
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
           ))
