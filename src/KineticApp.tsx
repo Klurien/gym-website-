@@ -620,8 +620,13 @@ const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ title, description, media_url: mediaUrl, tags, type })
       });
-      if (res.ok) { onClose(); }
-      else { alert('Only admins can post.'); }
+      const data = await res.json();
+      if (res.ok) { 
+        alert('Post published successfully!');
+        onClose(); 
+      } else {
+        alert(data.error || 'Failed to create post.');
+      }
     } catch { alert('Failed to post.'); }
   };
 

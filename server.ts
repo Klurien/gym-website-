@@ -43,6 +43,7 @@ async function startServer() {
 
   // --- API Routes ---
   app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
   
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
