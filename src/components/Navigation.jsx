@@ -32,6 +32,9 @@ export default function Navigation() {
       <button onClick={() => navigate('/community')} className={getButtonClass('/community')}>
         <span className="material-symbols-outlined" style={getIconStyle('/community')}>forum</span>
       </button>
+      <button onClick={() => navigate('/search')} className={getButtonClass('/search')}>
+        <span className="material-symbols-outlined" style={getIconStyle('/search')}>search</span>
+      </button>
       <button onClick={() => navigate('/timer')} className={getButtonClass('/timer')}>
         <span className="material-symbols-outlined" style={getIconStyle('/timer')}>timer</span>
       </button>

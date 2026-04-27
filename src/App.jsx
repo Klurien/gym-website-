@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
 import Timer from './pages/Timer';
 import Community from './pages/Community';
+import Search from './pages/Search';
 import { connectSocket, disconnectSocket } from './services/socket';
 
 function PageWrapper({ children }) {
@@ -61,6 +62,7 @@ function AnimatedRoutes() {
         <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
         <Route path="/notifications" element={<PageWrapper><Notifications /></PageWrapper>} />
         <Route path="/community" element={<PageWrapper><Community /></PageWrapper>} />
+        <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
         
         {/* Legacy Catch-alls to prevent loops */}
         <Route path="/login.html" element={<Navigate to="/auth" replace />} />
