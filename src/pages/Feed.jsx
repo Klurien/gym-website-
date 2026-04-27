@@ -210,14 +210,15 @@ export default function Feed() {
             <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-black flex flex-col">
               {/* Media Background Layer */}
               <div className="absolute inset-0 z-0 select-none">
-                {post.media_url?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
+                {(post.media_url?.match(/\.(mp4|webm|ogg|mov)$/i) || post.type === 'video') ? (
                   <video
-                    src={post.media_url.startsWith('http') ? post.media_url : `https://${post.media_url}`}
+                    src={post.media_url}
                     className="w-full h-full object-cover relative z-10"
                     autoPlay
                     loop
                     muted
                     playsInline
+                    controls
                   />
                 ) : (
                   <img
