@@ -241,17 +241,60 @@ export default function Community() {
           <div className="relative w-full bg-zinc-900 rounded-t-[30px] p-6">
             <h3 className="text-lg font-black text-white uppercase mb-6">Share Post</h3>
             <div className="grid grid-cols-4 gap-4">
-              <button onClick={() => navigator.share({ title: 'KINETIC', text: shareModal.content })} className="flex flex-col items-center gap-2">
+              <button 
+                onClick={async () => {
+                  try {
+                    await navigator.share({ title: 'KINETIC Post', text: shareModal.content + '\n\n' + window.location.origin });
+                  } catch { alert('Share not supported. Link copied!'); navigator.clipboard.writeText(window.location.origin); setShareModal(null); }
+                }} 
+                className="flex flex-col items-center gap-2"
+              >
                 <div className="w-14 h-14 bg-lime-400 rounded-full flex items-center justify-center">
                   <span className="material-symbols-outlined text-black text-2xl">share</span>
                 </div>
-                <span className="text-xs text-white">Apps</span>
+                <span className="text-xs text-white">Share</span>
               </button>
-              <button onClick={() => { navigator.clipboard.writeText(shareModal.content); alert('Copied!'); setShareModal(null); }} className="flex flex-col items-center gap-2">
+              
+              <button 
+                onClick={() => { 
+                  navigator.clipboard.writeText(shareModal.content + '\n\n' + window.location.origin); 
+                  alert('Link copied to clipboard!'); 
+                  setShareModal(null); 
+                }} 
+                className="flex flex-col items-center gap-2"
+              >
                 <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="material-symbols-outlined text-white text-2xl">link</span>
                 </div>
-                <span className="text-xs text-white">Copy</span>
+                <span className="text-xs text-white">Copy Link</span>
+              </button>
+              
+              <button 
+                onClick={() => {
+                  const message = encodeURIComponent(shareModal.content);
+                  window.open(`sms:&body=${message}`, '_blank');
+                  setShareModal(null);
+                }}
+                className="flex flex-col items-center gap-2"
+              >
+                <div className="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white text-2xl">sms</span>
+                </div>
+                <span className="text-xs text-white">SMS</span>
+              </button>
+              
+              <button 
+                onClick={() => {
+                  const text = encodeURIComponent(shareModal.content);
+                  window.open(`https://wa.me/?text=${text}`, '_blank');
+                  setShareModal(null);
+                }}
+                className="flex flex-col items-center gap-2"
+              >
+                <div className="w-14 h-14 bg-green-600 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white text-2xl">chat</span>
+                </div>
+                <span className="text-xs text-white">WhatsApp</span>
               </button>
             </div>
             <button onClick={() => setShareModal(null)} className="w-full bg-zinc-800 text-white font-bold py-4 rounded-full mt-6">Cancel</button>
