@@ -8,19 +8,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// API Handlers (CommonJS compatible imports)
+// API Handlers
 // @ts-ignore
-import registerHandler from './api/register.js';
-// @ts-ignore
-import loginHandler from './api/login.js';
-// @ts-ignore
-import postsHandler from './api/posts.js';
-// @ts-ignore
-import postsSocialHandler from './api/posts_social.js';
-// @ts-ignore
-import uploadHandler from './api/upload.js';
-// @ts-ignore
-import profileHandler from './api/profile.js';
+import apiHandler from './api/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,12 +65,7 @@ async function startServer() {
     }
   };
   
-  app.all('/api/register', wrap(registerHandler));
-  app.all('/api/login', wrap(loginHandler));
-  app.all('/api/posts', wrap(postsHandler));
-  app.all('/api/posts_social', wrap(postsSocialHandler));
-  app.all('/api/upload', wrap(uploadHandler));
-  app.all('/api/profile', wrap(profileHandler));
+  app.all('/api/:path*', wrap(apiHandler));
 
   // --- Vite Middleware ---
   if (process.env.NODE_ENV !== "production") {
