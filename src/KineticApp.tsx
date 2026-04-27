@@ -692,38 +692,26 @@ const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
           <div className="space-y-3">
             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Media Asset</label>
             
-            <div className="flex gap-3">
-              {/* File Upload Button */}
-              <label
-                htmlFor="elite-media-upload"
-                className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-[20px] p-4 cursor-pointer transition-all group ${
-                  uploaded ? 'border-kinetic-lime bg-kinetic-lime/5' : 'border-white/5 bg-zinc-900/30 hover:border-white/20'
-                }`}
-              >
-                {uploading ? (
-                  <div className="w-10 h-10 border-4 border-kinetic-lime/20 border-t-kinetic-lime rounded-full animate-spin" />
-                ) : uploaded ? (
-                  <span className="text-kinetic-lime">✓ Uploaded</span>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-2xl text-zinc-500 group-hover:text-kinetic-lime">upload</span>
-                    <span className="text-xs font-bold text-zinc-400 mt-1">Choose File</span>
-                  </>
-                )}
-                <input id="elite-media-upload" type="file" onChange={handleFile} className="hidden" accept="image/*,video/*" />
-              </label>
-
-              {/* URL Input */}
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Paste image URL..."
-                  value={mediaUrl}
-                  onChange={e => { setMediaUrl(e.target.value); setUploaded(false); }}
-                  className="w-full h-full bg-zinc-900/50 border border-white/5 text-white rounded-[20px] py-4 px-4 focus:border-kinetic-lime/50 outline-none text-xs font-bold transition-all placeholder:text-zinc-700"
-                />
-              </div>
-            </div>
+            {/* File Upload Button */}
+            <label
+              htmlFor="elite-media-upload"
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-[20px] p-6 cursor-pointer transition-all group ${
+                uploaded ? 'border-kinetic-lime bg-kinetic-lime/5' : 'border-white/5 bg-zinc-900/30 hover:border-white/20'
+              }`}
+            >
+              {uploading ? (
+                <div className="w-10 h-10 border-4 border-kinetic-lime/20 border-t-kinetic-lime rounded-full animate-spin" />
+              ) : uploaded ? (
+                <span className="text-kinetic-lime text-lg">✓ Uploaded</span>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-3xl text-zinc-500 group-hover:text-kinetic-lime">upload</span>
+                  <span className="text-sm font-bold text-zinc-400 mt-2">Choose Image/Video</span>
+                  <span className="text-xs text-zinc-600 mt-1">JPG, PNG, MP4</span>
+                </>
+              )}
+              <input id="elite-media-upload" type="file" onChange={handleFile} className="hidden" accept="image/*,video/*" />
+            </label>
           </div>
 
           {/* Tags */}
