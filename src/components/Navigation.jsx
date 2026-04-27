@@ -29,8 +29,11 @@ export default function Navigation() {
       <button onClick={() => navigate('/calendar')} className={getButtonClass('/calendar')}>
         <span className="material-symbols-outlined" style={getIconStyle('/calendar')}>event_note</span>
       </button>
+      <button onClick={() => navigate('/timer')} className={getButtonClass('/timer')}>
+        <span className="material-symbols-outlined" style={getIconStyle('/timer')}>timer</span>
+      </button>
       <button onClick={() => navigate('/tasks')} className={getButtonClass('/tasks')}>
-        <span className="material-symbols-outlined" style={getIconStyle('/tasks')}>crisis_alert</span>
+        <span className="material-symbols-outlined" style={getIconStyle('/tasks')}>checklist</span>
       </button>
       {user.role === 'admin' && (
         <button onClick={() => navigate('/admin')} className={getButtonClass('/admin')}>

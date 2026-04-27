@@ -12,6 +12,7 @@ import Auth from './pages/Auth';
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
+import Timer from './pages/Timer';
 import { connectSocket, disconnectSocket } from './services/socket';
 
 function PageWrapper({ children }) {
@@ -51,6 +52,7 @@ function AnimatedRoutes() {
         <Route path="/feed" element={<PageWrapper><Feed /></PageWrapper>} />
         <Route path="/messages" element={<PageWrapper><Messages /></PageWrapper>} />
         <Route path="/calendar" element={<PageWrapper><Calendar /></PageWrapper>} />
+        <Route path="/timer" element={<PageWrapper><Timer /></PageWrapper>} />
         <Route path="/tasks" element={<PageWrapper><Tasks /></PageWrapper>} />
         <Route path="/live" element={<PageWrapper><Live /></PageWrapper>} />
         <Route path="/auth" element={<PageWrapper><Auth /></PageWrapper>} />
