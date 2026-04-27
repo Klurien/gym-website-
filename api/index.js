@@ -1,4 +1,3 @@
-const express = require('express');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -27,7 +26,6 @@ function getPool() {
   return pool;
 }
 
-// Multer setup for uploads
 const uploadDir = path.join(os.homedir(), '.kinetic', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -44,12 +42,17 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter, limits: { fileSize: 50 * 1024 * 1024 } }).single('file');
 
-// All-in-One API Handler
-module.exports = async function handler(req, res) {
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
   const db = getPool();
   const method = req.method;
-  const pathParts = (req.url || '/').split('/').filter(Boolean);
-  const apiPath = pathParts[0] === 'api' ? pathParts[1] : pathParts[0];
+  const urlParts = (req.url || '/').split('/').filter(Boolean);
+  const apiPath = urlParts[0] === 'api' ? urlParts[1] : urlParts[0];
   
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
@@ -59,12 +62,10 @@ module.exports = async function handler(req, res) {
     try { user = jwt.verify(token, JWT_SECRET); } catch {}
   }
 
-  // Health check
   if (apiPath === 'health') {
-    return res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    return res.status(200).json({ status: 'ok' });
   }
 
-  // -------------------- AUTH --------------------
   if (apiPath === 'register' && method === 'POST') {
     const { username, email, password } = req.body || {};
     if (!username || !email || !password) return res.status(400).json({ error: 'Missing fields' });
@@ -98,10 +99,8 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // -------------------- PROTECTED --------------------
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-  // Profile
   if (apiPath === 'profile') {
     if (method === 'GET') {
       try {
@@ -119,7 +118,6 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // Posts (GET feed, POST create)
   if (apiPath === 'posts') {
     if (method === 'GET') {
       try {
@@ -148,7 +146,6 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // Social (likes, comments)
   if (apiPath === 'posts_social') {
     const action = req.query?.action;
     const { post_id, comment } = req.body || {};
@@ -184,7 +181,6 @@ module.exports = async function handler(req, res) {
     }
   }
 
-  // Upload (handled via multer)
   if (apiPath === 'upload' && method === 'POST') {
     return new Promise((resolve) => {
       upload(req, res, (err) => {
@@ -195,6 +191,5 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 404 for unknown endpoints
   return res.status(404).json({ error: 'Endpoint not found' });
 };
