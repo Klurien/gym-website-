@@ -21,6 +21,24 @@ export default function Auth() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(isLogin ? { email: formData.email, password: formData.password } : formData)
       });
+      
+      if (res.status === 404 || res.status === 405) {
+        // API not available - use mock auth
+        setStatus({ success: 'Demo mode - Logging in...', error: '' });
+        const mockUser = {
+          id: 'mock-' + Math.random().toString(36).substr(2, 9),
+          username: formData.username || formData.email.split('@')[0],
+          email: formData.email,
+          role: 'trainer',
+          profile_pic: null
+        };
+        localStorage.setItem('token', 'mock-token');
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        setTimeout(() => navigate('/feed'), 1000);
+        setLoading(false);
+        return;
+      }
+      
       const data = await res.json();
 
       if (res.ok) {
@@ -33,6 +51,23 @@ export default function Auth() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email: formData.email, password: formData.password })
             });
+            
+            if (loginRes.status === 404 || loginRes.status === 405) {
+              // API not available - use mock
+              const mockUser = {
+                id: 'mock-' + Math.random().toString(36).substr(2, 9),
+                username: formData.username || formData.email.split('@')[0],
+                email: formData.email,
+                role: 'trainer',
+                profile_pic: null
+              };
+              localStorage.setItem('token', 'mock-token');
+              localStorage.setItem('user', JSON.stringify(mockUser));
+              setTimeout(() => navigate('/feed'), 1000);
+              setLoading(false);
+              return;
+            }
+            
             const loginData = await loginRes.json();
             if (loginRes.ok) {
               localStorage.setItem('token', loginData.token);
