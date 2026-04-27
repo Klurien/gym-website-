@@ -589,16 +589,22 @@ const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
       if (res.ok) {
         const data = await res.json();
         setMediaUrl(data.url);
         setUploaded(true);
       } else {
-        alert('Upload failed. Try a URL instead.');
+        const data = await res.json();
+        alert(data.error || 'Upload failed. Try a URL instead.');
       }
     } catch { alert('Upload error.'); }
     finally { setUploading(false); }
@@ -765,9 +771,9 @@ const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-const FAB = ({ screen, onPress }: { screen: Screen, onPress: () => void }) => (
+const FAB = ({ screen, onPress, userRole }: { screen: Screen, onPress: () => void, userRole?: string }) => (
   <AnimatePresence>
-    {screen === 'feed' && (
+    {screen === 'feed' && (userRole === 'admin' || userRole === 'trainer') && (
       <motion.button
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -824,7 +830,7 @@ export default function KineticApp() {
       </main>
 
       <NavBar current={screen} setScreen={(s) => { setScreen(s); setActiveChat(null); }} />
-      <FAB screen={screen} onPress={() => setShowPostModal(true)} />
+      <FAB screen={screen} userRole={user?.role} onPress={() => setShowPostModal(true)} />
       <AnimatePresence>
         {showPostModal && <CreatePostModal onClose={() => setShowPostModal(false)} />}
       </AnimatePresence>
