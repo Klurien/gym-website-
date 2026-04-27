@@ -59,7 +59,21 @@ async function startServer() {
   });
 
   // Proxy to CommonJS handlers
-  const wrap = (handler: any) => (req: any, res: any) => handler(req, res);
+  const wrap = (handler: any) => 
+  (req: any, res: any) => {
+    try {
+      const result = handler(req, res);
+      if (result && typeof result.then === 'function') {
+        result.catch((err: any) => {
+          console.error('Async handler error:', err);
+          res.status(500).json({ error: 'Internal server error' });
+        });
+      }
+    } catch (err: any) {
+      console.error('Sync handler error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
   
   app.all('/api/register', wrap(registerHandler));
   app.all('/api/login', wrap(loginHandler));

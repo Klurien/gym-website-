@@ -29,6 +29,9 @@ interface Post {
   comments: number;
   tag?: string;
   isVideo?: boolean;
+  is_liked?: boolean;
+  likes_count?: number;
+  comments_count?: number;
 }
 
 interface Message {
@@ -43,6 +46,53 @@ interface Message {
   time: string;
   tags?: string[];
   unread?: boolean;
+}
+
+// --- Helpers ---
+const getAuthToken = () => localStorage.getItem('token');
+
+async function fetchPosts(): Promise<Post[]> {
+  const token = getAuthToken();
+  if (!token) return POSTS;
+  try {
+    const res = await fetch('/api/posts', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return POSTS;
+    const data = await res.json();
+    return data.map((p: any) => ({
+      id: p.id,
+      author: {
+        name: p.trainer_name || 'Trainer',
+        tier: 'Pro Coach',
+        avatar: p.trainer?.profile_pic || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=200&h=200&auto=format&fit=crop'
+      },
+      time: new Date(p.created_at).toLocaleDateString(),
+      image: p.media_url || '',
+      content: p.description || p.title,
+      likes: String(p.likes_count || 0),
+      comments: p.comments_count || 0,
+      tag: p.type === 'video' ? 'VIDEO' : undefined,
+      isVideo: p.type === 'video',
+      is_liked: !!p.is_liked,
+      likes_count: p.likes_count,
+      comments_count: p.comments_count
+    }));
+  } catch {
+    return POSTS;
+  }
+}
+
+async function toggleLike(postId: string) {
+  const token = getAuthToken();
+  if (!token) return;
+  try {
+    await fetch('/api/posts_social?action=like', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ post_id: postId })
+    });
+  } catch { /* ignore */ }
 }
 
 // --- Mock Data ---

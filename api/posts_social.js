@@ -1,32 +1,40 @@
 const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'gym-secret-2026';
+const JWT_SECRET = process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET must be set'); })();
 
 let pool;
-
-module.exports = async function handler(req, res) {
+function getPool() {
     if (!pool && process.env.DB_HOST) {
-        const dbConfig = {
+        pool = mysql.createPool({
             host: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
             port: process.env.DB_PORT || 4000,
-            ssl: { rejectUnauthorized: false }
-        };
-        pool = mysql.createPool(dbConfig);
+            ssl: { rejectUnauthorized: false },
+            waitForConnections: true,
+            connectionLimit: 10
+        });
     }
-    
-    if (!pool) return res.status(500).json({ error: 'DB config missing' });
+    return pool;
+}
+
+module.exports = async function handler(req, res) {
+    const db = getPool();
+    if (!db) return res.status(500).json({ error: 'Database configuration missing' });
 
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: 'Missing token' });
+    
     const token = authHeader.split(' ')[1];
+    if (!token || typeof token !== 'string') {
+        return res.status(401).json({ error: 'Missing token' });
+    }
 
     let decoded;
     try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET || 'gym-secret-2026');
+        decoded = jwt.verify(token, JWT_SECRET);
     } catch (err) {
         return res.status(401).json({ error: 'Invalid token' });
     }
@@ -39,13 +47,12 @@ module.exports = async function handler(req, res) {
 
         if (action === 'like') {
             try {
-                // Toggle like (if exists delete, else insert)
-                const [existing] = await pool.query('SELECT * FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, decoded.id]);
+                const [existing] = await db.query('SELECT * FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, decoded.id]);
                 if (existing.length > 0) {
-                    await pool.query('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, decoded.id]);
+                    await db.query('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, decoded.id]);
                     return res.status(200).json({ message: 'Unliked', status: 'deleted' });
                 } else {
-                    await pool.query('INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)', [post_id, decoded.id]);
+                    await db.query('INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)', [post_id, decoded.id]);
                     return res.status(201).json({ message: 'Liked', status: 'added' });
                 }
             } catch (err) {
@@ -58,7 +65,7 @@ module.exports = async function handler(req, res) {
             const { comment } = req.body;
             if (!comment) return res.status(400).json({ error: 'Comment text required' });
             try {
-                await pool.query('INSERT INTO post_comments (post_id, user_id, comment) VALUES (?, ?, ?)', [post_id, decoded.id, comment]);
+                await db.query('INSERT INTO post_comments (post_id, user_id, comment) VALUES (?, ?, ?)', [post_id, decoded.id, comment]);
                 return res.status(201).json({ message: 'Comment added' });
             } catch (err) {
                 console.error(err);
@@ -70,7 +77,7 @@ module.exports = async function handler(req, res) {
             const { post_id } = req.query;
             if (!post_id) return res.status(400).json({ error: 'post_id required' });
             try {
-                const [rows] = await pool.query('SELECT c.comment, c.created_at, u.username, u.profile_pic FROM post_comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at DESC', [post_id]);
+                const [rows] = await db.query('SELECT c.comment, c.created_at, u.username, u.profile_pic FROM post_comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at DESC', [post_id]);
                 return res.status(200).json(rows);
             } catch (err) {
                 console.error(err);

@@ -2,27 +2,36 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const JWT_SECRET = process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET must be set'); })();
+
+let pool;
+function getPool() {
+    if (!pool && process.env.DB_HOST) {
+        pool = mysql.createPool({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            port: process.env.DB_PORT || 4000,
+            ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: false },
+            waitForConnections: true,
+            connectionLimit: 10
+        });
+    }
+    return pool;
+}
+
 module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).end();
-    
-    const dbConfig = {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
-        port: process.env.DB_PORT || 4000,
-        ssl: {
-            minVersion: 'TLSv1.2',
-            rejectUnauthorized: false
-        }
-    };
     
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
 
     try {
-        const pool = mysql.createPool(dbConfig);
-        const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        const db = getPool();
+        if (!db) return res.status(500).json({ error: 'Database configuration missing' });
+        
+        const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         
         if (rows.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
         
@@ -32,7 +41,7 @@ module.exports = async (req, res) => {
 
         const token = jwt.sign(
             { id: user.id, role: user.role, username: user.username, profile_pic: user.profile_pic },
-            process.env.JWT_SECRET || 'gym-secret-2026',
+            JWT_SECRET,
             { expiresIn: '1d' }
         );
 
