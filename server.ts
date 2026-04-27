@@ -10,7 +10,7 @@ dotenv.config();
 
 // API Handlers
 // @ts-ignore
-import apiHandler from './api/index.js';
+import apiHandler from './server-api/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
