@@ -3,24 +3,23 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'gym-secret-2026';
 
-// Database config
-const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 4000,
-    ssl: {
-        rejectUnauthorized: false
-    }
-};
-
 let pool;
-if (process.env.DB_HOST) {
-    pool = mysql.createPool(dbConfig);
-}
 
 module.exports = async function handler(req, res) {
+    if (!pool && process.env.DB_HOST) {
+        const dbConfig = {
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            port: process.env.DB_PORT || 4000,
+            ssl: {
+                rejectUnauthorized: false
+            }
+        };
+        pool = mysql.createPool(dbConfig);
+    }
+
     if (!pool) {
         return res.status(500).json({ error: 'Database configuration missing' });
     }

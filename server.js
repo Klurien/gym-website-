@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -222,9 +223,9 @@ app.all('/api/upload',            wrap(require('./api/upload')));
 
 // Static Files
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // ── Fallback for React SPA Routing ──
-const path = require('path');
 app.get('*', (req, res) => {
     // Only intercept if it's a browser navigation request, not a file
     res.sendFile(path.join(__dirname, 'index.html'));

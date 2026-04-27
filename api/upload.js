@@ -23,12 +23,28 @@ const upload = multer({
 
 module.exports = (req, res) => {
   upload(req, res, (err) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'Elite content exceeds 50MB limit.' });
+      }
+      return res.status(400).json({ error: `Upload error: ${err.message}` });
+    } else if (err) {
+      return res.status(500).json({ error: `Server error: ${err.message}` });
     }
+    
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ error: 'No media asset provided.' });
     }
+
+    // Secondary validation for file extensions
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.mp4', '.mov', '.webm'];
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    if (!allowedExtensions.includes(ext)) {
+      // Cleanup file if invalid extension (multer already wrote it)
+      fs.unlinkSync(req.file.path);
+      return res.status(415).json({ error: 'Unsupported media format. Use JPG, PNG, or MP4.' });
+    }
+
     const url = `/uploads/${req.file.filename}`;
     res.json({ url });
   });

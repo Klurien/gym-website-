@@ -173,29 +173,32 @@ export default function Feed() {
   return (
     <main className="h-screen w-full bg-black overflow-hidden flex flex-col">
       {/* Immersive Header (Static) */}
-      <header className="px-6 pt-12 pb-6 bg-gradient-to-b from-black/80 to-transparent shrink-0 z-20">
-        <h1 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">
+      <header className="px-6 pt-12 pb-6 bg-gradient-to-b from-black/90 to-transparent shrink-0 z-20 animate-fade-in">
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none text-glow-lime">
           {greeting()}, <span className="text-lime-400">{user.username || 'Member'}</span>
         </h1>
-        <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.4em] mt-2">Elite Global Feed</p>
+        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.5em] mt-3 ml-1 opacity-60">Elite Global Feed</p>
       </header>
 
       {/* TikTok Style Vertical Snap Container */}
       <div className="flex-1 overflow-y-auto scroll-snap-y-mandatory hide-scrollbar pb-32">
         {loading ? (
-          <div className="h-full flex items-center justify-center">
-            <span className="material-symbols-outlined animate-spin text-lime-400 text-4xl">refresh</span>
+          <div className="h-full flex flex-col items-center justify-center gap-4 animate-pulse-soft">
+            <span className="material-symbols-outlined text-lime-400 text-5xl">stream</span>
+            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Establishing Link...</span>
           </div>
         ) : posts.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold gap-4">
-            <span className="material-symbols-outlined text-4xl opacity-30">movie_filter</span>
+          <div className="h-full flex flex-col items-center justify-center text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold gap-6 animate-fade-in">
+            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+              <span className="material-symbols-outlined text-4xl opacity-20">movie_filter</span>
+            </div>
             No Elite Clips Yet
           </div>
         ) : (
           posts.map(post => (
-            <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-zinc-900 flex flex-col">
+            <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-black flex flex-col">
               {/* Media Background Layer */}
-              <div className="absolute inset-0 z-0 bg-stone-950">
+              <div className="absolute inset-0 z-0 select-none">
                 {post.media_url?.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
                   <video
                     src={post.media_url.startsWith('http') ? post.media_url : `https://${post.media_url}`}
@@ -213,24 +216,24 @@ export default function Feed() {
                   />
                 )}
                 {/* Fixed Overlay: Ensure it doesn't block the video layer */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-20 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-20 pointer-events-none"></div>
               </div>
 
               {/* Interaction Layer: Branding & Text (z-30) */}
-              <div className="absolute inset-0 z-30 pointer-events-none p-6 flex flex-col justify-end">
-                <div className="mb-24 flex flex-col gap-3">
-                  <div className="flex items-center gap-2 pointer-events-auto w-fit">
-                    <div className="w-9 h-9 rounded-full border-2 border-lime-400 overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 z-30 pointer-events-none p-8 flex flex-col justify-end animate-slide-up">
+                <div className="mb-24 flex flex-col gap-5">
+                  <div className="flex items-center gap-3 pointer-events-auto w-fit bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 hover:bg-black/60 transition-all cursor-pointer">
+                    <div className="w-8 h-8 rounded-full border border-lime-400/50 overflow-hidden">
                       <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.trainer_name}`} className="w-full h-full" alt="Trainer" />
                     </div>
-                    <span className="text-xs font-black text-white uppercase tracking-wider drop-shadow-lg">@{post.trainer_name || 'Elite'}</span>
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">@{post.trainer_name || 'Elite'}</span>
                   </div>
                   
-                  <div className="max-w-[80%] pointer-events-auto">
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-1 drop-shadow-2xl">{post.title}</h2>
-                    <p className="text-[11px] text-zinc-300 font-medium leading-relaxed line-clamp-2 drop-shadow-xl">{post.description}</p>
+                  <div className="max-w-[85%] pointer-events-auto">
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2 leading-none drop-shadow-2xl">{post.title}</h2>
+                    <p className="text-xs text-zinc-300 font-medium leading-relaxed line-clamp-2 drop-shadow-xl opacity-80">{post.description}</p>
                     {post.tags && (
-                      <span className="inline-block mt-2 bg-lime-400/20 text-lime-400 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border border-lime-400/30">
+                      <span className="inline-block mt-4 bg-lime-400/10 text-lime-400 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] border border-lime-400/20 backdrop-blur-sm">
                         #{post.tags}
                       </span>
                     )}
@@ -239,29 +242,29 @@ export default function Feed() {
               </div>
 
               {/* Side Action Bar (Vertical) */}
-              <div className="absolute right-4 bottom-12 z-20 flex flex-col gap-6 items-center">
-                <div className="flex flex-col items-center gap-1">
+              <div className="absolute right-6 bottom-16 z-40 flex flex-col gap-8 items-center pointer-events-auto">
+                <div className="flex flex-col items-center gap-2">
                   <button
                     onClick={() => handleLike(post.id, post.is_liked)}
-                    className={`w-12 h-12 rounded-full backdrop-blur-xl flex items-center justify-center transition-all active:scale-75 shadow-2xl ${post.is_liked ? 'bg-lime-400 text-black shadow-lime-400/30' : 'bg-black/40 text-white border border-white/10'}`}
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all active:scale-75 shadow-2xl kinetic-hover ${post.is_liked ? 'bg-lime-400 text-black shadow-lime-400/30' : 'bg-black/40 text-white border border-white/10 backdrop-blur-xl hover:bg-white/10'}`}
                   >
-                    <span className="material-symbols-outlined font-black" style={post.is_liked ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
+                    <span className="material-symbols-outlined font-black text-2xl" style={post.is_liked ? { fontVariationSettings: "'FILL' 1" } : {}}>favorite</span>
                   </button>
-                  <span className="text-[10px] font-black text-white tracking-widest drop-shadow-md">{post.likes_count || 0}</span>
+                  <span className="text-[10px] font-black text-white tracking-widest drop-shadow-md opacity-70">{post.likes_count || 0}</span>
                 </div>
 
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center gap-2">
                   <button
                     onClick={() => openComments(post.id)}
-                    className="w-12 h-12 bg-black/40 backdrop-blur-xl text-white rounded-full flex items-center justify-center border border-white/10 shadow-2xl active:scale-75"
+                    className="w-14 h-14 bg-black/40 backdrop-blur-xl text-white rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl active:scale-75 kinetic-hover hover:bg-white/10"
                   >
-                    <span className="material-symbols-outlined font-black">forum</span>
+                    <span className="material-symbols-outlined font-black text-2xl">forum</span>
                   </button>
-                  <span className="text-[10px] font-black text-white tracking-widest drop-shadow-md">{post.comments_count || 0}</span>
+                  <span className="text-[10px] font-black text-white tracking-widest drop-shadow-md opacity-70">{post.comments_count || 0}</span>
                 </div>
 
-                <button className="w-12 h-12 bg-black/40 backdrop-blur-xl text-white rounded-full flex items-center justify-center border border-white/10 shadow-2xl active:scale-75">
-                  <span className="material-symbols-outlined font-black">share</span>
+                <button className="w-14 h-14 bg-black/40 backdrop-blur-xl text-white rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl active:scale-75 kinetic-hover hover:bg-white/10">
+                  <span className="material-symbols-outlined font-black text-2xl">share</span>
                 </button>
               </div>
             </div>
@@ -282,61 +285,120 @@ export default function Feed() {
       {/* Modals (Portal-like) */}
       {showPostModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setShowPostModal(false)}></div>
-          <div className="relative bg-zinc-900 border border-white/10 rounded-[32px] p-6 w-full max-w-sm shadow-2xl">
-            <h2 className="text-xl font-black text-white mb-6 uppercase tracking-tighter">New Global Post</h2>
-            <form onSubmit={handleCreatePost} className="space-y-4">
-              <input required type="text" placeholder="Post Title" value={postForm.title} onChange={e => setPostForm({ ...postForm, title: e.target.value })} className="w-full bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 transition-all outline-none" />
-              <textarea required placeholder="Caption..." value={postForm.description} onChange={e => setPostForm({ ...postForm, description: e.target.value })} className="w-full h-24 bg-black/40 border border-white/10 text-white rounded-xl py-3 px-4 focus:border-lime-400 resize-none outline-none"></textarea>
-              {/* Redesigned Media Selection Area */}
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl" onClick={() => setShowPostModal(false)}></div>
+          <div className="relative bg-zinc-950 border border-white/10 rounded-[40px] p-8 w-full max-w-lg shadow-[0_0_100px_rgba(0,0,0,1)] ring-1 ring-white/5 animate-in fade-in zoom-in duration-300">
+            <div className="flex justify-between items-center mb-10">
+              <div>
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">Create Elite Post</h2>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse"></span>
+                  <span className="text-[10px] font-black text-lime-400 uppercase tracking-[0.2em]">Global Broadcast</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowPostModal(false)}
+                className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all group"
+              >
+                <span className="material-symbols-outlined text-zinc-500 group-hover:text-white transition-colors">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreatePost} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Campaign Title</label>
+                <input 
+                  required 
+                  type="text" 
+                  placeholder="e.g. MORNING GRIND" 
+                  value={postForm.title} 
+                  onChange={e => setPostForm({ ...postForm, title: e.target.value })} 
+                  className="w-full bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 px-6 focus:border-lime-400/50 focus:ring-4 focus:ring-lime-400/5 transition-all outline-none font-bold placeholder:text-zinc-700" 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Elite Description</label>
+                <textarea 
+                  required 
+                  placeholder="Forge your legacy..." 
+                  value={postForm.description} 
+                  onChange={e => setPostForm({ ...postForm, description: e.target.value })} 
+                  className="w-full h-32 bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 px-6 focus:border-lime-400/50 focus:ring-4 focus:ring-lime-400/5 resize-none outline-none font-medium placeholder:text-zinc-700"
+                ></textarea>
+              </div>
+
               <div className="space-y-4">
+                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Media Asset</label>
                 <label 
                   htmlFor="media-upload" 
-                  className={`flex flex-col items-center justify-center border-2 border-dashed rounded-[24px] p-8 transition-all group cursor-pointer ${postForm.media_url && !uploading ? 'border-lime-400 bg-lime-400/5' : 'border-white/10 bg-black/20 hover:border-lime-400/50'}`}
+                  className={`flex flex-col items-center justify-center border-2 border-dashed rounded-[32px] p-10 transition-all group cursor-pointer relative overflow-hidden ${postForm.media_url && !uploading ? 'border-lime-400 bg-lime-400/5' : 'border-white/5 bg-zinc-900/30 hover:border-white/20'}`}
                 >
                   {uploading ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <span className="material-symbols-outlined animate-spin text-4xl text-lime-400">refresh</span>
-                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Processing...</span>
+                    <div className="flex flex-col items-center gap-4 relative z-10">
+                      <div className="w-16 h-16 border-4 border-lime-400/20 border-t-lime-400 rounded-full animate-spin"></div>
+                      <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Uploading Content...</span>
                     </div>
                   ) : postForm.media_url ? (
-                    <div className="flex flex-col items-center gap-3">
-                      <span className="material-symbols-outlined text-4xl text-lime-400">check_circle</span>
-                      <span className="text-[10px] font-black text-lime-400 uppercase tracking-widest">Media Attached</span>
-                      <span className="text-[8px] text-zinc-500 truncate max-w-[200px]">{postForm.media_url.split('/').pop()}</span>
+                    <div className="flex flex-col items-center gap-4 relative z-10">
+                      <div className="w-16 h-16 bg-lime-400 rounded-full flex items-center justify-center shadow-lg shadow-lime-400/20">
+                        <span className="material-symbols-outlined text-black text-3xl font-bold">check</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="block text-[10px] font-black text-lime-400 uppercase tracking-[0.2em]">Asset Secured</span>
+                        <span className="block text-[8px] text-zinc-500 mt-1 font-mono uppercase opacity-60">Ready for broadcast</span>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-3">
-                      <span className="material-symbols-outlined text-4xl text-zinc-500 group-hover:text-lime-400 transition-colors">add_a_photo</span>
+                    <div className="flex flex-col items-center gap-5 relative z-10">
+                      <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center border border-white/5 group-hover:bg-lime-400 transition-all duration-500">
+                        <span className="material-symbols-outlined text-4xl text-zinc-500 group-hover:text-black transition-colors">upload_file</span>
+                      </div>
                       <div className="text-center">
-                        <span className="block text-[10px] font-black text-white uppercase tracking-widest">Choose Elite Media</span>
-                        <span className="block text-[8px] text-zinc-500 uppercase tracking-widest mt-1 text-zinc-500/80">Tap to browse gallery</span>
+                        <span className="block text-xs font-black text-white uppercase tracking-widest">Select Elite Media</span>
+                        <span className="block text-[9px] text-zinc-500 uppercase tracking-[0.1em] mt-2 group-hover:text-zinc-400 transition-colors">Video (mp4) or Image (jpg/png)</span>
                       </div>
                     </div>
                   )}
                   <input id="media-upload" type="file" onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
                 </label>
 
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                     <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">OR</span>
-                  </div>
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-white/5"></div>
+                  <span className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.4em]">Alternative</span>
+                  <div className="h-px flex-1 bg-white/5"></div>
+                </div>
+
+                <div className="relative group">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 material-symbols-outlined text-lg group-focus-within:text-lime-400 transition-colors">link</span>
                   <input 
                     type="text" 
-                    placeholder="External Media URL..." 
+                    placeholder="Enter Content URL..." 
                     value={postForm.media_url} 
                     onChange={e => {
                       const url = e.target.value;
                       const type = url.match(/\.(mp4|webm|ogg|mov)$|video/i) ? 'video' : 'static';
                       setPostForm({ ...postForm, media_url: url, type });
                     }} 
-                    className="w-full bg-black/40 border border-white/10 text-white rounded-2xl py-4 pl-12 pr-4 focus:border-lime-400 text-xs outline-none transition-all" 
+                    className="w-full bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-5 pl-14 pr-6 focus:border-lime-400/50 outline-none text-[11px] font-bold transition-all placeholder:text-zinc-700" 
                   />
                 </div>
               </div>
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setShowPostModal(false)} className="flex-1 bg-zinc-800 text-white font-bold py-4 rounded-2xl hover:bg-zinc-700 transition">Cancel</button>
-                <button type="submit" className="flex-1 bg-lime-400 text-black font-black py-4 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">Publish</button>
+
+              <div className="flex gap-4 pt-6">
+                <button 
+                  type="button" 
+                  onClick={() => setShowPostModal(false)} 
+                  className="flex-1 bg-white/5 text-zinc-400 font-black text-[10px] uppercase tracking-widest py-6 rounded-2xl hover:bg-white/10 hover:text-white transition-all border border-white/5"
+                >
+                  Discard
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={uploading || !postForm.title}
+                  className="flex-1 bg-lime-400 text-black font-black text-[10px] uppercase tracking-widest py-6 rounded-2xl shadow-[0_20px_40px_rgba(163,230,53,0.15)] hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:translate-y-0"
+                >
+                  Publish Post
+                </button>
               </div>
             </form>
           </div>
