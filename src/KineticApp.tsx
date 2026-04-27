@@ -691,53 +691,38 @@ const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
           {/* Media Upload */}
           <div className="space-y-3">
             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Media Asset</label>
-            <label
-              htmlFor="elite-media-upload"
-              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-[28px] p-8 cursor-pointer transition-all group ${
-                uploaded ? 'border-kinetic-lime bg-kinetic-lime/5' : 'border-white/5 bg-zinc-900/30 hover:border-white/20'
-              }`}
-            >
-              {uploading ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-14 h-14 border-4 border-kinetic-lime/20 border-t-kinetic-lime rounded-full animate-spin" />
-                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Uploading...</span>
-                </div>
-              ) : uploaded ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-14 h-14 bg-kinetic-lime rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(195,244,0,0.3)]">
-                    <span className="material-symbols-outlined text-black text-2xl font-bold">check</span>
-                  </div>
-                  <span className="text-[10px] font-black text-kinetic-lime uppercase tracking-[0.2em]">Asset Secured</span>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center border border-white/5 group-hover:bg-kinetic-lime transition-all duration-500">
-                    <span className="material-symbols-outlined text-3xl text-zinc-500 group-hover:text-black transition-colors">upload_file</span>
-                  </div>
-                  <div className="text-center">
-                    <span className="block text-xs font-black text-white uppercase tracking-widest">Select Elite Media</span>
-                    <span className="block text-[9px] text-zinc-500 uppercase tracking-[0.1em] mt-1">Video (mp4) or Image (jpg/png)</span>
-                  </div>
-                </div>
-              )}
-              <input id="elite-media-upload" type="file" onChange={handleFile} className="hidden" accept="image/*,video/*" />
-            </label>
+            
+            <div className="flex gap-3">
+              {/* File Upload Button */}
+              <label
+                htmlFor="elite-media-upload"
+                className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-[20px] p-4 cursor-pointer transition-all group ${
+                  uploaded ? 'border-kinetic-lime bg-kinetic-lime/5' : 'border-white/5 bg-zinc-900/30 hover:border-white/20'
+                }`}
+              >
+                {uploading ? (
+                  <div className="w-10 h-10 border-4 border-kinetic-lime/20 border-t-kinetic-lime rounded-full animate-spin" />
+                ) : uploaded ? (
+                  <span className="text-kinetic-lime">✓ Uploaded</span>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-2xl text-zinc-500 group-hover:text-kinetic-lime">upload</span>
+                    <span className="text-xs font-bold text-zinc-400 mt-1">Choose File</span>
+                  </>
+                )}
+                <input id="elite-media-upload" type="file" onChange={handleFile} className="hidden" accept="image/*,video/*" />
+              </label>
 
-            <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-white/5" />
-              <span className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.4em]">or URL</span>
-              <div className="h-px flex-1 bg-white/5" />
-            </div>
-
-            <div className="relative group">
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-zinc-600 text-lg group-focus-within:text-kinetic-lime transition-colors">link</span>
-              <input
-                type="text"
-                placeholder="https://..."
-                value={mediaUrl}
-                onChange={e => { setMediaUrl(e.target.value); setUploaded(false); }}
-                className="w-full bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 pl-14 pr-6 focus:border-kinetic-lime/50 outline-none text-[11px] font-bold transition-all placeholder:text-zinc-700"
-              />
+              {/* URL Input */}
+              <div className="flex-1">
+                <input
+                  type="text"
+                  placeholder="Paste image URL..."
+                  value={mediaUrl}
+                  onChange={e => { setMediaUrl(e.target.value); setUploaded(false); }}
+                  className="w-full h-full bg-zinc-900/50 border border-white/5 text-white rounded-[20px] py-4 px-4 focus:border-kinetic-lime/50 outline-none text-xs font-bold transition-all placeholder:text-zinc-700"
+                />
+              </div>
             </div>
           </div>
 
