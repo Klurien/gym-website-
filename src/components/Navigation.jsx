@@ -29,6 +29,9 @@ export default function Navigation() {
       <button onClick={() => navigate('/calendar')} className={getButtonClass('/calendar')}>
         <span className="material-symbols-outlined" style={getIconStyle('/calendar')}>event_note</span>
       </button>
+      <button onClick={() => navigate('/community')} className={getButtonClass('/community')}>
+        <span className="material-symbols-outlined" style={getIconStyle('/community')}>forum</span>
+      </button>
       <button onClick={() => navigate('/timer')} className={getButtonClass('/timer')}>
         <span className="material-symbols-outlined" style={getIconStyle('/timer')}>timer</span>
       </button>
