@@ -527,13 +527,202 @@ const NavBar = ({ current, setScreen }: { current: Screen, setScreen: (s: Screen
   </nav>
 );
 
-const FAB = ({ screen }: { screen: Screen }) => (
+const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [tags, setTags] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setMediaUrl(data.url);
+        setUploaded(true);
+      } else {
+        alert('Upload failed. Try a URL instead.');
+      }
+    } catch { alert('Upload error.'); }
+    finally { setUploading(false); }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    const type = mediaUrl.match(/\.(mp4|webm|ogg|mov)$/i) ? 'video' : 'static';
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ title, description, media_url: mediaUrl, tags, type })
+      });
+      if (res.ok) { onClose(); }
+      else { alert('Only admins can post.'); }
+    } catch { alert('Failed to post.'); }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+    >
+      <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl" onClick={onClose} />
+      <motion.div
+        initial={{ scale: 0.92, y: 20, opacity: 0 }}
+        animate={{ scale: 1, y: 0, opacity: 1 }}
+        exit={{ scale: 0.92, y: 20, opacity: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="relative bg-zinc-950 border border-white/10 rounded-[40px] p-8 w-full max-w-lg shadow-[0_0_100px_rgba(0,0,0,1)] ring-1 ring-white/5 z-10"
+      >
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-1">Create Elite Post</h2>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-kinetic-lime animate-pulse" />
+              <span className="text-[10px] font-black text-kinetic-lime uppercase tracking-[0.2em]">Global Broadcast</span>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all group"
+          >
+            <span className="material-symbols-outlined text-zinc-500 group-hover:text-white transition-colors" style={{ fontSize: '20px' }}>close</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Title */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Campaign Title</label>
+            <input
+              required
+              type="text"
+              placeholder="e.g. MORNING GRIND"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              className="w-full bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 px-6 focus:border-kinetic-lime/50 focus:ring-4 focus:ring-kinetic-lime/5 outline-none font-bold placeholder:text-zinc-700 transition-all"
+            />
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Elite Description</label>
+            <textarea
+              required
+              placeholder="Forge your legacy..."
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              className="w-full h-28 bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 px-6 focus:border-kinetic-lime/50 focus:ring-4 focus:ring-kinetic-lime/5 resize-none outline-none font-medium placeholder:text-zinc-700 transition-all"
+            />
+          </div>
+
+          {/* Media Upload */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Media Asset</label>
+            <label
+              htmlFor="elite-media-upload"
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-[28px] p-8 cursor-pointer transition-all group ${
+                uploaded ? 'border-kinetic-lime bg-kinetic-lime/5' : 'border-white/5 bg-zinc-900/30 hover:border-white/20'
+              }`}
+            >
+              {uploading ? (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-14 h-14 border-4 border-kinetic-lime/20 border-t-kinetic-lime rounded-full animate-spin" />
+                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em]">Uploading...</span>
+                </div>
+              ) : uploaded ? (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-14 h-14 bg-kinetic-lime rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(195,244,0,0.3)]">
+                    <span className="material-symbols-outlined text-black text-2xl font-bold">check</span>
+                  </div>
+                  <span className="text-[10px] font-black text-kinetic-lime uppercase tracking-[0.2em]">Asset Secured</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center border border-white/5 group-hover:bg-kinetic-lime transition-all duration-500">
+                    <span className="material-symbols-outlined text-3xl text-zinc-500 group-hover:text-black transition-colors">upload_file</span>
+                  </div>
+                  <div className="text-center">
+                    <span className="block text-xs font-black text-white uppercase tracking-widest">Select Elite Media</span>
+                    <span className="block text-[9px] text-zinc-500 uppercase tracking-[0.1em] mt-1">Video (mp4) or Image (jpg/png)</span>
+                  </div>
+                </div>
+              )}
+              <input id="elite-media-upload" type="file" onChange={handleFile} className="hidden" accept="image/*,video/*" />
+            </label>
+
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/5" />
+              <span className="text-[9px] font-black text-zinc-700 uppercase tracking-[0.4em]">or URL</span>
+              <div className="h-px flex-1 bg-white/5" />
+            </div>
+
+            <div className="relative group">
+              <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-zinc-600 text-lg group-focus-within:text-kinetic-lime transition-colors">link</span>
+              <input
+                type="text"
+                placeholder="https://..."
+                value={mediaUrl}
+                onChange={e => { setMediaUrl(e.target.value); setUploaded(false); }}
+                className="w-full bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 pl-14 pr-6 focus:border-kinetic-lime/50 outline-none text-[11px] font-bold transition-all placeholder:text-zinc-700"
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Tags</label>
+            <input
+              type="text"
+              placeholder="e.g. legday, strength"
+              value={tags}
+              onChange={e => setTags(e.target.value)}
+              className="w-full bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 px-6 focus:border-kinetic-lime/50 outline-none text-sm font-medium transition-all placeholder:text-zinc-700"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-4 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-white/5 text-zinc-400 font-black text-[10px] uppercase tracking-widest py-5 rounded-2xl hover:bg-white/10 hover:text-white transition-all border border-white/5"
+            >
+              Discard
+            </button>
+            <button
+              type="submit"
+              disabled={uploading || !title}
+              className="flex-1 bg-kinetic-lime text-black font-black text-[10px] uppercase tracking-widest py-5 rounded-2xl shadow-[0_20px_40px_rgba(195,244,0,0.15)] hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"
+            >
+              Publish Post
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const FAB = ({ screen, onPress }: { screen: Screen, onPress: () => void }) => (
   <AnimatePresence>
     {screen === 'feed' && (
-      <motion.button 
+      <motion.button
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0, opacity: 0 }}
+        onClick={onPress}
         className="fixed bottom-32 right-8 w-14 h-14 bg-kinetic-lime text-black rounded-2xl shadow-[0_0_30px_rgba(195,244,0,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40"
       >
         <Plus size={32} strokeWidth={3} />
@@ -546,6 +735,7 @@ export default function KineticApp() {
   const [screen, setScreen] = useState<Screen>('feed');
   const [user, setUser] = useState<User | null>(null);
   const [activeChat, setActiveChat] = useState<any | null>(null);
+  const [showPostModal, setShowPostModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -584,7 +774,10 @@ export default function KineticApp() {
       </main>
 
       <NavBar current={screen} setScreen={(s) => { setScreen(s); setActiveChat(null); }} />
-      <FAB screen={screen} />
+      <FAB screen={screen} onPress={() => setShowPostModal(true)} />
+      <AnimatePresence>
+        {showPostModal && <CreatePostModal onClose={() => setShowPostModal(false)} />}
+      </AnimatePresence>
 
       <AnimatePresence>
         {activeChat && (
