@@ -50,8 +50,8 @@ function AnimatedRoutes() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageWrapper><Feed /></PageWrapper>} />
-        <Route path="/feed" element={<PageWrapper><Feed /></PageWrapper>} />
+        <Route path="/" element={<PageWrapper><Community /></PageWrapper>} />
+        <Route path="/feed" element={<PageWrapper><Community /></PageWrapper>} />
         <Route path="/messages" element={<PageWrapper><Messages /></PageWrapper>} />
         <Route path="/calendar" element={<PageWrapper><Calendar /></PageWrapper>} />
         <Route path="/timer" element={<PageWrapper><Timer /></PageWrapper>} />
