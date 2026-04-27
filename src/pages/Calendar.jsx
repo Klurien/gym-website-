@@ -1,165 +1,197 @@
 import React, { useState, useEffect } from 'react';
 
 export default function Calendar() {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Generate a dynamic matrix of 21 days centered around today
-  const [activeDate, setActiveDate] = useState(new Date().getDate());
+  const [schedules, setSchedules] = useState(() => {
+    const saved = localStorage.getItem('kinetic_schedules');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  
   const today = new Date();
   const currentMonth = today.toLocaleString('default', { month: 'long', year: 'numeric' });
   
-  const days = Array.from({ length: 21 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + (i - 10)); // 10 days ago to 10 days ahead
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+  
+  const days = Array.from({ length: daysInMonth }, (_, i) => {
+    const date = i + 1;
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+    const daySchedules = schedules.filter(s => s.date === dateStr);
     return {
-      date: d.getDate(),
-      fullDate: d.toISOString().split('T')[0],
-      isToday: i === 10,
-      hasSession: Math.random() > 0.7 // In a real app derived from bookings
+      date,
+      dateStr,
+      hasSchedule: daySchedules.length > 0,
+      isToday: date === today.getDate()
     };
   });
 
-  const fetchBookings = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-      const res = await fetch('/api/bookings', { headers: { 'Authorization': `Bearer ${token}` } });
-      const data = await res.json();
-      setBookings(data.bookings || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const todaySchedules = schedules.filter(s => s.date === selectedDate);
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    localStorage.setItem('kinetic_schedules', JSON.stringify(schedules));
+  }, [schedules]);
 
-  const handleCancelBooking = async (bookingId) => {
-    const confirmCancel = window.confirm('Are you sure you want to cancel this booking?');
-    if (!confirmCancel) return;
+  const handleAddSchedule = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const newSchedule = {
+      id: Date.now(),
+      title: form.title.value,
+      time: form.time.value,
+      date: selectedDate,
+      completed: false
+    };
+    setSchedules([...schedules, newSchedule]);
+    setShowAddModal(false);
+    form.reset();
+  };
 
-    const token = localStorage.getItem('token');
-    try {
-      const res = await fetch('/api/bookings', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ booking_id: bookingId })
-      });
-      if (res.ok) {
-        // Optimistic toggle off
-        setBookings(prev => prev.filter(b => b.id !== bookingId));
-      }
-    } catch (e) {
-      console.error('Cancellation failed', e);
-    }
+  const toggleComplete = (id) => {
+    setSchedules(prev => prev.map(s => s.id === id ? { ...s, completed: !s.completed } : s));
+  };
+
+  const deleteSchedule = (id) => {
+    setSchedules(prev => prev.filter(s => s.id !== id));
   };
 
   return (
-    <main className="pt-28 pb-32 px-edge-margin space-y-stack-lg max-w-2xl mx-auto">
-      {/* Section Header */}
-      <div className="flex flex-col gap-unit">
-        <p className="text-label-sm font-label-sm text-lime-400 uppercase tracking-[0.2em] drop-shadow-[0_0_10px_rgba(204,255,0,0.5)]">Training Schedule</p>
-        <h2 className="text-headline-lg font-headline-lg text-primary">{currentMonth}</h2>
+    <main className="pt-28 pb-32 px-6 max-w-lg mx-auto space-y-6">
+      <header>
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">{currentMonth}</h1>
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em]">Your Schedule</p>
+      </header>
+
+      {/* Calendar Grid */}
+      <div className="bg-zinc-900/50 rounded-[24px] p-5 border border-white/5">
+        <div className="grid grid-cols-7 text-center mb-2">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+            <span key={i} className="text-[10px] font-bold text-zinc-600 uppercase">{d}</span>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {Array(firstDay).fill(null).map((_, i) => (
+            <div key={`empty-${i}`} />
+          ))}
+          {days.map(day => (
+            <button
+              key={day.date}
+              onClick={() => setSelectedDate(day.dateStr)}
+              className={`relative p-2 rounded-xl text-sm font-bold transition-all ${
+                day.isToday 
+                  ? 'bg-lime-400 text-black' 
+                  : selectedDate === day.dateStr 
+                    ? 'bg-zinc-700 text-white' 
+                    : 'text-zinc-400 hover:bg-zinc-800'
+              }`}
+            >
+              {day.date}
+              {day.hasSchedule && (
+                <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-lime-400 rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Monthly Calendar Card */}
-      <section className="bg-zinc-900/60 rounded-[24px] p-container-padding shadow-2xl border border-white/5 relative overflow-hidden backdrop-blur-md">
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-lime-400/10 blur-[80px] rounded-full"></div>
-        <div className="grid grid-cols-7 gap-y-stack-md text-center">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">Sun</span>
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">Mon</span>
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">Tue</span>
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">Wed</span>
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">Thu</span>
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">Fri</span>
-          <span className="text-[10px] font-bold text-zinc-500 uppercase">Sat</span>
-          
-          {days.map((dayObj, idx) => {
-            const isSelected = activeDate === dayObj.date;
-            if (dayObj.isToday) {
-              return (
-                <div key={idx} onClick={() => setActiveDate(dayObj.date)} className="flex items-center justify-center cursor-pointer active:scale-90 transition-transform">
-                  <span className={`w-8 h-8 flex items-center justify-center font-bold rounded-full shadow-[0_0_15px_rgba(204,255,0,0.4)] ${isSelected ? 'bg-lime-400 text-black border-2 border-white' : 'bg-lime-400 text-black'}`}>
-                    {dayObj.date}
-                  </span>
-                </div>
-              );
-            }
-            return (
-              <span 
-                key={idx} 
-                onClick={() => setActiveDate(dayObj.date)}
-                className={`text-body-md font-body-md relative cursor-pointer hover:text-white transition-colors flex items-center justify-center w-8 h-8 mx-auto rounded-full ${isSelected ? 'bg-zinc-800 text-white' : (idx < 10 ? 'text-zinc-600' : 'text-primary')} active:scale-90 transition-transform`}
-              >
-                {dayObj.date}
-                {dayObj.hasSession && (
-                  <span className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSelected ? 'bg-lime-400' : 'bg-zinc-500'}`}></span>
-                )}
-              </span>
-            );
-          })}
+      {/* Selected Day */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-black text-white uppercase">
+            {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' })}
+          </h2>
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="bg-lime-400 text-black px-4 py-2 rounded-full text-xs font-black uppercase flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Add
+          </button>
         </div>
-      </section>
 
-      {/* Bookings Output */}
-      <section className="space-y-stack-md">
-        <h3 className="text-headline-md font-headline-md text-primary">Your Sessions</h3>
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <span className="material-symbols-outlined animate-spin text-lime-400">refresh</span>
-          </div>
-        ) : bookings.length === 0 ? (
-          <div className="bg-zinc-900/30 rounded-[24px] p-container-padding text-center border border-white/5 shadow-2xl">
-             <p className="text-zinc-500 font-label-bold uppercase tracking-widest text-[10px]">No Upcoming Classes</p>
-             <button className="mt-4 px-6 py-2 border border-white/10 rounded-full text-[10px] font-bold text-white uppercase tracking-widest bg-zinc-800 hover:bg-zinc-700 active:scale-95 transition-all">Book Open Session</button>
+        {todaySchedules.length === 0 ? (
+          <div className="text-center py-10 text-zinc-500">
+            <span className="material-symbols-outlined text-4xl mb-2">event_note</span>
+            <p className="text-xs font-bold uppercase tracking-widest">No activities planned</p>
           </div>
         ) : (
-          bookings.map(booking => (
-            <div key={booking.id} className="bg-zinc-900/50 rounded-[24px] overflow-hidden shadow-2xl border border-white/5 group hover:border-lime-400/30 transition-colors duration-300 mb-6">
-              <div className="relative h-24 w-full overflow-hidden cursor-pointer">
-                <img 
-                  alt="Gym classification" 
-                  className="w-full h-full object-cover opacity-30 group-hover:scale-110 transition-transform duration-700" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuD95XSlFYb76FfDl3GnhBu3Sxf1MEEDIBLAO7qnBPt_mn_d1orVdxZPtkLfnlN1m_xZLIH3DBs6lSoUJmjTMz2ukZti8uglOQOprN52kpl27KfizZZt4CuAVaV6Rf8ttjqVvH3mNYSct4jCWJCam6ogFKU0upxP-BLMxROO2euxdmHiJKQqRm9NtwQOGo-MqHOOOCCSX0rNl6AZj_oE24cMarObXftrFFppVo_NAReCGgyGOpVkGlJFlLGH_B2TEkUJsl-dC92J-4LY"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                <div className="absolute bottom-4 left-6">
-                  <span className="px-3 py-1 bg-lime-400/20 text-lime-400 border border-lime-400 text-label-sm font-bold rounded-full tracking-widest uppercase text-[10px]">
-                    {booking.status}
-                  </span>
-                </div>
-              </div>
-              <div className="p-container-padding space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="text-headline-md font-headline-md text-primary">{booking.name}</h4>
-                    <p className="text-body-md font-body-md text-zinc-400 mt-1 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">person</span> {booking.instructor}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-display-xl text-lime-400 leading-none">
-                      {new Date(booking.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-                
-                <button 
-                  onClick={() => handleCancelBooking(booking.id)}
-                  className="w-full bg-zinc-950 border border-red-500/30 text-red-400 font-lexend font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500/10 transition-colors active:scale-95 duration-150 uppercase tracking-widest text-xs"
+          <div className="space-y-3">
+            {todaySchedules.map(schedule => (
+              <div 
+                key={schedule.id}
+                className={`bg-zinc-900/50 border rounded-2xl p-4 flex items-center gap-4 ${
+                  schedule.completed ? 'border-lime-400/30' : 'border-white/5'
+                }`}
+              >
+                <button
+                  onClick={() => toggleComplete(schedule.id)}
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    schedule.completed 
+                      ? 'bg-lime-400 border-lime-400' 
+                      : 'border-zinc-600 hover:border-lime-400'
+                  }`}
                 >
-                  <span className="material-symbols-outlined font-variation-settings-'FILL' 1 text-red-500" style={{ fontVariationSettings: "'FILL' 1" }}>event_busy</span>
-                  Cancel Booking
+                  {schedule.completed && <span className="material-symbols-outlined text-black text-sm">check</span>}
+                </button>
+                <div className="flex-1">
+                  <p className={`font-bold ${schedule.completed ? 'text-zinc-500 line-through' : 'text-white'}`}>
+                    {schedule.title}
+                  </p>
+                  <p className="text-xs text-zinc-500">{schedule.time}</p>
+                </div>
+                <button 
+                  onClick={() => deleteSchedule(schedule.id)}
+                  className="text-zinc-600 hover:text-red-500"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
                 </button>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
-      </section>
+      </div>
+
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setShowAddModal(false)}></div>
+          <div className="relative bg-zinc-900 border border-white/10 rounded-[32px] p-8 w-full max-w-sm">
+            <h2 className="text-xl font-black text-white mb-6 uppercase">Add Activity</h2>
+            <form onSubmit={handleAddSchedule} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-2">Activity</label>
+                <input 
+                  name="title"
+                  required
+                  placeholder="e.g. Morning Run, Gym Session"
+                  className="w-full bg-black/40 border border-white/10 text-white rounded-2xl py-4 px-6 focus:border-lime-400 transition-all outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-2">Time</label>
+                <input 
+                  name="time"
+                  required
+                  type="time"
+                  className="w-full bg-black/40 border border-white/10 text-white rounded-2xl py-4 px-6 focus:border-lime-400 transition-all outline-none"
+                />
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 bg-zinc-800 text-white font-bold py-4 rounded-2xl"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="flex-1 bg-lime-400 text-black font-black py-4 rounded-2xl">
+                  Add
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -1,166 +1,232 @@
 import React, { useState, useEffect } from 'react';
 
 export default function Tasks() {
-  const [logs, setLogs] = useState([]);
-  const [stats, setStats] = useState({ calories: 0, streak: 12, volume: '8.2t', sleep: '7h' });
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('kinetic_tasks_list');
-    if (saved) return JSON.parse(saved);
-    return [
-      { id: 1, text: 'Morning Mobility Flow', time: '08:00 AM', done: false },
-      { id: 2, text: 'Hydration Goal: 4L', time: 'Ongoing', done: true },
-      { id: 3, text: 'Supplement Stack Check', time: '09:30 PM', done: false }
+  const [goals, setGoals] = useState(() => {
+    const saved = localStorage.getItem('kinetic_goals');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, text: 'Complete 30 min cardio', time: '07:00', done: false, notified: false },
+      { id: 2, text: 'Drink 3L water', time: '12:00', done: false, notified: false },
+      { id: 3, text: 'Read 20 pages', time: '21:00', done: false, notified: false }
     ];
   });
+  const [newGoal, setNewGoal] = useState('');
+  const [newTime, setNewTime] = useState('12:00');
+  const [showAdd, setShowAdd] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('kinetic_tasks_list', JSON.stringify(tasks));
-  }, [tasks]);
-
-  const toggleTask = (id) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
-  };
-
-  useEffect(() => {
-    fetchWorkouts();
-  }, []);
-
-  const fetchWorkouts = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    try {
-      const res = await fetch('/api/workouts', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data.logs || []);
+    localStorage.setItem('kinetic_goals', JSON.stringify(goals));
+    
+    // Save to notifications for due tasks
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    goals.forEach(goal => {
+      if (!goal.done && !goal.notified && goal.time <= currentTime) {
+        // Add to notifications
+        const notifications = JSON.parse(localStorage.getItem('kinetic_notifications') || '[]');
+        if (!notifications.find(n => n.goalId === goal.id && n.type === 'reminder')) {
+          notifications.unshift({
+            id: Date.now(),
+            type: 'reminder',
+            text: `Task due: ${goal.text}`,
+            time: 'Just now',
+            goalId: goal.id,
+            read: false
+          });
+          localStorage.setItem('kinetic_notifications', JSON.stringify(notifications));
+        }
         
-        // Calculate total calories from logs
-        const _calc = (data.logs || []).reduce((acc, log) => acc + (log.calories_burned || 0), 0);
-        if (_calc > 0) {
-           setStats(prev => ({ ...prev, calories: _calc }));
+        // Mark as notified
+        setGoals(prev => prev.map(g => g.id === goal.id ? { ...g, notified: true } : g));
+        
+        // Browser notification
+        if (Notification.permission === 'granted') {
+          new Notification('KINETIC', { body: goal.text });
         }
       }
-    } catch (e) {
-      console.error(e);
+    });
+  }, [goals]);
+
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
     }
+  }, []);
+
+  const toggleGoal = (id) => {
+    setGoals(prev => prev.map(g => g.id === id ? { ...g, done: !g.done } : g));
   };
 
+  const deleteGoal = (id) => {
+    setGoals(prev => prev.filter(g => g.id !== id));
+  };
+
+  const addGoal = (e) => {
+    e.preventDefault();
+    if (!newGoal.trim()) return;
+    
+    setGoals([...goals, {
+      id: Date.now(),
+      text: newGoal,
+      time: newTime,
+      done: false,
+      notified: false
+    }]);
+    
+    setNewGoal('');
+    setShowAdd(false);
+  };
+
+  const completedCount = goals.filter(g => g.done).length;
+  const progress = goals.length > 0 ? Math.round((completedCount / goals.length) * 100) : 0;
+  const pendingGoals = goals.filter(g => !g.done).sort((a, b) => a.time.localeCompare(b.time));
+
   return (
-    <main className="pt-32 pb-32 px-edge-margin space-y-stack-lg max-w-5xl mx-auto">
-      {/* Header Section */}
-      <section className="flex flex-col gap-2">
-        <h2 className="font-display-xl text-display-xl text-primary tracking-tighter">DAILY TASKS</h2>
-        <div className="flex items-center gap-3">
-          <div className="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-lime-500 to-lime-300 w-[65%]"></div>
-          </div>
-          <span className="font-label-bold text-label-bold text-lime-400">65% DONE</span>
-        </div>
-      </section>
+    <main className="pt-28 pb-32 px-6 max-w-lg mx-auto space-y-8">
+      <header className="text-center">
+        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Daily Goals</h1>
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] mt-1">Track Your Progress</p>
+      </header>
 
-      {/* Bento Grid Tasks */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-        {/* High Priority Task */}
-        <div className="bg-zinc-900/50 p-container-padding rounded-[24px] border border-white/5 shadow-2xl relative overflow-hidden group hover:border-lime-400/50 transition-all duration-300">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <span className="bg-lime-400/10 text-lime-400 text-[10px] font-black px-2 py-1 rounded-full border border-lime-400/20 uppercase tracking-widest">High Energy</span>
-              <h3 className="font-headline-md text-headline-md text-primary mt-2 uppercase">Leg Day Session</h3>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-lime-400 flex items-center justify-center shadow-[0_0_20px_rgba(204,255,0,0.4)]">
-              <span className="material-symbols-outlined text-black font-bold">fitness_center</span>
-            </div>
-          </div>
-          <p className="font-body-md text-body-md text-zinc-400 mb-6">Heavy squats & deadlifts. Focus on explosive power and form.</p>
-          <div className="flex items-center justify-between">
-            <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full border-2 border-zinc-900 overflow-hidden">
-                <img className="w-full h-full object-cover" alt="Athlete" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuNtPePjL4zkxIhCKuNs175WACc-Pn5VP0KvbRTJ-peHSKzXE3DBx92KwGXEIlO2WfKSn-dzwh0NVQxJJvG2i7ZBGhdp6glYOds-Pj7jq2-J9usAXSBxJxnPw2jRGRaqj_lwdGx_2f3bdjh5gCPvMG_vUtdoeKuTYWZvd-NavFIrh1U45EndxpkYU-eBzGiNVR2sBDTUANQXSw70ZN4O-wQuqyy_YxL6dCqHxyJI5M1P9P3sRG0gC7AlIhj4FxDQartMYz8keiLWs3" />
-              </div>
-              <div className="w-8 h-8 rounded-full border-2 border-zinc-900 bg-zinc-800 flex items-center justify-center font-label-sm text-lime-400">+3</div>
-            </div>
-            <button className="bg-lime-400 text-black font-label-bold text-label-bold px-6 py-2 rounded-full hover:scale-105 active:scale-95 transition-all">COMPLETE</button>
-          </div>
+      {/* Progress Bar */}
+      <div className="bg-zinc-900/50 rounded-3xl p-6 border border-white/5">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Progress</span>
+          <span className="text-sm font-black text-lime-400">{progress}%</span>
+        </div>
+        <div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-lime-500 to-lime-300 rounded-full transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <p className="text-center text-[10px] text-zinc-600 mt-2">{completedCount} of {goals.length} completed</p>
+      </div>
+
+      {/* Pending Goals */}
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Pending</h2>
+          <button 
+            onClick={() => setShowAdd(true)}
+            className="bg-lime-400 text-black px-4 py-2 rounded-full text-xs font-black uppercase flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Add Goal
+          </button>
         </div>
 
-        {/* Focus Task */}
-        <div className="bg-zinc-900/50 p-container-padding rounded-[24px] border border-white/5 shadow-2xl group hover:border-lime-400/50 transition-all duration-300">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <span className="bg-zinc-800 text-zinc-400 text-[10px] font-black px-2 py-1 rounded-full border border-white/5 uppercase tracking-widest">Nutrition</span>
-              <h3 className="font-headline-md text-headline-md text-primary mt-2 uppercase">Meal Prep</h3>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-white/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-lime-400">restaurant</span>
-            </div>
+        {pendingGoals.length === 0 ? (
+          <div className="text-center py-12 text-zinc-500">
+            <span className="material-symbols-outlined text-5xl mb-3 text-lime-400">emoji_events</span>
+            <p className="text-sm font-bold uppercase tracking-widest">All goals completed!</p>
           </div>
-          <p className="font-body-md text-body-md text-zinc-400 mb-6">Prepare high-protein containers for the next 3 days.</p>
-          <div className="flex items-center gap-2">
-            <div className="w-full bg-zinc-800 h-2 rounded-full">
-              <div className="h-full bg-lime-400 w-1/3 rounded-full"></div>
-            </div>
-            <span className="text-label-sm font-label-sm text-zinc-500 whitespace-nowrap">2/6 items</span>
-          </div>
-        </div>
-
-        {/* List Card */}
-        <div className="md:col-span-2 bg-zinc-900/50 rounded-[24px] border border-white/5 overflow-hidden">
-          <div className="p-container-padding border-b border-white/5 flex justify-between items-center">
-            <h3 className="font-headline-md text-headline-md text-primary uppercase">Active Checklist</h3>
-            <span className="material-symbols-outlined text-zinc-500 cursor-pointer hover:text-white">more_horiz</span>
-          </div>
-          <div className="divide-y divide-white/5">
-            {tasks.map(task => (
+        ) : (
+          pendingGoals.map(goal => {
+            const isOverdue = goal.time < new Date().toTimeString().slice(0, 5);
+            return (
               <div 
-                key={task.id} 
-                onClick={() => toggleTask(task.id)}
-                className={`p-4 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer group select-none ${task.done ? 'bg-lime-400/5' : ''}`}
+                key={goal.id}
+                className={`bg-zinc-900/50 border rounded-2xl p-4 flex items-center gap-4 ${
+                  isOverdue ? 'border-red-500/30' : 'border-white/5'
+                }`}
               >
-                <div className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
-                  task.done 
-                    ? 'bg-lime-400 border border-lime-400' 
-                    : 'border-2 border-zinc-700 group-hover:border-lime-400/50 group-hover:bg-lime-400/10'
-                }`}>
-                  <span className={`material-symbols-outlined text-sm font-bold ${
-                    task.done ? 'text-black block' : 'text-lime-400 hidden group-hover:block'
-                  }`}>check</span>
+                <button
+                  onClick={() => toggleGoal(goal.id)}
+                  className="w-7 h-7 rounded-full border-2 border-zinc-600 hover:border-lime-400 hover:bg-lime-400/10 flex items-center justify-center transition-all shrink-0"
+                >
+                  <span className="material-symbols-outlined text-zinc-500 text-sm">add</span>
+                </button>
+                <div className="flex-1">
+                  <p className="font-bold text-white">{goal.text}</p>
+                  <p className={`text-xs ${isOverdue ? 'text-red-500' : 'text-zinc-500'}`}>
+                    {isOverdue ? 'Overdue' : goal.time}
+                  </p>
                 </div>
-                <span className={`font-body-md text-body-md flex-1 ${task.done ? 'line-through text-zinc-500' : 'text-zinc-300'}`}>
-                  {task.text}
-                </span>
-                <span className={`font-label-sm text-label-sm ${task.done ? 'text-lime-400/50 font-black' : 'text-zinc-500'}`}>
-                  {task.done ? 'DONE' : task.time}
-                </span>
+                <button 
+                  onClick={() => deleteGoal(goal.id)}
+                  className="text-zinc-600 hover:text-red-500 p-2"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
               </div>
-            ))}
+            );
+          })
+        )}
+      </div>
+
+      {/* Completed */}
+      {goals.filter(g => g.done).length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Completed</h2>
+          {goals.filter(g => g.done).map(goal => (
+            <div 
+              key={goal.id}
+              className="bg-zinc-900/30 border border-lime-400/20 rounded-2xl p-4 flex items-center gap-4"
+            >
+              <button
+                onClick={() => toggleGoal(goal.id)}
+                className="w-7 h-7 rounded-full bg-lime-400 border-2 border-lime-400 flex items-center justify-center shrink-0"
+              >
+                <span className="material-symbols-outlined text-black text-sm">check</span>
+              </button>
+              <div className="flex-1">
+                <p className="font-bold text-zinc-500 line-through">{goal.text}</p>
+              </div>
+              <button 
+                onClick={() => deleteGoal(goal.id)}
+                className="text-zinc-700 hover:text-zinc-500 p-2"
+              >
+                <span className="material-symbols-outlined text-sm">delete</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Modal */}
+      {showAdd && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setShowAdd(false)}></div>
+          <div className="relative bg-zinc-900 border border-white/10 rounded-[32px] p-8 w-full max-w-sm">
+            <h2 className="text-xl font-black text-white mb-6 uppercase">New Goal</h2>
+            <form onSubmit={addGoal} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-2">Goal</label>
+                <input
+                  value={newGoal}
+                  onChange={(e) => setNewGoal(e.target.value)}
+                  required
+                  placeholder="What do you want to achieve?"
+                  className="w-full bg-black/40 border border-white/10 text-white rounded-2xl py-4 px-6 focus:border-lime-400 transition-all outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-2">Remind At</label>
+                <input
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 text-white rounded-2xl py-4 px-6 focus:border-lime-400 transition-all outline-none"
+                />
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowAdd(false)}
+                  className="flex-1 bg-zinc-800 text-white font-bold py-4 rounded-2xl"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="flex-1 bg-lime-400 text-black font-black py-4 rounded-2xl">
+                  Add
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </section>
-
-      {/* Stats Overview */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-gutter mt-8">
-        <div className="bg-zinc-900/50 p-stack-md rounded-[20px] border border-white/5 text-center">
-          <p className="font-label-sm text-label-sm text-zinc-500 uppercase">Streak</p>
-          <p className="font-display-xl text-[32px] text-lime-400">{stats.streak}</p>
-        </div>
-        <div className="bg-zinc-900/50 p-stack-md rounded-[20px] border border-white/5 text-center">
-          <p className="font-label-sm text-label-sm text-zinc-500 uppercase">Calories</p>
-          <p className="font-display-xl text-[32px] text-white">
-            {stats.calories >= 1000 ? (stats.calories / 1000).toFixed(1) + 'k' : stats.calories || '2.4k'}
-          </p>
-        </div>
-        <div className="bg-zinc-900/50 p-stack-md rounded-[20px] border border-white/5 text-center">
-          <p className="font-label-sm text-label-sm text-zinc-500 uppercase">Volume</p>
-          <p className="font-display-xl text-[32px] text-white">{stats.volume}</p>
-        </div>
-        <div className="bg-zinc-900/50 p-stack-md rounded-[20px] border border-white/5 text-center">
-          <p className="font-label-sm text-label-sm text-zinc-500 uppercase">Sleep</p>
-          <p className="font-display-xl text-[32px] text-white">{stats.sleep}</p>
-        </div>
-      </section>
+      )}
     </main>
   );
 }
