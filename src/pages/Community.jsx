@@ -60,16 +60,37 @@ export default function Community() {
   const createPost = (e) => {
     e.preventDefault();
     if (!newPost.trim() && !mediaFile) return;
-    setIsPosting(true);
-    const post = {
-      id: Date.now(), userId: user.id || 'user', username: user.username || 'Anonymous',
-      avatar: user.profile_pic || '', content: newPost, media_url: mediaPreview || '',
-      media_type: mediaType, time: 'Just now', likes: 0, replies: 0, liked: false, reposts: 0, comments: []
+    
+    // Create new post object
+    const newPostObj = {
+      id: Date.now(), 
+      userId: user?.id || 'user', 
+      username: user?.username || 'Anonymous',
+      avatar: user?.profile_pic || '', 
+      content: newPost, 
+      media_url: mediaPreview || '',
+      media_type: mediaType, 
+      time: 'Just now', 
+      likes: 0, 
+      replies: 0, 
+      liked: false, 
+      reposts: 0, 
+      comments: []
     };
-    setPosts([post, ...posts]);
-    setNewPost(''); setMediaPreview(null); setMediaType(null); setMediaFile(null);
+    
+    // Add to posts
+    const updatedPosts = [newPostObj, ...posts];
+    setPosts(updatedPosts);
+    
+    // Save to localStorage
+    localStorage.setItem('kinetic_community', JSON.stringify(updatedPosts));
+    
+    // Clear form
+    setNewPost('');
+    setMediaPreview(null);
+    setMediaType(null);
+    setMediaFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    setIsPosting(false);
   };
 
   const toggleLike = (postId) => {
@@ -97,7 +118,10 @@ export default function Community() {
     }));
   };
 
-  const getAvatar = (item) => item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.username}`;
+  const getAvatar = (item) => {
+    if (!item) return 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
+    return item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.username || 'default'}`;
+  };
 
   const openComments = (post) => setCommentsModal(post);
 
@@ -132,8 +156,8 @@ export default function Community() {
                   <span className="material-symbols-outlined">image</span>
                 </button>
               </div>
-              <button type="submit" disabled={!newPost.trim() && !mediaFile || isPosting} className="bg-lime-400 text-black font-black px-6 py-2 rounded-full disabled:opacity-50">
-                {isPosting ? 'Posting...' : 'Post'}
+              <button type="submit" disabled={!newPost.trim() && !mediaFile} className="bg-lime-400 text-black font-black px-6 py-2 rounded-full disabled:opacity-50">
+                Post
               </button>
             </div>
           </form>
