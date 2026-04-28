@@ -17,36 +17,25 @@ export default function Community() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('kinetic_community') || '[]');
-    if (saved.length === 0) {
-      setPosts([
-        { 
-          id: 1, userId: 'demo', username: 'Coach Mike', avatar: '', 
-          content: 'Just crushed a new PR! Deadlift 315lbs x 5 reps. Consistency is key everyone! 💪', 
-          time: '2h ago', likes: 24, replies: 5, liked: false, reposts: 3, media_url: '',
-          comments: [
-            { id: 1, userId: 'user2', username: 'Sarah', content: 'Amazing work! 💪', time: '1h ago' },
-            { id: 2, userId: 'user3', username: 'GymBro', content: 'Congratulations coach!', time: '30m ago' }
-          ]
-        },
-        { 
-          id: 2, userId: 'demo2', username: 'Sarah Fitness', avatar: '', 
-          content: 'Morning cardio done! Who else is on the early bird grind?', 
-          time: '4h ago', likes: 18, replies: 12, liked: false, reposts: 2, 
-          media_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800', media_type: 'image',
-          comments: []
-        },
-      ]);
-    } else {
-      setPosts(saved);
-    }
+    setPosts([
+      { 
+        id: 1, userId: 'demo', username: 'Coach Mike', avatar: '', 
+        content: 'Just crushed a new PR! Deadlift 315lbs x 5 reps. Consistency is key everyone! 💪', 
+        time: '2h ago', likes: 24, replies: 5, liked: false, reposts: 3, media_url: '',
+        comments: [
+          { id: 1, userId: 'user2', username: 'Sarah', content: 'Amazing work! 💪', time: '1h ago' },
+          { id: 2, userId: 'user3', username: 'GymBro', content: 'Congratulations coach!', time: '30m ago' }
+        ]
+      },
+      { 
+        id: 2, userId: 'demo2', username: 'Sarah Fitness', avatar: '', 
+        content: 'Morning cardio done! Who else is on the early bird grind?', 
+        time: '4h ago', likes: 18, replies: 12, liked: false, reposts: 2, 
+        media_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800', media_type: 'image',
+        comments: []
+      },
+    ]);
   }, []);
-
-  useEffect(() => {
-    if (posts.length > 0) {
-      localStorage.setItem('kinetic_community', JSON.stringify(posts));
-    }
-  }, [posts]);
 
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
@@ -81,9 +70,6 @@ export default function Community() {
     // Add to posts
     const updatedPosts = [newPostObj, ...posts];
     setPosts(updatedPosts);
-    
-    // Save to localStorage
-    localStorage.setItem('kinetic_community', JSON.stringify(updatedPosts));
     
     // Clear form
     setNewPost('');

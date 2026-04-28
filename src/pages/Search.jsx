@@ -28,9 +28,11 @@ export default function Search() {
       setAllUsers(saved);
     }
     
-    // Load posts for search
-    const savedPosts = JSON.parse(localStorage.getItem('kinetic_community') || '[]');
-    setAllPosts(savedPosts);
+     // Load posts for search
+    setAllPosts([
+      { id: 1, userId: 'demo', username: 'Coach Mike', content: 'Just crushed a new PR! Deadlift 315lbs x 5 reps. Consistency is key everyone! 💪', media_type: '' },
+      { id: 2, userId: 'demo2', username: 'Sarah Fitness', content: 'Morning cardio done! Who else is on the early bird grind?', media_type: 'image', media_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800' },
+    ]);
     
     setFollowing(JSON.parse(localStorage.getItem('kinetic_following') || '[]'));
     setRecentSearches(JSON.parse(localStorage.getItem('kinetic_recent_searches') || '[]'));
