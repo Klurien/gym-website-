@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { getSchedules, saveSchedules } from '../services/storage';
 
 export default function Calendar() {
-  const [schedules, setSchedules] = useState(() => {
-    const saved = localStorage.getItem('kinetic_schedules');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [schedules, setSchedules] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [loading, setLoading] = useState(true);
   
   const today = new Date();
   const currentMonth = today.toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -29,8 +28,28 @@ export default function Calendar() {
   const todaySchedules = schedules.filter(s => s.date === selectedDate);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      getSchedules().then(data => {
+        setSchedules(data || []);
+        setLoading(false);
+      }).catch(() => setLoading(false));
+    } else {
+      const saved = localStorage.getItem('kinetic_schedules');
+      setSchedules(saved ? JSON.parse(saved) : []);
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
     localStorage.setItem('kinetic_schedules', JSON.stringify(schedules));
-  }, [schedules]);
+    
+    const token = localStorage.getItem('token');
+    if (token) {
+      saveSchedules(schedules).catch(console.error);
+    }
+  }, [schedules, loading]);
 
   const handleAddSchedule = (e) => {
     e.preventDefault();
@@ -62,7 +81,6 @@ export default function Calendar() {
         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em]">Your Schedule</p>
       </header>
 
-      {/* Calendar Grid */}
       <div className="bg-zinc-900/50 rounded-[24px] p-5 border border-white/5">
         <div className="grid grid-cols-7 text-center mb-2">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
@@ -94,7 +112,6 @@ export default function Calendar() {
         </div>
       </div>
 
-      {/* Selected Day */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-black text-white uppercase">
@@ -151,7 +168,6 @@ export default function Calendar() {
         )}
       </div>
 
-      {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setShowAddModal(false)}></div>

@@ -1,53 +1,53 @@
 import React, { useState, useEffect } from 'react';
+import { getTasks, saveTasks } from '../services/storage';
 
 export default function Tasks() {
-  const [goals, setGoals] = useState(() => {
-    const saved = localStorage.getItem('kinetic_goals');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, text: 'Complete 30 min cardio', time: '07:00', done: false, notified: false },
-      { id: 2, text: 'Drink 3L water', time: '12:00', done: false, notified: false },
-      { id: 3, text: 'Read 20 pages', time: '21:00', done: false, notified: false }
-    ];
-  });
+  const [goals, setGoals] = useState([
+    { id: 1, text: 'Complete 30 min cardio', time: '07:00', done: false, notified: false },
+    { id: 2, text: 'Drink 3L water', time: '12:00', done: false, notified: false },
+    { id: 3, text: 'Read 20 pages', time: '21:00', done: false, notified: false }
+  ]);
   const [newGoal, setNewGoal] = useState('');
   const [newTime, setNewTime] = useState('12:00');
   const [showAdd, setShowAdd] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      getTasks().then(tasks => {
+        if (tasks?.length) {
+          setGoals(tasks);
+        }
+        setLoading(false);
+      }).catch(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
     localStorage.setItem('kinetic_goals', JSON.stringify(goals));
     
-    // Save to notifications for due tasks
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     
     goals.forEach(goal => {
       if (!goal.done && !goal.notified && goal.time <= currentTime) {
-        // Add to notifications
-        const notifications = JSON.parse(localStorage.getItem('kinetic_notifications') || '[]');
-        if (!notifications.find(n => n.goalId === goal.id && n.type === 'reminder')) {
-          notifications.unshift({
-            id: Date.now(),
-            type: 'reminder',
-            text: `Task due: ${goal.text}`,
-            time: 'Just now',
-            goalId: goal.id,
-            read: false
-          });
-          localStorage.setItem('kinetic_notifications', JSON.stringify(notifications));
-        }
-        
-        // Mark as notified
-        setGoals(prev => prev.map(g => g.id === goal.id ? { ...g, notified: true } : g));
-        
-        // Browser notification
         if (Notification.permission === 'granted') {
           new Notification('KINETIC', { body: goal.text });
         }
+        setGoals(prev => prev.map(g => g.id === goal.id ? { ...g, notified: true } : g));
       }
     });
-  }, [goals]);
 
-  // Request notification permission
+    const token = localStorage.getItem('token');
+    if (token) {
+      saveTasks(goals).catch(console.error);
+    }
+  }, [goals, loading]);
+
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
@@ -89,7 +89,6 @@ export default function Tasks() {
         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.4em] mt-1">Track Your Progress</p>
       </header>
 
-      {/* Progress Bar */}
       <div className="bg-zinc-900/50 rounded-3xl p-6 border border-white/5">
         <div className="flex justify-between items-center mb-3">
           <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Progress</span>
@@ -104,7 +103,6 @@ export default function Tasks() {
         <p className="text-center text-[10px] text-zinc-600 mt-2">{completedCount} of {goals.length} completed</p>
       </div>
 
-      {/* Pending Goals */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Pending</h2>
@@ -156,7 +154,6 @@ export default function Tasks() {
         )}
       </div>
 
-      {/* Completed */}
       {goals.filter(g => g.done).length > 0 && (
         <div className="space-y-3">
           <h2 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Completed</h2>
@@ -185,7 +182,6 @@ export default function Tasks() {
         </div>
       )}
 
-      {/* Add Modal */}
       {showAdd && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={() => setShowAdd(false)}></div>

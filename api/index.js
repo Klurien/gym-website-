@@ -48,6 +48,7 @@ export async function GET(request) {
     const url = new URL(request.url);
     const path = url.pathname;
     const search = url.search;
+    const searchParams = url.searchParams;
 
     if (path === '/api/health' || path === '/health') {
         return Response.json({ status: 'ok', path, search });
@@ -188,6 +189,9 @@ export async function POST(request) {
             if (!title) return Response.json({ error: 'Title required' }, { status: 400 });
             const [r] = await db.query('INSERT INTO posts (trainer_id, media_url, title, description, tags, type, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
                 [user.id, media_url || '', title, description || '', tags || '', type || 'static']);
+            if (pusher) {
+                pusher.trigger('gym-posts', 'new_post', { title, id: r.insertId });
+            }
             return Response.json({ message: 'Post created', postId: r.insertId }, { status: 201 });
         }
 
@@ -262,6 +266,27 @@ export async function POST(request) {
             } catch (e) {
                 return Response.json({ error: 'Push failed' }, { status: 500 });
             }
+        }
+
+        if (path === '/api/storage' || path.endsWith('/storage')) {
+            const action = searchParams.get('action');
+            if (action === 'tasks') {
+                const [rows] = await db.query('SELECT * FROM user_tasks WHERE user_id = ? ORDER BY created_at DESC', [user.id]);
+                return Response.json(rows);
+            }
+            if (action === 'schedules') {
+                const [rows] = await db.query('SELECT * FROM user_schedules WHERE user_id = ? ORDER BY date ASC', [user.id]);
+                return Response.json(rows);
+            }
+            if (action === 'notifications') {
+                const [rows] = await db.query('SELECT * FROM user_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50', [user.id]);
+                return Response.json(rows);
+            }
+            if (action === 'following') {
+                const [rows] = await db.query('SELECT following_id FROM user_following WHERE user_id = ?', [user.id]);
+                return Response.json(rows.map(r => r.following_id));
+            }
+            return Response.json({ error: 'Invalid action' }, { status: 400 });
         }
 
         return Response.json({ error: 'Not found' }, { status: 404 });
