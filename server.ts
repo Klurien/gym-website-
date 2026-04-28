@@ -8,9 +8,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// API Handlers
-// @ts-ignore
-import apiHandler from './server-api/index.js';
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const apiHandler = require('./server-api/index.js');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
