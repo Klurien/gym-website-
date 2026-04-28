@@ -21,7 +21,7 @@ try {
 }
 
 let pool;
-function getPool() {
+async function getPool() {
     if (!pool && process.env.DB_HOST) {
         pool = mysql.createPool({
             host: process.env.DB_HOST,
@@ -31,7 +31,8 @@ function getPool() {
             port: process.env.DB_PORT || 4000,
             ssl: { rejectUnauthorized: false },
             waitForConnections: true,
-            connectionLimit: 10
+            connectionLimit: 5,
+            connectTimeout: 10000
         });
     }
     return pool;
@@ -55,10 +56,10 @@ export async function GET(request) {
     try {
         if (path === '/api/posts' || path === '/posts' || path.endsWith('/posts')) {
             try {
-                const [rows] = await db.query('SELECT p.*, u.username as trainer_name FROM posts p LEFT JOIN users u ON p.trainer_id = u.id ORDER BY p.created_at DESC LIMIT 50');
+                const [rows] = await db.query('SELECT * FROM posts ORDER BY created_at DESC LIMIT 50');
                 return Response.json(rows);
             } catch (err) {
-                return Response.json({ error: err.message }, { status: 500 });
+                return Response.json({ error: err.message, stack: err.stack }, { status: 500 });
             }
         }
 
