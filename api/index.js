@@ -18,7 +18,7 @@ try {
     });
   }
 } catch (e) {
-  console.log('Pusher not configured');
+  console.log('DB config:', { host: process.env.DB_HOST, user: process.env.DB_USER, db: process.env.DB_NAME, port: process.env.DB_PORT });
 }
 
 let pool = null;
@@ -31,18 +31,17 @@ async function getPool() {
                 password: process.env.DB_PASSWORD,
                 database: process.env.DB_NAME,
                 port: process.env.DB_PORT || 4000,
-                ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: false },
+                ssl: { rejectUnauthorized: false },
                 waitForConnections: true,
-                connectionLimit: 2,
-                connectTimeout: 15000,
-                acquireTimeout: 15000
+                connectionLimit: 1,
+                connectTimeout: 20000,
+                acquireTimeout: 20000
             });
             const conn = await pool.getConnection();
             conn.release();
-        } catch (e) {
-            console.error('DB pool error:', e.message);
-            pool = null;
-        }
+} catch (e) {
+    console.log('DB config:', { host: !!process.env.DB_HOST, hasUser: !!process.env.DB_USER });
+}
     }
     return pool;
 }
@@ -59,7 +58,11 @@ export async function GET(request) {
     const path = url.pathname;
     const searchParams = url.searchParams;
 
+    console.log('GET start, path:', path);
+
     const db = await getPool();
+    console.log('GET db:', !!db);
+    
     if (!db) {
         return Response.json({ error: 'Database connection failed', path }, { status: 503 });
     }
