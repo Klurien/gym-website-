@@ -31,12 +31,19 @@ function getUser(req) {
 export async function GET(request) {
     const url = new URL(request.url);
     const path = url.pathname;
+    const search = url.search;
+
+    if (path === '/api/health' || path === '/health') {
+        return Response.json({ status: 'ok', path, search });
+    }
 
     const db = getPool();
-    if (!db) return Response.json({ error: 'Database config missing' }, { status: 500 });
+    if (!db) return Response.json({ error: 'Database config missing', path, search }, { status: 500 });
 
     try {
-        if (path === '/api/posts' || path.endsWith('/posts')) {
+        console.log('GET path:', path, 'search:', search);
+        
+        if (path === '/api/posts' || path === '/posts' || path.endsWith('/posts')) {
             const user = getUser(request);
             const [rows] = await db.query(
                 `SELECT p.*, u.username as trainer_name,
@@ -49,17 +56,17 @@ export async function GET(request) {
             return Response.json(rows);
         }
 
-        if (path === '/api/workouts' || path.endsWith('/workouts')) {
+        if (path === '/api/workouts' || path === '/workouts' || path.endsWith('/workouts')) {
             const [rows] = await db.query('SELECT * FROM workouts ORDER BY created_at DESC LIMIT 50');
             return Response.json(rows);
         }
 
-        if (path === '/api/classes' || path.endsWith('/classes')) {
+        if (path === '/api/classes' || path === '/classes' || path.endsWith('/classes')) {
             const [rows] = await db.query('SELECT * FROM classes ORDER BY day_of_week, time');
             return Response.json(rows);
         }
 
-        if (path === '/api/bookings' || path.endsWith('/bookings')) {
+        if (path === '/api/bookings' || path === '/bookings' || path.endsWith('/bookings')) {
             const user = getUser(request);
             if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
             const [rows] = await db.query(
@@ -70,7 +77,7 @@ export async function GET(request) {
             return Response.json(rows);
         }
 
-        if (path === '/api/analytics' || path.endsWith('/analytics')) {
+        if (path === '/api/analytics' || path === '/analytics' || path.endsWith('/analytics')) {
             const user = getUser(request);
             if (!user || user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
             const [stats] = await db.query(`
@@ -83,7 +90,7 @@ export async function GET(request) {
             return Response.json(stats[0]);
         }
 
-        if (path === '/api/messages' || path.endsWith('/messages')) {
+        if (path === '/api/messages' || path === '/messages' || path.endsWith('/messages')) {
             const user = getUser(request);
             if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
             const [rows] = await db.query(
@@ -110,7 +117,7 @@ export async function POST(request) {
     if (!db) return Response.json({ error: 'Database config missing' }, { status: 500 });
 
     try {
-        if (path === '/api/login' || path.endsWith('/login')) {
+        if (path === '/api/login' || path === '/login' || path.endsWith('/login')) {
             const { email, password } = await request.json();
             if (!email || !password) return Response.json({ error: 'Missing fields' }, { status: 400 });
             const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
@@ -181,7 +188,7 @@ export async function POST(request) {
             return Response.json({ message: 'Workout added' }, { status: 201 });
         }
 
-        if (path === '/api/classes' || path.endsWith('/classes')) {
+        if (path === '/api/classes' || path === '/classes' || path.endsWith('/classes')) {
             if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
             const { name, instructor, day_of_week, time, duration, capacity } = await request.json();
             if (!name) return Response.json({ error: 'Name required' }, { status: 400 });
@@ -190,7 +197,7 @@ export async function POST(request) {
             return Response.json({ message: 'Class added' }, { status: 201 });
         }
 
-        if (path === '/api/bookings' || path.endsWith('/bookings')) {
+        if (path === '/api/bookings' || path === '/bookings' || path.endsWith('/bookings')) {
             const { class_id, booking_date } = await request.json();
             if (!class_id || !booking_date) return Response.json({ error: 'class_id and booking_date required' }, { status: 400 });
             await db.query('INSERT INTO bookings (user_id, class_id, booking_date, status) VALUES (?, ?, ?, "confirmed")',
