@@ -16,6 +16,7 @@ import Timer from './pages/Timer';
 import Community from './pages/Community';
 import Search from './pages/Search';
 import { connectSocket, disconnectSocket } from './services/socket';
+import { initPushNotifications } from './services/pushNotifications';
 
 function PageWrapper({ children }) {
   return (
@@ -83,6 +84,7 @@ export default function App() {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (token && user.id) {
       connectSocket(token);
+      initPushNotifications().catch(console.error);
     }
     return () => disconnectSocket();
   }, []);

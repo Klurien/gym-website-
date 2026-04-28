@@ -252,6 +252,18 @@ export async function POST(request) {
             return Response.json({ message: 'Message sent' }, { status: 201 });
         }
 
+        if (path === '/api/push-notify' || path.endsWith('/push-notify')) {
+            const { userId, title, message } = await request.json();
+            if (!userId || !title || !message) return Response.json({ error: 'Missing params' }, { status: 400 });
+            if (!pusher) return Response.json({ error: 'Pusher not configured' }, { status: 503 });
+            try {
+                pusher.trigger(`private-user-${userId}`, 'notification', { title, message });
+                return Response.json({ success: true });
+            } catch (e) {
+                return Response.json({ error: 'Push failed' }, { status: 500 });
+            }
+        }
+
         return Response.json({ error: 'Not found' }, { status: 404 });
     } catch (err) {
         console.error(err);
