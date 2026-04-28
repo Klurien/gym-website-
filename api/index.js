@@ -268,14 +268,14 @@ export async function POST(request) {
             }
         }
 
-        if (path === '/api/storage' || path.endsWith('/storage')) {
+if (path === '/api/storage' || path.endsWith('/storage')) {
             const action = searchParams.get('action');
             if (action === 'tasks') {
                 const [rows] = await db.query('SELECT * FROM user_tasks WHERE user_id = ? ORDER BY created_at DESC', [user.id]);
                 return Response.json(rows);
             }
             if (action === 'schedules') {
-                const [rows] = await db.query('SELECT * FROM user_schedules WHERE user_id = ? ORDER BY date ASC', [user.id]);
+                const [rows] = await db.query('SELECT * FROM user_schedules WHERE user_id = ? ORDER BY schedule_date ASC', [user.id]);
                 return Response.json(rows);
             }
             if (action === 'notifications') {
@@ -286,6 +286,57 @@ export async function POST(request) {
                 const [rows] = await db.query('SELECT following_id FROM user_following WHERE user_id = ?', [user.id]);
                 return Response.json(rows.map(r => r.following_id));
             }
+            return Response.json({ error: 'Invalid action' }, { status: 400 });
+        }
+
+        if (path === '/api/storage' || path.endsWith('/storage')) {
+            const { action, tasks, schedules, following, searches, id, mark_read } = await request.json();
+            
+            if (action === 'tasks' && tasks) {
+                await db.query('DELETE FROM user_tasks WHERE user_id = ?', [user.id]);
+                for (const task of tasks) {
+                    await db.query(
+                        'INSERT INTO user_tasks (user_id, text, task_time, done, notified) VALUES (?, ?, ?, ?, ?)',
+                        [user.id, task.text, task.time || null, task.done || false, task.notified || false]
+                    );
+                }
+                return Response.json({ success: true });
+            }
+            
+            if (action === 'schedules' && schedules) {
+                await db.query('DELETE FROM user_schedules WHERE user_id = ?', [user.id]);
+                for (const s of schedules) {
+                    await db.query(
+                        'INSERT INTO user_schedules (user_id, title, schedule_time, schedule_date, completed) VALUES (?, ?, ?, ?, ?)',
+                        [user.id, s.title, s.time || null, s.date || null, s.completed || false]
+                    );
+                }
+                return Response.json({ success: true });
+            }
+            
+            if (action === 'follow' && following) {
+                await db.query('INSERT IGNORE INTO user_following (user_id, following_id) VALUES (?, ?)', [user.id, following]);
+                return Response.json({ success: true });
+            }
+            
+            if (action === 'unfollow' && following) {
+                await db.query('DELETE FROM user_following WHERE user_id = ? AND following_id = ?', [user.id, following]);
+                return Response.json({ success: true });
+            }
+            
+            if (action === 'searches' && searches) {
+                await db.query('DELETE FROM user_searches WHERE user_id = ?', [user.id]);
+                for (const s of searches) {
+                    await db.query('INSERT INTO user_searches (user_id, query) VALUES (?, ?)', [user.id, s]);
+                }
+                return Response.json({ success: true });
+            }
+            
+            if (action === 'mark_read' && id) {
+                await db.query('UPDATE user_notifications SET read_flag = TRUE WHERE id = ? AND user_id = ?', [id, user.id]);
+                return Response.json({ success: true });
+            }
+            
             return Response.json({ error: 'Invalid action' }, { status: 400 });
         }
 
