@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { connectSocket } from '../services/socket';
 
+const API_BASE = '';
+
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: '', password: '', username: '' });
@@ -14,95 +16,49 @@ export default function Auth() {
     setLoading(true);
     setStatus({ error: '', success: '' });
     
-    const endpoint = isLogin ? '/api/login' : '/api/register';
     try {
+      const endpoint = isLogin ? `${API_BASE}/api/login` : `${API_BASE}/api/register`;
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(isLogin ? { email: formData.email, password: formData.password } : formData)
       });
       
-      if (res.status === 404 || res.status === 405) {
-        // API not available - use mock auth
-        setStatus({ success: 'Demo mode - Logging in...', error: '' });
-        const mockUser = {
-          id: 'mock-' + Math.random().toString(36).substr(2, 9),
-          username: formData.username || formData.email.split('@')[0],
-          email: formData.email,
-          role: 'trainer',
-          profile_pic: null
-        };
-        localStorage.setItem('token', 'mock-token');
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        setTimeout(() => navigate('/feed'), 1000);
-        setLoading(false);
-        return;
-      }
-      
       const data = await res.json();
+      console.log('Auth response:', res.status, data);
 
       if (res.ok) {
         if (!isLogin) {
-          // Immediately log them in instead of just switching the UI
           setStatus({ success: 'Registration complete! Logging in...', error: '' });
-          try {
-            const loginRes = await fetch('/api/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: formData.email, password: formData.password })
-            });
-            
-            if (loginRes.status === 404 || loginRes.status === 405) {
-              // API not available - use mock
-              const mockUser = {
-                id: 'mock-' + Math.random().toString(36).substr(2, 9),
-                username: formData.username || formData.email.split('@')[0],
-                email: formData.email,
-                role: 'trainer',
-                profile_pic: null
-              };
-              localStorage.setItem('token', 'mock-token');
-              localStorage.setItem('user', JSON.stringify(mockUser));
-              setTimeout(() => navigate('/feed'), 1000);
-              setLoading(false);
-              return;
-            }
-            
-            const loginData = await loginRes.json();
-            if (loginRes.ok) {
-              localStorage.setItem('token', loginData.token);
-              localStorage.setItem('user', JSON.stringify(loginData.user));
-              connectSocket(loginData.token);
-              setStatus({ success: `Welcome, ${loginData.user.username}! Tuning your feed...`, error: '' });
-              setTimeout(() => {
-                navigate('/feed');
-              }, 1200);
-            } else {
-              setIsLogin(true);
-            }
-          } catch (e) {
+          const loginRes = await fetch(`${API_BASE}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: formData.email, password: formData.password })
+          });
+          const loginData = await loginRes.json();
+          if (loginRes.ok) {
+            localStorage.setItem('token', loginData.token);
+            localStorage.setItem('user', JSON.stringify(loginData.user));
+            connectSocket(loginData.token);
+            setStatus({ success: `Welcome, ${loginData.user.username}!`, error: '' });
+            setTimeout(() => navigate('/feed'), 1000);
+          } else {
+            setStatus({ error: loginData.error || 'Login failed', success: '' });
             setIsLogin(true);
           }
         } else {
-          // Login successful
           localStorage.setItem('token', data.token);
           localStorage.setItem('user', JSON.stringify(data.user));
           connectSocket(data.token);
           setStatus({ success: `Welcome back, ${data.user.username}!`, error: '' });
-          
-          setTimeout(() => {
-            if (data.user?.role === 'admin') {
-              window.location.href = '/admin.html';
-            } else {
-              navigate('/feed');
-            }
-          }, 1000);
+          setTimeout(() => navigate('/feed'), 1000);
         }
       } else {
         setStatus({ error: data.error || 'Authentication failed', success: '' });
       }
     } catch (err) {
-      setStatus({ error: 'Network communication failed.', success: '' });
+      console.error('Auth error:', err);
+      setStatus({ error: 'Network error. Please try again.', success: '' });
     } finally {
       setLoading(false);
     }
