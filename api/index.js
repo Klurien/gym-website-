@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+const INCLUDE_STACK = process.env.NODE_ENV !== 'production';
 
 let pusher = null;
 try {
@@ -20,20 +21,28 @@ try {
   console.log('Pusher not configured');
 }
 
-let pool;
+let pool = null;
 async function getPool() {
     if (!pool && process.env.DB_HOST) {
-        pool = mysql.createPool({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            port: process.env.DB_PORT || 4000,
-            ssl: { rejectUnauthorized: false },
-            waitForConnections: true,
-            connectionLimit: 5,
-            connectTimeout: 10000
-        });
+        try {
+            pool = mysql.createPool({
+                host: process.env.DB_HOST,
+                user: process.env.DB_USER,
+                password: process.env.DB_PASSWORD,
+                database: process.env.DB_NAME,
+                port: process.env.DB_PORT || 4000,
+                ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: false },
+                waitForConnections: true,
+                connectionLimit: 2,
+                connectTimeout: 15000,
+                acquireTimeout: 15000
+            });
+            const conn = await pool.getConnection();
+            conn.release();
+        } catch (e) {
+            console.error('DB pool error:', e.message);
+            pool = null;
+        }
     }
     return pool;
 }
@@ -50,17 +59,15 @@ export async function GET(request) {
     const path = url.pathname;
     const searchParams = url.searchParams;
 
-    const db = getPool();
-    if (!db) return Response.json({ error: 'Database config missing' }, { status: 500 });
+    const db = await getPool();
+    if (!db) {
+        return Response.json({ error: 'Database connection failed', path }, { status: 503 });
+    }
 
     try {
         if (path === '/api/posts' || path === '/posts' || path.endsWith('/posts')) {
-            try {
-                const [rows] = await db.query('SELECT * FROM posts ORDER BY created_at DESC LIMIT 50');
-                return Response.json(rows);
-            } catch (err) {
-                return Response.json({ error: err.message, stack: err.stack }, { status: 500 });
-            }
+            const [rows] = await db.query('SELECT * FROM posts ORDER BY created_at DESC LIMIT 50');
+            return Response.json(rows);
         }
 
         if (path === '/api/workouts' || path === '/workouts' || path.endsWith('/workouts')) {
@@ -96,21 +103,24 @@ export async function GET(request) {
         }
 
         if (path === '/api/storage' || path.endsWith('/storage')) {
+            const user = getUser(request);
             const action = searchParams.get('action');
+            const uid = user?.id || 0;
+            
             if (action === 'tasks') {
-                const [rows] = await db.query('SELECT * FROM user_tasks WHERE user_id = ? ORDER BY created_at DESC', [user?.id || 0]);
+                const [rows] = await db.query('SELECT * FROM user_tasks WHERE user_id = ? ORDER BY created_at DESC', [uid]);
                 return Response.json(rows);
             }
             if (action === 'schedules') {
-                const [rows] = await db.query('SELECT * FROM user_schedules WHERE user_id = ? ORDER BY schedule_date ASC', [user?.id || 0]);
+                const [rows] = await db.query('SELECT * FROM user_schedules WHERE user_id = ? ORDER BY schedule_date ASC', [uid]);
                 return Response.json(rows);
             }
             if (action === 'notifications') {
-                const [rows] = await db.query('SELECT * FROM user_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50', [user?.id || 0]);
+                const [rows] = await db.query('SELECT * FROM user_notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50', [uid]);
                 return Response.json(rows);
             }
             if (action === 'following') {
-                const [rows] = await db.query('SELECT following_id FROM user_following WHERE user_id = ?', [user?.id || 0]);
+                const [rows] = await db.query('SELECT following_id FROM user_following WHERE user_id = ?', [uid]);
                 return Response.json(rows.map(r => r.following_id));
             }
         }
@@ -118,7 +128,7 @@ export async function GET(request) {
         return Response.json({ error: 'Not found' }, { status: 404 });
     } catch (err) {
         console.error(err);
-        return Response.json({ error: 'Internal error' }, { status: 500 });
+        return Response.json({ error: err.message }, { status: 500 });
     }
 }
 
@@ -127,8 +137,10 @@ export async function POST(request) {
     const path = url.pathname;
     const searchParams = url.searchParams;
 
-    const db = getPool();
-    if (!db) return Response.json({ error: 'Database config missing' }, { status: 500 });
+    const db = await getPool();
+    if (!db) {
+        return Response.json({ error: 'Database connection failed' }, { status: 503 });
+    }
 
     try {
         if (path === '/api/login' || path === '/login' || path.endsWith('/login')) {
@@ -160,18 +172,14 @@ export async function POST(request) {
         if (path === '/api/posts' || path === '/posts' || path.endsWith('/posts')) {
             const { media_url, title, description, tags, type } = await request.json();
             if (!title) return Response.json({ error: 'Title required' }, { status: 400 });
-            try {
-                const [r] = await db.query(
-                    'INSERT INTO posts (trainer_id, media_url, title, description, tags, type, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
-                    [user.id, media_url || '', title, description || '', tags || '', type || 'static']
-                );
-                if (pusher) {
-                    pusher.trigger('gym-posts', 'new_post', { title, id: r.insertId });
-                }
-                return Response.json({ message: 'Post created', postId: r.insertId }, { status: 201 });
-            } catch (err) {
-                return Response.json({ error: err.message }, { status: 500 });
+            const [r] = await db.query(
+                'INSERT INTO posts (trainer_id, media_url, title, description, tags, type, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+                [user.id, media_url || '', title, description || '', tags || '', type || 'static']
+            );
+            if (pusher) {
+                try { pusher.trigger('gym-posts', 'new_post', { title, id: r.insertId }); } catch (e) {}
             }
+            return Response.json({ message: 'Post created', postId: r.insertId }, { status: 201 });
         }
 
         if (path === '/api/posts_social' || path.endsWith('/posts_social')) {
@@ -219,9 +227,8 @@ export async function POST(request) {
 
         if (path === '/api/push-notify' || path.endsWith('/push-notify')) {
             const { userId, title, message } = await request.json();
-            if (!userId || !title || !message) return Response.json({ error: 'Missing params' }, { status: 400 });
-            if (pusher) {
-                pusher.trigger(`private-user-${userId}`, 'notification', { title, message });
+            if (pusher && userId && title && message) {
+                try { pusher.trigger(`private-user-${userId}`, 'notification', { title, message }); } catch (e) {}
             }
             return Response.json({ success: true });
         }
@@ -261,14 +268,6 @@ export async function POST(request) {
                 return Response.json({ success: true });
             }
             
-            if (action === 'searches' && searches) {
-                await db.query('DELETE FROM user_searches WHERE user_id = ?', [user.id]);
-                for (const s of searches) {
-                    await db.query('INSERT INTO user_searches (user_id, query) VALUES (?, ?)', [user.id, s]);
-                }
-                return Response.json({ success: true });
-            }
-            
             if (action === 'mark_read' && id) {
                 await db.query('UPDATE user_notifications SET read_flag = TRUE WHERE id = ? AND user_id = ?', [id, user.id]);
                 return Response.json({ success: true });
@@ -278,6 +277,6 @@ export async function POST(request) {
         return Response.json({ error: 'Not found' }, { status: 404 });
     } catch (err) {
         console.error(err);
-        return Response.json({ error: 'Internal error' }, { status: 500 });
+        return Response.json({ error: err.message }, { status: 500 });
     }
 }
