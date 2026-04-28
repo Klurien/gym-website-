@@ -1,7 +1,4 @@
-const mysql = require('mysql2/promise');
-const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET must be set'); })();
+import mysql from 'mysql2/promise';
 
 let pool;
 function getPool() {
@@ -20,71 +17,75 @@ function getPool() {
     return pool;
 }
 
-module.exports = async function handler(req, res) {
+export async function GET(request) {
     const db = getPool();
-    if (!db) return res.status(500).json({ error: 'Database configuration missing' });
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: 'Missing token' });
-    
-    const token = authHeader.split(' ')[1];
-    if (!token || typeof token !== 'string') {
-        return res.status(401).json({ error: 'Missing token' });
+    if (!db) {
+        return Response.json({ error: 'Database configuration missing' }, { status: 500 });
     }
 
-    let decoded;
     try {
-        decoded = jwt.verify(token, JWT_SECRET);
-    } catch (err) {
-        return res.status(401).json({ error: 'Invalid token' });
-    }
+        const url = new URL(request.url);
+        const action = url.searchParams.get('action');
+        const body = action ? null : await request.json().catch(() => null);
 
-    const { action } = req.query;
+        if (action === 'like' && request.method === 'POST') {
+            const { post_id } = await request.json();
+            if (!post_id) return Response.json({ error: 'post_id required' }, { status: 400 });
 
-    if (req.method === 'POST') {
-        const { post_id } = req.body;
-        if (!post_id) return res.status(400).json({ error: 'post_id required' });
+            const authHeader = request.headers.get('Authorization');
+            const token = authHeader?.split(' ')[1];
+            const jwt = await import('jsonwebtoken');
+            const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+            let user;
+            if (token) { try { user = jwt.verify(token, JWT_SECRET); } catch {} }
 
-        if (action === 'like') {
-            try {
-                const [existing] = await db.query('SELECT * FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, decoded.id]);
-                if (existing.length > 0) {
-                    await db.query('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, decoded.id]);
-                    return res.status(200).json({ message: 'Unliked', status: 'deleted' });
-                } else {
-                    await db.query('INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)', [post_id, decoded.id]);
-                    return res.status(201).json({ message: 'Liked', status: 'added' });
-                }
-            } catch (err) {
-                console.error(err);
-                return res.status(500).json({ error: 'Like operation failed' });
-            }
-        } 
-        
-        if (action === 'comment') {
-            const { comment } = req.body;
-            if (!comment) return res.status(400).json({ error: 'Comment text required' });
-            try {
-                await db.query('INSERT INTO post_comments (post_id, user_id, comment) VALUES (?, ?, ?)', [post_id, decoded.id, comment]);
-                return res.status(201).json({ message: 'Comment added' });
-            } catch (err) {
-                console.error(err);
-                return res.status(500).json({ error: 'Comment operation failed' });
+            if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+            const [existing] = await db.query('SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, user.id]);
+            if (existing.length > 0) {
+                await db.query('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, user.id]);
+                return Response.json({ status: 'deleted' });
+            } else {
+                await db.query('INSERT INTO post_likes (post_id, user_id) VALUES (?, ?)', [post_id, user.id]);
+                return Response.json({ status: 'added' });
             }
         }
-    } else if (req.method === 'GET') {
-        if (action === 'comments') {
-            const { post_id } = req.query;
-            if (!post_id) return res.status(400).json({ error: 'post_id required' });
-            try {
-                const [rows] = await db.query('SELECT c.comment, c.created_at, u.username, u.profile_pic FROM post_comments c JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at DESC', [post_id]);
-                return res.status(200).json(rows);
-            } catch (err) {
-                console.error(err);
-                return res.status(500).json({ error: 'Comment fetch failed' });
-            }
-        }
-    }
 
-    res.status(400).json({ error: 'Invalid action or method' });
-};
+        if (action === 'comments' && request.method === 'GET') {
+            const postId = url.searchParams.get('post_id');
+            if (!postId) return Response.json({ error: 'post_id required' }, { status: 400 });
+
+            const [comments] = await db.query(
+                'SELECT c.*, u.username FROM post_comments c LEFT JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at ASC',
+                [postId]
+            );
+            return Response.json(comments);
+        }
+
+        if (action === 'comment' && request.method === 'POST') {
+            const { post_id, comment } = await request.json();
+            if (!post_id || !comment) return Response.json({ error: 'post_id and comment required' }, { status: 400 });
+
+            const authHeader = request.headers.get('Authorization');
+            const token = authHeader?.split(' ')[1];
+            const jwt = await import('jsonwebtoken');
+            const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+            let user;
+            if (token) { try { user = jwt.verify(token, JWT_SECRET); } catch {} }
+
+            if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+            await db.query('INSERT INTO post_comments (post_id, user_id, comment) VALUES (?, ?, ?)', [post_id, user.id, comment]);
+            return Response.json({ message: 'Comment added' }, { status: 201 });
+        }
+
+        return Response.json({ error: 'Invalid action' }, { status: 400 });
+    } catch (error) {
+        console.error('Error in posts_social:', error);
+        return Response.json({ error: 'Internal server error' }, { status: 500 });
+    }
+}
+
+export async function POST(request) {
+    return GET(request);
+}

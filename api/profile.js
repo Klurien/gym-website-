@@ -1,7 +1,7 @@
-const mysql = require('mysql2/promise');
-const jwt = require('jsonwebtoken');
+import mysql from 'mysql2/promise';
+import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET must be set'); })();
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 let pool;
 function getPool() {
@@ -20,56 +20,43 @@ function getPool() {
     return pool;
 }
 
-function isValidBase64(str) {
-    if (typeof str !== 'string') return false;
-    const base64Regex = /^data:image\/\w+;base64,/;
-    return base64Regex.test(str);
+export async function GET(request) {
+    const db = getPool();
+    if (!db) return Response.json({ error: 'Database configuration missing' }, { status: 500 });
+
+    try {
+        const authHeader = request.headers.get('Authorization');
+        const token = authHeader?.split(' ')[1];
+        if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+        const decoded = jwt.verify(token, JWT_SECRET);
+
+        const [rows] = await db.query('SELECT id, username, email, role, profile_pic FROM users WHERE id = ?', [decoded.id]);
+        if (rows.length === 0) return Response.json({ error: 'User not found' }, { status: 404 });
+
+        return Response.json(rows[0]);
+    } catch (error) {
+        return Response.json({ error: 'Failed to fetch profile' }, { status: 500 });
+    }
 }
 
-module.exports = async function handler(req, res) {
+export async function PUT(request) {
     const db = getPool();
-    if (!db) return res.status(500).json({ error: 'Database configuration missing' });
+    if (!db) return Response.json({ error: 'Database configuration missing' }, { status: 500 });
 
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: 'No token provided' });
-
-    const token = authHeader.split(' ')[1];
-    if (!token || typeof token !== 'string') {
-        return res.status(401).json({ error: 'Missing token' });
-    }
-
-    let decoded;
     try {
-        decoded = jwt.verify(token, JWT_SECRET);
-    } catch (err) {
-        return res.status(401).json({ error: 'Invalid token' });
-    }
+        const authHeader = request.headers.get('Authorization');
+        const token = authHeader?.split(' ')[1];
+        if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    if (req.method === 'POST') {
-        const { profile_pic } = req.body;
-        if (!profile_pic) return res.status(400).json({ error: 'No profile picture provided' });
-        
-        if (!isValidBase64(profile_pic)) {
-            return res.status(400).json({ error: 'Invalid profile picture format' });
-        }
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const { username, profile_pic } = await request.json();
 
-        try {
-            await db.query('UPDATE users SET profile_pic = ? WHERE id = ?', [profile_pic, decoded.id]);
-            res.status(200).json({ message: 'Profile picture updated successfully' });
-        } catch (err) {
-            console.error('Error updating profile pic:', err);
-            res.status(500).json({ error: 'Database error' });
-        }
-    } else if (req.method === 'GET') {
-        try {
-            const [rows] = await db.query('SELECT id, username, email, role, profile_pic, created_at FROM users WHERE id = ?', [decoded.id]);
-            if (rows.length === 0) return res.status(404).json({ error: 'User not found' });
-            res.status(200).json({ user: rows[0] });
-        } catch (err) {
-            res.status(500).json({ error: 'Database error' });
-        }
-    } else {
-        res.setHeader('Allow', ['GET', 'POST']);
-        res.status(405).end(`Method ${req.method} Not Allowed`);
+        await db.query('UPDATE users SET username = ?, profile_pic = ? WHERE id = ?',
+            [username || '', profile_pic || '', decoded.id]);
+
+        return Response.json({ message: 'Profile updated' });
+    } catch (error) {
+        return Response.json({ error: 'Failed to update profile' }, { status: 500 });
     }
-};
+}

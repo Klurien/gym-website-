@@ -1,58 +1,48 @@
-const mysql = require('mysql2/promise');
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
+import mysql from 'mysql2/promise';
 
-const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 4000,
-    ssl: {
-        minVersion: 'TLSv1.2',
-        rejectUnauthorized: process.env.DB_CA_PATH ? true : false,
-        ca: process.env.DB_CA_PATH ? fs.readFileSync(process.env.DB_CA_PATH) : undefined
+let pool;
+function getPool() {
+    if (!pool && process.env.DB_HOST) {
+        pool = mysql.createPool({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            port: process.env.DB_PORT || 4000,
+            ssl: { rejectUnauthorized: false },
+            waitForConnections: true,
+            connectionLimit: 10
+        });
     }
-};
+    return pool;
+}
 
-module.exports = async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (req.method === 'OPTIONS') return res.status(200).end();
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: 'No authorization header provided' });
-
-    const token = authHeader.split(' ')[1];
-    let decoded;
-    try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET || 'gym-secret-2026');
-    } catch (err) {
-        return res.status(401).json({ error: 'Invalid token' });
-    }
+export async function GET(request) {
+    const db = getPool();
+    if (!db) return Response.json({ error: 'Database configuration missing' }, { status: 500 });
 
     try {
-        const pool = mysql.createPool(dbConfig);
-        
-        if (req.method === 'GET') {
-            const [rows] = await pool.query('SELECT * FROM workout_logs WHERE user_id = ? ORDER BY log_date DESC', [decoded.userId]);
-            return res.status(200).json({ logs: rows });
-        } else if (req.method === 'POST') {
-            const { log_date, duration_minutes, calories_burned, notes } = req.body;
-            if (!log_date) return res.status(400).json({ error: 'log_date missing' });
-
-            const [result] = await pool.query(
-                'INSERT INTO workout_logs (user_id, log_date, duration_minutes, calories_burned, notes) VALUES (?, ?, ?, ?, ?)',
-                [decoded.userId, log_date, duration_minutes || 0, calories_burned || 0, notes || '']
-            );
-            return res.status(201).json({ message: 'Log created', id: result.insertId });
-        } else {
-            return res.status(405).end();
-        }
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Database error', details: err.message });
+        const [rows] = await db.query('SELECT * FROM workouts ORDER BY created_at DESC LIMIT 50');
+        return Response.json(rows);
+    } catch (error) {
+        return Response.json({ error: 'Failed to fetch workouts' }, { status: 500 });
     }
-};
+}
+
+export async function POST(request) {
+    const db = getPool();
+    if (!db) return Response.json({ error: 'Database configuration missing' }, { status: 500 });
+
+    try {
+        const { title, description, video_url, duration, difficulty } = await request.json();
+        if (!title) return Response.json({ error: 'Title required' }, { status: 400 });
+
+        await db.query(
+            'INSERT INTO workouts (title, description, video_url, duration, difficulty, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+            [title, description || '', video_url || '', duration || 0, difficulty || 'beginner']
+        );
+        return Response.json({ message: 'Workout added' }, { status: 201 });
+    } catch (error) {
+        return Response.json({ error: 'Failed to add workout' }, { status: 500 });
+    }
+}

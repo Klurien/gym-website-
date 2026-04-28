@@ -1,5 +1,8 @@
-const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
+import mysql from 'mysql2/promise';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 let pool;
 function getPool() {
@@ -10,7 +13,7 @@ function getPool() {
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
             port: process.env.DB_PORT || 4000,
-            ssl: { minVersion: 'TLSv1.2', rejectUnauthorized: false },
+            ssl: { rejectUnauthorized: false },
             waitForConnections: true,
             connectionLimit: 10
         });
@@ -18,34 +21,36 @@ function getPool() {
     return pool;
 }
 
-module.exports = async (req, res) => {
-    if (req.method !== 'POST') return res.status(405).end();
-    
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) return res.status(400).json({ error: 'Missing fields' });
-
-    // Efficient Security Validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return res.status(400).json({ error: 'Invalid email format' });
-    if (password.length < 6) return res.status(400).json({ error: 'Password too short (min 6 chars)' });
-
+export async function POST(request) {
     try {
         const db = getPool();
-        if (!db) return res.status(500).json({ error: 'Database configuration missing' });
-        
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        const [users] = await db.query('SELECT COUNT(*) as count FROM users');
-        const role = users[0].count === 0 ? 'admin' : 'user';
+        if (!db) {
+            return Response.json({ error: 'Database configuration missing' }, { status: 500 });
+        }
 
-        await db.query(
-            'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
-            [username, email, hashedPassword, role]
-        );
+        const { username, email, password } = await request.json();
+        if (!username || !email || !password) {
+            return Response.json({ error: 'Missing fields' }, { status: 400 });
+        }
 
-        res.status(201).json({ message: 'User registered successfully!' });
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return Response.json({ error: 'Invalid email' }, { status: 400 });
+        }
+
+        if (password.length < 6) {
+            return Response.json({ error: 'Password too short' }, { status: 400 });
+        }
+
+        const hashed = await bcrypt.hash(password, 10);
+        const [rows] = await db.query('SELECT COUNT(*) as c FROM users');
+        const role = rows[0].c === 0 ? 'admin' : 'user';
+
+        await db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
+            [username, email, hashed, role]);
+
+        return Response.json({ message: 'User registered' }, { status: 201 });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Registration failed', details: err.message });
+        return Response.json({ error: 'Registration failed' }, { status: 500 });
     }
-};
+}
