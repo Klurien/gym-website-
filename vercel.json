@@ -7,5 +7,10 @@
       "src": "/api/(.*)",
       "dest": "/api/index.js"
     }
-  ]
+  ],
+  "env": {
+    "VITE_PUSHER_KEY": "@pusher-key",
+    "VITE_PUSHER_CLUSTER": "@pusher-cluster"
+  },
+  "regions": ["iad1"]
 }

@@ -1,17 +1,24 @@
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import Pusher from 'pusher';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID || '',
-  key: process.env.PUSHER_KEY || '',
-  secret: process.env.PUSHER_SECRET || '',
-  cluster: process.env.PUSHER_CLUSTER || 'us2',
-  useTLS: true,
-});
+let pusher = null;
+try {
+  const Pusher = (await import('pusher')).default;
+  if (process.env.PUSHER_APP_ID && process.env.PUSHER_KEY) {
+    pusher = new Pusher({
+      appId: process.env.PUSHER_APP_ID,
+      key: process.env.PUSHER_KEY,
+      secret: process.env.PUSHER_SECRET,
+      cluster: process.env.PUSHER_CLUSTER || 'us2',
+      useTLS: true,
+    });
+  }
+} catch (e) {
+  console.log('Pusher not configured');
+}
 
 let pool;
 function getPool() {
@@ -127,6 +134,7 @@ export async function POST(request) {
 
     try {
         if (path === '/api/pusher-auth' || path.endsWith('/pusher-auth')) {
+            if (!pusher) return Response.json({ error: 'Pusher not configured' }, { status: 503 });
             const user = getUser(request);
             if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
             const auth = pusher.authenticate(request.headers.get('socket_id'), {
@@ -137,6 +145,7 @@ export async function POST(request) {
         }
 
         if (path === '/api/pusher-trigger' || path.endsWith('/pusher-trigger')) {
+            if (!pusher) return Response.json({ error: 'Pusher not configured' }, { status: 503 });
             const { channel, event, data } = await request.json();
             if (!channel || !event || !data) return Response.json({ error: 'Missing params' }, { status: 400 });
             try {
