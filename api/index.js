@@ -52,6 +52,10 @@ module.exports = async function handler(req, res) {
         if (!mysql) mysql = require('mysql2/promise');
         if (!bcrypt) bcrypt = require('bcryptjs');
         if (!jwt) jwt = require('jsonwebtoken');
+        
+        // Force the bundler to include iconv-lite helpers
+        try { require('iconv-lite/lib/helpers/merge-exports.js'); } catch (f) {}
+        try { require('iconv-lite/encodings/index.js'); } catch (f) {}
     } catch (importErr) {
         return res.status(500).json({ error: "Failed to require modules: " + importErr.message });
     }
