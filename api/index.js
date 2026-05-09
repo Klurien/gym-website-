@@ -357,3 +357,51 @@ export async function PATCH(request) {
         return Response.json({ error: e.message }, { status: 500 });
     }
 }
+
+export async function OPTIONS(request) {
+    return new Response(null, {
+        status: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+    });
+}
+
+// Vercel Node.js Serverless Wrapper
+export default async function handler(req, res) {
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const urlString = `${protocol}://${host}${req.url}`;
+    
+    const requestOptions = {
+        method: req.method,
+        headers: req.headers
+    };
+    if (['POST', 'PATCH', 'PUT'].includes(req.method)) {
+        requestOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    }
+    
+    const webRequest = new Request(urlString, requestOptions);
+    let webResponse;
+    
+    if (req.method === 'GET') webResponse = await GET(webRequest);
+    else if (req.method === 'POST') webResponse = await POST(webRequest);
+    else if (req.method === 'PATCH') webResponse = await PATCH(webRequest);
+    else if (req.method === 'OPTIONS') webResponse = await OPTIONS(webRequest);
+    else webResponse = new Response('Method Not Allowed', { status: 405 });
+
+    if (!webResponse) return res.status(500).send('No response');
+
+    webResponse.headers.forEach((value, key) => res.setHeader(key, value));
+    
+    const contentType = webResponse.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        const data = await webResponse.json();
+        res.status(webResponse.status).json(data);
+    } else {
+        const text = await webResponse.text();
+        res.status(webResponse.status).send(text);
+    }
+}
