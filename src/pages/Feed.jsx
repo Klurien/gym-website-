@@ -139,7 +139,8 @@ export default function Feed() {
         setPostForm({ title: '', description: '', media_url: '', tags: '', type: 'static' });
         fetchPosts();
       } else {
-        alert('Failed to create post. Only Pro trainers can post.');
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to create post. Please try again.');
       }
     } catch (e) {
       console.error(e);
