@@ -1,11 +1,8 @@
-// CommonJS format required for Vercel Node.js Serverless runtime
-const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+const fs = require('fs'); // standard node module
+let mysql, bcrypt, jwt;
 
 let pool = null;
+
 function getPool() {
     if (!pool && process.env.DB_HOST) {
         pool = mysql.createPool({
@@ -27,7 +24,10 @@ function getUser(req) {
     const authHeader = req.headers['authorization'] || req.headers['Authorization'] || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!token) return null;
-    try { return jwt.verify(token, JWT_SECRET); } catch { return null; }
+    try {
+        const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+        return jwt.verify(token, JWT_SECRET);
+    } catch { return null; }
 }
 
 function getBody(req) {
@@ -38,12 +38,23 @@ function getBody(req) {
     return req.body;
 }
 
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+
 module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
+
+    try {
+        // Try to require the modules safely!
+        if (!mysql) mysql = require('mysql2/promise');
+        if (!bcrypt) bcrypt = require('bcryptjs');
+        if (!jwt) jwt = require('jsonwebtoken');
+    } catch (importErr) {
+        return res.status(500).json({ error: "Failed to require modules: " + importErr.message });
+    }
 
     const url = req.url || '/';
     const [pathWithApi, searchRaw] = url.split('?');
@@ -60,7 +71,7 @@ module.exports = async function handler(req, res) {
             if (!db) return res.status(503).json({ error: 'DB not configured' });
 
             if (path.endsWith('/health')) {
-                return res.status(200).json({ status: 'ok' });
+                return res.status(200).json({ status: 'ok', using_express_res: true });
             }
 
             if (path.endsWith('/posts')) {
