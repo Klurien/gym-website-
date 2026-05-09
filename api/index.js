@@ -55,7 +55,18 @@ export async function GET(request) {
 
     try {
         if (path === '/api/posts' || path.endsWith('/posts')) {
-            const [rows] = await db.query('SELECT * FROM posts ORDER BY created_at DESC LIMIT 50');
+            const user = getUser(request);
+            const userId = user ? user.id : 0;
+            const [rows] = await db.query(
+                `SELECT p.*, u.username as trainer_name,
+                 (SELECT COUNT(*) FROM post_likes l WHERE l.post_id = p.id) as likes_count,
+                 (SELECT COUNT(*) FROM post_comments c WHERE c.post_id = p.id) as comments_count,
+                 EXISTS(SELECT 1 FROM post_likes l2 WHERE l2.post_id = p.id AND l2.user_id = ?) as is_liked
+                 FROM posts p 
+                 LEFT JOIN users u ON p.trainer_id = u.id 
+                 ORDER BY p.created_at DESC LIMIT 50`,
+                [userId]
+            );
             return Response.json(rows);
         }
         if (path === '/api/workouts' || path.endsWith('/workouts')) {
@@ -125,10 +136,12 @@ export async function POST(request) {
         if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
         if (path === '/api/posts' || path.endsWith('/posts')) {
-            const { title, media_url } = await request.json();
+            const { title, description, media_url, tags, type } = await request.json();
             if (!title) return Response.json({ error: 'Title required' }, { status: 400 });
-            const [r] = await db.query('INSERT INTO posts (trainer_id, title, media_url, created_at) VALUES (?, ?, ?, NOW())',
-                [user.id, title, media_url || '']);
+            const [r] = await db.query(
+                'INSERT INTO posts (trainer_id, title, description, tags, type, media_url, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+                [user.id, title, description || '', tags || '', type || 'static', media_url || '']
+            );
             if (pusher) try { pusher.trigger('gym-posts', 'new_post', { title }); } catch (e) {}
             return Response.json({ message: 'Post created', postId: r.insertId }, { status: 201 });
         }
