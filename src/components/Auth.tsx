@@ -14,16 +14,53 @@ export default function Auth({ onLogin }: AuthProps) {
   const [name, setName] = useState('');
   const [role, setRole] = useState<'client' | 'trainer'>('client');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate auth
-    onLogin({
-      id: Math.random().toString(36).substr(2, 9),
-      name: isLogin ? 'Alex Rivers' : name,
-      email,
-      role: isLogin ? 'trainer' : role,
-      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=100&h=100&auto=format&fit=crop',
-    });
+    setError('');
+    setLoading(true);
+
+    try {
+      const url = isLogin ? '/api/login' : '/api/register';
+      const body = isLogin 
+        ? { email, password }
+        : { username: name, email, password };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      if (isLogin) {
+        localStorage.setItem('token', data.token);
+        onLogin(data.user);
+      } else {
+        // Auto-login after register
+        const loginRes = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const loginData = await loginRes.json();
+        if (loginRes.ok) {
+          localStorage.setItem('token', loginData.token);
+          onLogin(loginData.user);
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || 'Network error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -132,6 +169,12 @@ export default function Auth({ onLogin }: AuthProps) {
               />
             </div>
 
+            {error && (
+              <div className="text-red-500 text-[10px] font-bold uppercase tracking-widest text-center">
+                {error}
+              </div>
+            )}
+
             {isLogin && (
               <div className="text-right">
                 <button type="button" className="text-[9px] font-black text-zinc-600 hover:text-kinetic-lime uppercase tracking-widest">
@@ -142,10 +185,11 @@ export default function Auth({ onLogin }: AuthProps) {
 
             <button 
               type="submit"
-              className="w-full bg-kinetic-lime text-black py-4 rounded-2xl font-black text-xs tracking-[0.2em] shadow-[0_0_20px_rgba(195,244,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group"
+              disabled={loading}
+              className="w-full bg-kinetic-lime text-black py-4 rounded-2xl font-black text-xs tracking-[0.2em] shadow-[0_0_20px_rgba(195,244,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
             >
-              {isLogin ? 'ENTER CHAIN' : 'ESTABLISH PROFILE'}
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              {loading ? 'PROCESSING...' : (isLogin ? 'ENTER CHAIN' : 'ESTABLISH PROFILE')}
+              {!loading && <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
         </div>

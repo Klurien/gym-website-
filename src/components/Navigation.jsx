@@ -23,7 +23,7 @@ export default function Navigation() {
   const menuItems = [
     { path: '/community', label: 'Community', icon: 'forum' },
     { path: '/timer', label: 'Timer', icon: 'timer' },
-    { path: '/tasks', label: 'Goals', icon: 'checklist' },
+    { path: '/tasks', label: 'Tasks', icon: 'checklist' },
     { path: '/calendar', label: 'Calendar', icon: 'event_note' },
     { path: '/notifications', label: 'Alerts', icon: 'notifications' },
     { path: '/profile', label: 'Profile', icon: 'person' },
@@ -31,8 +31,22 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-[60] flex justify-around items-center h-16 px-2 bg-zinc-950/95 backdrop-blur-xl border-t border-white/5">
-        {navItems.map(item => (
+      <nav className="fixed bottom-0 left-0 right-0 z-[60] flex justify-around items-center h-16 px-4 bg-zinc-950/95 backdrop-blur-xl border-t border-white/5">
+        {navItems.slice(0, 2).map(item => (
+          <button key={item.path} onClick={() => navigate(item.path)} className={getButtonClass(item.path)}>
+            <span className="material-symbols-outlined text-2xl">{item.icon}</span>
+          </button>
+        ))}
+        
+        {/* Create Post Button */}
+        <button 
+          onClick={() => navigate('/feed?action=compose')} 
+          className="bg-lime-400 text-black rounded-2xl p-3 shadow-[0_0_20px_rgba(204,255,0,0.6)] hover:scale-105 transition-transform"
+        >
+          <span className="material-symbols-outlined text-3xl font-bold">add</span>
+        </button>
+
+        {navItems.slice(2).map(item => (
           <button key={item.path} onClick={() => navigate(item.path)} className={getButtonClass(item.path)}>
             <span className="material-symbols-outlined text-2xl">{item.icon}</span>
           </button>
@@ -40,7 +54,7 @@ export default function Navigation() {
         
         {/* Menu Button */}
         <button onClick={() => setShowMenu(true)} className={showMenu ? "bg-lime-400 text-black rounded-full p-3" : "text-zinc-400 hover:text-lime-400 p-3"}>
-          <span className="material-symbols-outlined text-2xl">apps</span>
+          <span className="material-symbols-outlined text-2xl">menu</span>
         </button>
       </nav>
 

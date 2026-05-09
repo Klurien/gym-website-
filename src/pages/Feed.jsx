@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const greeting = () => {
     const hour = new Date().getHours();
@@ -28,6 +29,13 @@ export default function Feed() {
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    if (location.search.includes('action=compose')) {
+      setShowPostModal(true);
+      navigate('/feed', { replace: true });
+    }
+  }, [location.search, navigate]);
 
   const fetchPosts = async () => {
     const token = localStorage.getItem('token');
@@ -334,16 +342,6 @@ export default function Feed() {
           ))
         )}
       </div>
-
-      {/* Floating Create Post Button */}
-      {user.role === 'admin' && (
-        <button
-          onClick={() => setShowPostModal(true)}
-          className="fixed bottom-32 right-6 w-14 h-14 bg-lime-400 text-black rounded-2xl shadow-[0_10px_40px_rgba(204,255,0,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40"
-        >
-          <span className="material-symbols-outlined text-3xl font-bold">add</span>
-        </button>
-      )}
 
       {/* Modals (Portal-like) */}
       {showPostModal && (
