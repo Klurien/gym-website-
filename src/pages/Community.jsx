@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RichMedia from '../components/RichMedia';
+import RichText from '../components/RichText';
 
 export default function Community() {
   const [posts, setPosts] = useState([]);
@@ -165,17 +166,6 @@ export default function Community() {
     return item.profile_pic || item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.username || 'default'}`;
   };
 
-  const formatText = (text) => {
-    if (!text) return null;
-    const URL_REGEX = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(URL_REGEX);
-    return parts.map((part, i) => {
-      if (part.match(URL_REGEX)) {
-        return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-lime-400 hover:underline break-all">{part}</a>;
-      }
-      return part;
-    });
-  };
 
   if (loading) {
     return <div className="pt-28 text-center text-zinc-500">Loading...</div>;
@@ -226,41 +216,48 @@ export default function Community() {
       {/* Posts */}
       <div className="divide-y divide-white/5">
         {posts.length === 0 ? (
-          <p className="text-center text-zinc-500 py-8">No posts yet. Be the first to post!</p>
+          <div className="py-20 flex flex-col items-center justify-center text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold gap-6 animate-fade-in text-center px-10">
+            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+              <span className="material-symbols-outlined text-4xl opacity-20">forum</span>
+            </div>
+            The community center is quiet.<br />Start the conversation with an elite post.
+          </div>
         ) : (
-          posts.map(post => (
-            <article key={post.id} className="p-4">
-              <div className="flex gap-3">
-                <img src={getAvatar(post)} className="w-10 h-10 rounded-full bg-zinc-800" alt={post.trainer_name} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-white">{post.trainer_name}</span>
-                    <span className="text-zinc-500 text-sm">@{post.trainer_name?.toLowerCase()}</span>
-                  </div>
-                  <div className="text-white mt-1 whitespace-pre-wrap">{formatText(post.description || post.title)}</div>
-                  <RichMedia 
-                    url={post.media_url} 
-                    type={post.type} 
-                    title={post.title} 
-                    description={post.description} 
-                  />
-                  <div className="flex justify-between mt-3 max-w-md">
-                    <button onClick={() => openComments(post)} className="flex items-center gap-2 text-zinc-500 hover:text-blue-400">
-                      <span className="material-symbols-outlined p-2">chat_bubble_outline</span>
-                      <span className="text-sm">{post.comments_count || 0}</span>
-                    </button>
-                    <button onClick={() => toggleLike(post.id)} className={`flex items-center gap-2 ${post.is_liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500'}`}>
-                      <span className="material-symbols-outlined p-2">{post.is_liked ? 'favorite' : 'favorite_border'}</span>
-                      <span className="text-sm">{post.likes_count || 0}</span>
-                    </button>
-                    <button onClick={() => setShareModal(post)} className="text-zinc-500 p-2">
-                      <span className="material-symbols-outlined">ios_share</span>
-                    </button>
+          <div className="space-y-6 p-4">
+            {posts.map(post => (
+              <article key={post.id} className="bg-zinc-900/60 rounded-[32px] border border-white/5 overflow-hidden transition-all hover:border-white/10 p-5 mb-4">
+                <div className="flex gap-4">
+                  <img src={getAvatar(post)} className="w-12 h-12 rounded-full border-2 border-kinetic-lime/30 p-0.5 object-cover" alt={post.trainer_name} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-white tracking-tight">{post.trainer_name}</span>
+                      <span className="text-zinc-600 text-[10px] font-black uppercase tracking-widest whitespace-nowrap">@{post.trainer_name?.toLowerCase().replace(/\s+/g, '')}</span>
+                    </div>
+                    <RichText text={post.description || post.title} className="text-zinc-300 text-sm leading-relaxed mb-4" />
+                    <RichMedia 
+                      url={post.media_url} 
+                      type={post.type} 
+                      title={post.title} 
+                      description={post.description} 
+                    />
+                    <div className="flex items-center gap-8 mt-4 pt-4 border-t border-white/5">
+                      <button onClick={() => openComments(post)} className="flex items-center gap-2 text-zinc-500 hover:text-kinetic-lime transition-colors group">
+                        <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">chat_bubble</span>
+                        <span className="text-[10px] font-black">{post.comments_count || 0}</span>
+                      </button>
+                      <button onClick={() => toggleLike(post.id)} className={`flex items-center gap-2 transition-colors group ${post.is_liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500'}`}>
+                        <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">{post.is_liked ? 'favorite' : 'favorite_border'}</span>
+                        <span className="text-[10px] font-black">{post.likes_count || 0}</span>
+                      </button>
+                      <button onClick={() => setShareModal(post)} className="text-zinc-500 hover:text-white transition-colors ml-auto">
+                        <span className="material-symbols-outlined text-[20px]">ios_share</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </article>
-          ))
+              </article>
+            ))}
+          </div>
         )}
       </div>
 

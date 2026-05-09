@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import RichMedia from '../components/RichMedia';
+import RichText from '../components/RichText';
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
@@ -51,11 +52,7 @@ export default function Feed() {
       });
       
       if (res.status === 404 || res.status === 405 || !res.ok) {
-        // API not available - show demo posts
-        setPosts([
-          { id: '1', title: 'Morning Grind', description: 'Crushing it at 6AM!', media_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800', type: 'static', likes_count: 42, comments_count: 5, is_liked: false },
-          { id: '2', title: 'New Workout Drop', description: 'Check out the new mobility flow!', media_url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800', type: 'video', likes_count: 128, comments_count: 12, is_liked: true },
-        ]);
+        setPosts([]);
         setLoading(false);
         return;
       }
@@ -63,11 +60,7 @@ export default function Feed() {
       const data = await res.json();
       setPosts(data);
     } catch (e) {
-      // Fallback to demo posts on error
-      setPosts([
-        { id: '1', title: 'Morning Grind', description: 'Crushing it at 6AM!', media_url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800', type: 'static', likes_count: 42, comments_count: 5, is_liked: false },
-        { id: '2', title: 'New Workout Drop', description: 'Check out the new mobility flow!', media_url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800', type: 'video', likes_count: 128, comments_count: 12, is_liked: true },
-      ]);
+      setPosts([]);
     } finally {
       setLoading(false);
     }
@@ -233,11 +226,11 @@ export default function Feed() {
             <span className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.4em]">Establishing Link...</span>
           </div>
         ) : posts.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold gap-6 animate-fade-in">
+          <div className="h-full flex flex-col items-center justify-center text-zinc-500 uppercase tracking-[0.3em] text-[10px] font-bold gap-6 animate-fade-in text-center px-10">
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
               <span className="material-symbols-outlined text-4xl opacity-20">movie_filter</span>
             </div>
-            No Elite Clips Yet
+            The feed is currently quiet.<br />Be the first to post to the elite community.
           </div>
         ) : (
           posts.map(post => (
@@ -267,7 +260,7 @@ export default function Feed() {
                   
                   <div className="max-w-[85%] pointer-events-auto">
                     <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2 leading-none drop-shadow-2xl">{post.title}</h2>
-                    <p className="text-xs text-zinc-300 font-medium leading-relaxed line-clamp-2 drop-shadow-xl opacity-80">{post.description}</p>
+                    <RichText text={post.description} className="text-xs text-zinc-300 font-medium leading-relaxed line-clamp-2 drop-shadow-xl opacity-80" />
                     {post.tags && (
                       <span className="inline-block mt-4 bg-lime-400/10 text-lime-400 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] border border-lime-400/20 backdrop-blur-sm">
                         #{post.tags}

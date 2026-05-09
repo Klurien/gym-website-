@@ -30,3 +30,40 @@
 .animate-typing-bounce {
   animation: typing-bounce 1.4s infinite ease-in-out;
 }
+
+/* Rich Media & Link Styles */
+.rich-text-link {
+  @apply text-lime-400 font-bold hover:underline break-all transition-all;
+}
+
+.link-card {
+  @apply mt-4 bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden hover:bg-zinc-900 transition-all flex flex-col sm:flex-row shadow-2xl ring-1 ring-white/5;
+}
+
+.link-card-content {
+  @apply p-4 flex-1 flex flex-col justify-center gap-1;
+}
+
+.link-card-open-icon {
+  @apply hidden sm:flex w-32 bg-zinc-800 items-center justify-center border-l border-white/5;
+}
+
+.link-card-title {
+  @apply text-sm font-black text-white uppercase tracking-tight transition-colors line-clamp-1;
+}
+
+.link-card-description {
+  @apply text-[10px] text-zinc-500 font-medium line-clamp-2;
+}
+
+.link-card-url {
+  @apply text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-1 flex items-center gap-1;
+}
+
+.iframe-container {
+  @apply relative w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl ring-1 ring-white/5;
+}
+
+.iframe-container iframe {
+  @apply absolute inset-0 w-full h-full;
+}
