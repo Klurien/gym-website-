@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import RichMedia from '../components/RichMedia';
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
@@ -243,23 +244,13 @@ export default function Feed() {
             <div key={post.id} className="relative h-[calc(100vh-160px)] w-full snap-start overflow-hidden border-b border-white/5 bg-black flex flex-col">
               {/* Media Background Layer */}
               <div className="absolute inset-0 z-0 select-none">
-                {(post.media_url?.match(/\.(mp4|webm|ogg|mov)$/i) || post.type === 'video') ? (
-                  <video
-                    src={post.media_url}
-                    className="w-full h-full object-cover relative z-10"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    controls
-                  />
-                ) : (
-                  <img
-                    src={post.media_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"}
-                    className="w-full h-full object-cover relative z-10"
-                    alt={post.title}
-                  />
-                )}
+                <RichMedia 
+                  url={post.media_url} 
+                  type={post.type} 
+                  title={post.title} 
+                  description={post.description} 
+                  immersive={true}
+                />
                 {/* Fixed Overlay: Ensure it doesn't block the video layer */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-20 pointer-events-none"></div>
               </div>

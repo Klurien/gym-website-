@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import RichMedia from '../components/RichMedia';
 
 export default function Community() {
   const [posts, setPosts] = useState([]);
@@ -164,6 +165,18 @@ export default function Community() {
     return item.profile_pic || item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.username || 'default'}`;
   };
 
+  const formatText = (text) => {
+    if (!text) return null;
+    const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(URL_REGEX);
+    return parts.map((part, i) => {
+      if (part.match(URL_REGEX)) {
+        return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-lime-400 hover:underline break-all">{part}</a>;
+      }
+      return part;
+    });
+  };
+
   if (loading) {
     return <div className="pt-28 text-center text-zinc-500">Loading...</div>;
   }
@@ -224,13 +237,13 @@ export default function Community() {
                     <span className="font-bold text-white">{post.trainer_name}</span>
                     <span className="text-zinc-500 text-sm">@{post.trainer_name?.toLowerCase()}</span>
                   </div>
-                  <p className="text-white mt-1">{post.title}</p>
-                  {post.media_url && (
-                    <div className="mt-3 rounded-2xl overflow-hidden">
-                      {post.type === 'video' ? <video src={post.media_url} className="w-full" controls /> :
-                        <img src={post.media_url} className="w-full" />}
-                    </div>
-                  )}
+                  <div className="text-white mt-1 whitespace-pre-wrap">{formatText(post.description || post.title)}</div>
+                  <RichMedia 
+                    url={post.media_url} 
+                    type={post.type} 
+                    title={post.title} 
+                    description={post.description} 
+                  />
                   <div className="flex justify-between mt-3 max-w-md">
                     <button onClick={() => openComments(post)} className="flex items-center gap-2 text-zinc-500 hover:text-blue-400">
                       <span className="material-symbols-outlined p-2">chat_bubble_outline</span>
