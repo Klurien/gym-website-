@@ -55,10 +55,12 @@ export default function Auth() {
         }
       } else {
         setStatus({ error: data.error || 'Authentication failed', success: '' });
+        setFormData(prev => ({ ...prev, password: '' }));
       }
     } catch (err) {
       console.error('Auth error:', err);
       setStatus({ error: 'Network error. Please try again.', success: '' });
+      setFormData(prev => ({ ...prev, password: '' }));
     } finally {
       setLoading(false);
     }
@@ -93,7 +95,10 @@ export default function Auth() {
                     type="text" 
                     required={!isLogin}
                     value={formData.username}
-                    onChange={(e) => setFormData({...formData, username: e.target.value})}
+                    onChange={(e) => {
+                      setFormData({...formData, username: e.target.value});
+                      if (status.error) setStatus({ ...status, error: '' });
+                    }}
                     className="w-full bg-zinc-950/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400/20 font-body-md" 
                     placeholder="fitness_guru"
                   />
@@ -111,7 +116,10 @@ export default function Auth() {
                   type="email" 
                   required 
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({...formData, email: e.target.value});
+                    if (status.error) setStatus({ ...status, error: '' });
+                  }}
                   className="w-full bg-zinc-950/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400/20 font-body-md" 
                   placeholder="name@email.com"
                 />
@@ -128,7 +136,10 @@ export default function Auth() {
                   type="password" 
                   required 
                   value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({...formData, password: e.target.value});
+                    if (status.error) setStatus({ ...status, error: '' });
+                  }}
                   className="w-full bg-zinc-950/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400/20 font-body-md" 
                   placeholder="••••••••"
                 />

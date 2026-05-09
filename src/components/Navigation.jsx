@@ -29,6 +29,10 @@ export default function Navigation() {
     { path: '/profile', label: 'Profile', icon: 'person' },
   ];
 
+  if (user.role === 'admin') {
+    menuItems.push({ path: '/admin', label: 'Dashboard', icon: 'admin_panel_settings' });
+  }
+
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-[60] flex justify-around items-center h-16 px-4 bg-zinc-950/95 backdrop-blur-xl border-t border-white/5">

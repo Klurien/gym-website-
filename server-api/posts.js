@@ -55,9 +55,7 @@ module.exports = async function handler(req, res) {
             return res.status(200).json(rows);
             
         } else if (method === 'POST') {
-            if (decodedToken.role !== 'admin' && decodedToken.role !== 'trainer') {
-                return res.status(403).json({ error: 'Forbidden: Only trainers/admins can post.' });
-            }
+            // Allow any authenticated user to create a post
 
             const { media_url, title, description, tags, type } = body;
             if (!title) {
