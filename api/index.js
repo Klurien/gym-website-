@@ -5,19 +5,22 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
 let pusher = null;
-try {
-  const Pusher = (await import('pusher')).default;
-  if (process.env.PUSHER_APP_ID && process.env.PUSHER_KEY) {
-    pusher = new Pusher({
-      appId: process.env.PUSHER_APP_ID,
-      key: process.env.PUSHER_KEY,
-      secret: process.env.PUSHER_SECRET,
-      cluster: process.env.PUSHER_CLUSTER || 'us2',
-      useTLS: true,
-    });
-  }
-} catch (e) {
-  console.log('Pusher init failed');
+async function initPusher() {
+    if (!pusher && process.env.PUSHER_APP_ID && process.env.PUSHER_KEY) {
+        try {
+            const Pusher = (await import('pusher')).default;
+            pusher = new Pusher({
+                appId: process.env.PUSHER_APP_ID,
+                key: process.env.PUSHER_KEY,
+                secret: process.env.PUSHER_SECRET,
+                cluster: process.env.PUSHER_CLUSTER || 'us2',
+                useTLS: true,
+            });
+        } catch (e) {
+            console.log('Pusher init failed', e);
+        }
+    }
+    return pusher;
 }
 
 let pool = null;
@@ -278,7 +281,8 @@ export async function POST(request) {
                 'INSERT INTO posts (trainer_id, title, description, tags, type, media_url, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
                 [user.id, title, description || '', tags || '', type || 'static', media_url || '']
             );
-            if (pusher) try { pusher.trigger('gym-posts', 'new_post', { title }); } catch (e) {}
+            const p = await initPusher();
+            if (p) try { p.trigger('gym-posts', 'new_post', { title }); } catch (e) {}
             return Response.json({ message: 'Post created', postId: r.insertId }, { status: 201 });
         }
 
