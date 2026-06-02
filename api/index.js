@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const util = require('util');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'gym-elite-secret-default-2026';
 
 let pool = null;
 function getPool() {
@@ -181,6 +181,13 @@ module.exports = async function handler(req, res) {
                 return res.status(200).json({ responses: rows });
             }
 
+            if (path.endsWith('/admin/users')) {
+                const user = getUser(req);
+                if (!user || user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+                const rows = await db.queryP('SELECT id, username, email, role, profile_pic, last_seen, created_at FROM users ORDER BY last_seen DESC, created_at DESC');
+                return res.status(200).json(rows);
+            }
+
             return res.status(404).json({ error: 'API endpoint not found', path });
         }
 
@@ -245,9 +252,10 @@ module.exports = async function handler(req, res) {
             }
 
             if (path.endsWith('/posts_social')) {
-                const { post_id, comment, action } = body;
+                const action = searchParams.get('action');
+                const { post_id, comment } = body;
                 if (action === 'like') {
-                    const existing = await db.queryP('SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, user.id]);
+                    const existing = await db.queryP('SELECT 1 FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, user.id]);
                     if (existing.length) {
                         await db.queryP('DELETE FROM post_likes WHERE post_id = ? AND user_id = ?', [post_id, user.id]);
                         return res.status(200).json({ status: 'deleted' });
@@ -305,6 +313,13 @@ module.exports = async function handler(req, res) {
                     await db.queryP('DELETE FROM user_following WHERE user_id = ? AND following_id = ?', [user.id, following]);
                     return res.status(200).json({ success: true });
                 }
+            }
+
+            if (path.endsWith('/heartbeat')) {
+                const user = getUser(req);
+                if (!user) return res.status(401).json({ error: 'Unauthorized' });
+                await db.queryP('UPDATE users SET last_seen = NOW() WHERE id = ?', [user.id]);
+                return res.status(200).json({ success: true });
             }
 
             return res.status(404).json({ error: 'Not found', path });

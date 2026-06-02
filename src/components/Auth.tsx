@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { motion } from 'motion/react';
 import { Zap, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -17,7 +17,7 @@ export default function Auth({ onLogin }: AuthProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);

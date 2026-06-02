@@ -58,9 +58,10 @@ export default function Community() {
   };
 
   const uploadMedia = async (file) => {
+    const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('file', file);
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
     if (res.ok) {
       const data = await res.json();
       return data.url;
@@ -179,8 +180,7 @@ export default function Community() {
       </header>
 
       {/* Compose */}
-      {(user.role === 'admin' || user.role === 'trainer') && (
-        <div className="border-b border-white/5 p-4">
+      <div className="border-b border-white/5 p-4">
           <div className="flex gap-3">
             <img src={getAvatar(user)} className="w-10 h-10 rounded-full bg-zinc-800" alt="You" />
             <form onSubmit={createPost} className="flex-1">
@@ -210,8 +210,7 @@ export default function Community() {
               </div>
             </form>
           </div>
-        </div>
-      )}
+      </div>
 
       {/* Posts */}
       <div className="divide-y divide-white/5">

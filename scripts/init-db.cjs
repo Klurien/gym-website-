@@ -13,6 +13,7 @@ const schema = [
     role ENUM('user', 'admin', 'trainer') DEFAULT 'user',
     profile_pic LONGTEXT,
     avatar VARCHAR(255),
+    last_seen DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS posts (
@@ -113,6 +114,16 @@ async function init() {
   for (const sql of schema) {
     console.log(`Running: ${sql.substring(0, 50)}...`);
     await connection.query(sql);
+  }
+
+  // Ensure missing columns on pre-existing tables
+  const migrations = [
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen DATETIME",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar VARCHAR(255)",
+    "ALTER TABLE users MODIFY COLUMN role ENUM('user','admin','trainer') DEFAULT 'user'",
+  ];
+  for (const sql of migrations) {
+    try { await connection.query(sql); } catch {}
   }
 
   console.log('Database initialized successfully.');

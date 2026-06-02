@@ -1,6 +1,6 @@
 const API_BASE = '';
 
-async function apiFetch(endpoint, options = {}) {
+async function apiFetch(endpoint: string, options: RequestInit = {}) {
     const token = localStorage.getItem('token');
     const res = await fetch(`${API_BASE}${endpoint}`, {
         ...options,

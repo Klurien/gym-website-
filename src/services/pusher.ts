@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import Pusher from 'pusher-js';
 
 const PUSHER_KEY = import.meta.env.VITE_PUSHER_KEY || 'demo-key';

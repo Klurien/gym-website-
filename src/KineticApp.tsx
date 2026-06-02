@@ -5,7 +5,7 @@
 
 import { Home, MessageSquare, Calendar, Zap, Menu, Bell, MoreVertical, Plus, Heart, Share2, Bookmark, Search, Play, Send, ChevronLeft, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type FormEvent, type ChangeEvent } from 'react';
 import { cn } from './lib/utils';
 import { socket, connectSocket, disconnectSocket } from './services/socket';
 import { User, MessageUpdate } from './types';
@@ -298,7 +298,7 @@ const FeedScreen = () => (
   </motion.div>
 );
 
-const TrainerDashboard = ({ user }: { user: User }) => (
+const TrainerDashboard = ({ user }: { key?: string | number | null; user: User }) => (
   <motion.div 
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -389,7 +389,7 @@ const TrainerDashboard = ({ user }: { user: User }) => (
   </motion.div>
 );
 
-const MessagesScreen = ({ user, onOpenChat }: { user: User, onOpenChat: (trainer: any) => void }) => (
+const MessagesScreen = ({ user, onOpenChat }: { key?: string | number | null; user: User, onOpenChat: (trainer: any) => void }) => (
   <motion.div 
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -477,7 +477,7 @@ const ChatRoom = ({ user, recipient, onBack }: { user: User, recipient: any, onB
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = (e: React.FormEvent) => {
+  const sendMessage = (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -585,7 +585,7 @@ const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState(false);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -610,7 +610,7 @@ const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
     finally { setUploading(false); }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     const type = mediaUrl.match(/\.(mp4|webm|ogg|mov)$/i) ? 'video' : 'static';

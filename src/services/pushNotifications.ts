@@ -1,3 +1,12 @@
+/// <reference types="vite/client" />
+
+declare const PusherPushNotifications: {
+  Client: new (config: { instanceId: string }) => {
+    start: () => Promise<void>;
+    addDeviceInterest: (interest: string) => Promise<void>;
+  };
+};
+
 const PUSHER_BEAMS_INSTANCE_ID = import.meta.env.VITE_PUSHER_BEAMS_INSTANCE_ID || 'ca297b86-9f0a-4535-b4df-71387610989d';
 
 export async function requestNotificationPermission() {

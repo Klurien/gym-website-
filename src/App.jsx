@@ -82,11 +82,32 @@ export default function App() {
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    let heartbeatInterval;
+
     if (token && user.id) {
       connectSocket(token);
       initPushNotifications().catch(console.error);
+      
+      // Initial heartbeat
+      fetch('/api/heartbeat', { 
+        method: 'POST', 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      }).catch(() => {});
+
+      // Periodic heartbeat every 60 seconds
+      heartbeatInterval = setInterval(() => {
+        fetch('/api/heartbeat', { 
+          method: 'POST', 
+          headers: { 'Authorization': `Bearer ${token}` } 
+        }).catch(() => {});
+      }, 60000);
     }
-    return () => disconnectSocket();
+
+    return () => {
+      disconnectSocket();
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+    };
   }, []);
 
   return (
