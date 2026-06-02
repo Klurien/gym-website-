@@ -164,7 +164,7 @@ export default function Community() {
 
   const getAvatar = (item) => {
     if (!item) return 'https://api.dicebear.com/7.x/avataaars/svg?seed=default';
-    return item.profile_pic || item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.username || 'default'}`;
+    return item.profile_pic || item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.username || item.trainer_name || 'default'}`;
   };
 
 

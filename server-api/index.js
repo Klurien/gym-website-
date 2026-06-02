@@ -126,7 +126,7 @@ module.exports = async (req, res) => {
     if (method === 'GET') {
       try {
         const [rows] = await db.query(
-          `SELECT p.*, u.username as trainer_name,
+          `SELECT p.*, u.username as trainer_name, u.profile_pic,
            (SELECT COUNT(*) FROM post_likes l WHERE l.post_id = p.id) as likes_count,
            (SELECT COUNT(*) FROM post_comments c WHERE c.post_id = p.id) as comments_count,
            EXISTS(SELECT 1 FROM post_likes l2 WHERE l2.post_id = p.id AND l2.user_id = ?) as is_liked
