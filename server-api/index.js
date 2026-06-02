@@ -235,11 +235,12 @@ module.exports = async (req, res) => {
         const [conversations] = await db.query(
           `SELECT u.id as other_id, u.username as other_name, u.role as other_role,
               (SELECT content FROM messages WHERE (sender_id = u.id AND receiver_id = ?) OR (sender_id = ? AND receiver_id = u.id) ORDER BY created_at DESC LIMIT 1) as last_message,
+              (SELECT created_at FROM messages WHERE (sender_id = u.id AND receiver_id = ?) OR (sender_id = ? AND receiver_id = u.id) ORDER BY created_at DESC LIMIT 1) as last_message_time,
               (SELECT COUNT(*) FROM messages WHERE sender_id = u.id AND receiver_id = ? AND is_read = 0) as unread
            FROM users u WHERE u.id != ? AND (
               EXISTS (SELECT 1 FROM messages WHERE sender_id = u.id AND receiver_id = ?) OR
               EXISTS (SELECT 1 FROM messages WHERE sender_id = ? AND receiver_id = u.id)
-           ) ORDER BY last_message DESC`, [user.id, user.id, user.id, user.id, user.id, user.id]
+           ) ORDER BY last_message_time DESC`, [user.id, user.id, user.id, user.id, user.id, user.id, user.id, user.id]
         );
         const [unreadRows] = await db.query('SELECT COUNT(*) as total_unread FROM messages WHERE receiver_id = ? AND is_read = 0', [user.id]);
         const total_unread = unreadRows[0].total_unread;
