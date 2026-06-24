@@ -1,7 +1,6 @@
-# COMRADES GYM — Design System (Claude Design Standard)
+# COMRADES GYM — Design System
 
 This file is the single source of truth for all UI decisions on this platform.
-Every page, component, and style must derive from these tokens.
 
 ---
 
@@ -9,7 +8,8 @@ Every page, component, and style must derive from these tokens.
 
 - **Name:** Comrades Gym
 - **Tagline:** Forge Your Legacy
-- **Vibe:** Professional Personal Trainer Platform — disciplined but welcoming. Not military-aggressive on interior pages. Raw energy on the landing page only.
+- **Vibe:** Professional Personal Trainer Platform — disciplined but welcoming. Raw energy meets clean UX.
+- **Core Concept:** Trainer-Trainee premium relationship with level-based program progression.
 
 ---
 
@@ -32,10 +32,10 @@ Every page, component, and style must derive from these tokens.
 | `--red-soft` | `rgba(232,41,74,0.12)` | Backgrounds under red text |
 | `--red-glow` | `rgba(232,41,74,0.3)` | Button shadows |
 
-### Accent — Warm Amber (Claude Design Influence)
+### Accent — Warm Amber
 | Token | Value | Usage |
 |---|---|---|
-| `--amber` | `#E8973A` | Secondary CTAs, highlights |
+| `--amber` | `#E8973A` | Secondary CTAs, premium highlights |
 | `--amber-soft` | `rgba(232,151,58,0.12)` | Tag/badge backgrounds |
 
 ### Text
@@ -63,7 +63,7 @@ Accent:       'Syncopate', sans-serif            — labels, section badges
 
 ### Scale
 | Class | Size | Weight | Usage |
-|---|---|---|---|
+|---|---|---|---|---|
 | `.t-display` | `clamp(3rem, 8vw, 7rem)` | 400 (Anton) | Hero titles |
 | `.t-h1` | `2.5rem` | 700 (Inter) | Page titles |
 | `.t-h2` | `1.5rem` | 600 (Inter) | Section titles |
@@ -74,113 +74,42 @@ Accent:       'Syncopate', sans-serif            — labels, section badges
 
 ---
 
-## Spacing
-
-Base unit: `4px`. Use multiples only.
-
-```
---space-1: 4px    --space-2: 8px    --space-3: 12px   --space-4: 16px
---space-5: 20px   --space-6: 24px   --space-8: 32px   --space-10: 40px
---space-12: 48px  --space-16: 64px
-```
-
----
-
-## Border Radius
-
-```
---radius-xs: 4px     (tags, chips)
---radius-s: 8px      (inputs, small cards)
---radius-m: 12px     (cards, panels)
---radius-l: 16px     (modals, large cards)
---radius-xl: 24px    (messaging bubbles)
---radius-full: 9999px (avatars, pills)
-```
-
----
-
-## Shadows
-
-```
---shadow-sm:  0 1px 3px rgba(0,0,0,0.4)
---shadow-md:  0 4px 16px rgba(0,0,0,0.5)
---shadow-lg:  0 8px 32px rgba(0,0,0,0.6)
---shadow-red: 0 4px 20px rgba(232,41,74,0.25)
-```
-
----
-
 ## Components
 
 ### Card `.card`
-```css
-background: var(--surface);
-border: 1px solid var(--border);
-border-radius: var(--radius-m);
-padding: 24px;
-box-shadow: var(--shadow-sm);
-transition: border-color 0.2s ease, box-shadow 0.2s ease;
-```
+Background: `var(--surface)`, border: `1px solid var(--border)`, radius: `--radius-m`, padding: `24px`
 
 ### Button Primary `.btn`
-```css
-background: var(--red);
-color: #fff;
-border-radius: var(--radius-s);
-padding: 10px 20px;
-font-size: 0.85rem; font-weight: 600;
-box-shadow: var(--shadow-red);
-transition: opacity 0.2s ease, transform 0.15s ease;
-```
+Background: `var(--red)`, color: `#fff`, radius: `--radius-s`, padding: `10px 20px`
 Hover: `opacity: 0.88; transform: translateY(-1px);`
 
 ### Button Ghost `.btn-ghost`
-```css
-background: transparent;
-border: 1px solid var(--border-active);
-color: var(--text);
-border-radius: var(--radius-s);
-padding: 10px 20px;
-```
+Transparent bg, border: `1px solid var(--border-active)`, color: `var(--text)`
 
 ### Input `.field`
-```css
-background: var(--surface-2);
-border: 1px solid var(--border);
-border-radius: var(--radius-s);
-color: var(--text);
-padding: 10px 14px;
-font-size: 0.9rem;
-```
-Focus: `border-color: var(--red); outline: none;`
+Background: `var(--surface-2)`, border: `1px solid var(--border)`, radius: `--radius-s`
+Focus: `border-color: var(--red)`
 
 ### Badge `.badge`
-```css
-display: inline-flex;
-padding: 3px 10px;
-border-radius: var(--radius-full);
-font-size: 0.65rem; font-weight: 600;
-letter-spacing: 0.05em; text-transform: uppercase;
-```
-`.badge-red` → `background: var(--red-soft); color: var(--red);`
-`.badge-green` → `background: rgba(62,207,142,0.12); color: var(--green);`
-`.badge-amber` → `background: var(--amber-soft); color: var(--amber);`
+`.badge-red` → background: `var(--red-soft)`, color: `var(--red)`
+`.badge-green` → background: `rgba(62,207,142,0.12)`, color: `var(--green)`
+`.badge-amber` → background: `var(--amber-soft)`, color: `var(--amber)`
 
 ---
 
-## Messaging Components
+## Program Levels
 
-### Conversation Item `.conv-item`
-- Height: `72px`; padding: `12px 16px`
-- Avatar: `40px` circle, border `2px solid var(--border)`
-- Name: `.t-body` weight 600
-- Preview: `.t-small` color `var(--text-2)` truncated
-- Unread dot: `8px` circle `var(--red)` aligned top-right of avatar
+### Beginner (Free)
+- Foundation Strength — 4 weeks / 12 sessions
+- Bodyweight Mastery — 6 weeks / 18 sessions
 
-### Message Bubble
-- Outgoing `.bubble-out`: `background: var(--red); color: #fff; border-radius: 18px 18px 4px 18px;`
-- Incoming `.bubble-in`: `background: var(--surface-2); color: var(--text); border-radius: 18px 18px 18px 4px;`
-- Max width: `70%`; padding: `10px 14px`
+### Intermediate (Premium — $29–$39)
+- Hypertrophy Accelerator — 8 weeks / 24 sessions
+- Power & Explosiveness — 6 weeks / 18 sessions
+
+### Advanced (Premium — $79–$149)
+- Elite Performance — 12 weeks / 36 sessions
+- Certified Coach Program — 16 weeks / 48 sessions
 
 ---
 
@@ -189,7 +118,7 @@ letter-spacing: 0.05em; text-transform: uppercase;
 ✅ Use `var(--*)` tokens — never hardcode hex values  
 ✅ Apply `transition` on interactive elements  
 ✅ Use `Inter` for UI text; `Anton` for impact headings only  
-✅ Inner page hero sections use `padding-top: 120px` (accounts for fixed nav)  
-❌ Don't use `all-caps` on body text in interior pages (landing only)  
+✅ Inner page sections use `padding-top: 80px` (accounts for fixed nav)  
 ❌ Don't use `border-radius: 0` on cards or inputs  
 ❌ Don't use raw `rgba(red-value)` — use the defined token  
+❌ Don't hardcode colors — always reference CSS variables

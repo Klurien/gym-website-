@@ -1,69 +1,154 @@
 @import "tailwindcss";
 
-@theme {
-  --color-primary: #ffffff;
-  --color-background: #131313;
-  --color-on-background: #e5e2e1;
-  
-  --spacing-stack-md: 16px;
-  --spacing-gutter: 16px;
-  --spacing-edge-margin: 20px;
-  --spacing-unit: 4px;
-  --spacing-container-padding: 24px;
-  --spacing-stack-lg: 32px;
-  --spacing-stack-sm: 8px;
-
-  --font-label-sm: Lexend, sans-serif;
-  --font-headline-md: Lexend, sans-serif;
-  --font-headline-lg: Lexend, sans-serif;
-  --font-body-md: Lexend, sans-serif;
-  --font-label-bold: Lexend, sans-serif;
-  --font-display-xl: Lexend, sans-serif;
-  --font-body-lg: Lexend, sans-serif;
+:root {
+  --bg: #0A0A0B;
+  --bg-2: #111114;
+  --surface: #18181C;
+  --surface-2: #1F1F25;
+  --border: rgba(255,255,255,0.08);
+  --border-active: rgba(255,255,255,0.18);
+  --red: #E8294A;
+  --red-soft: rgba(232,41,74,0.12);
+  --red-glow: rgba(232,41,74,0.3);
+  --amber: #E8973A;
+  --amber-soft: rgba(232,151,58,0.12);
+  --text: #F2F2F3;
+  --text-2: #A0A0AB;
+  --text-3: #5C5C6B;
+  --green: #3ECF8E;
+  --yellow: #EAB308;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-red: 0 4px 20px rgba(232,41,74,0.25);
+  --radius-xs: 4px;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
 }
 
-@keyframes typing-bounce {
-  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-  40% { transform: translateY(-4px); opacity: 1; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
-.animate-typing-bounce {
-  animation: typing-bounce 1.4s infinite ease-in-out;
+.font-anton { font-family: 'Anton', serif; }
+.font-inter { font-family: 'Inter', system-ui, sans-serif; }
+.font-syncopate { font-family: 'Syncopate', sans-serif; }
+
+.t-display { font-size: clamp(3rem, 8vw, 7rem); font-weight: 400; font-family: 'Anton', serif; line-height: 0.95; }
+.t-h1 { font-size: 2.5rem; font-weight: 700; line-height: 1.1; }
+.t-h2 { font-size: 1.5rem; font-weight: 600; line-height: 1.2; }
+.t-h3 { font-size: 1.1rem; font-weight: 600; line-height: 1.3; }
+.t-body { font-size: 0.95rem; font-weight: 400; line-height: 1.5; }
+.t-small { font-size: 0.8rem; font-weight: 400; line-height: 1.4; }
+.t-label { font-size: 0.7rem; font-weight: 600; font-family: 'Syncopate', sans-serif; letter-spacing: 0.05em; text-transform: uppercase; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Rich Media & Link Styles */
-.rich-text-link {
-  @apply text-lime-400 font-bold hover:underline break-all transition-all;
+.card:hover {
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-md);
 }
 
-.link-card {
-  @apply mt-4 bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden hover:bg-zinc-900 transition-all flex flex-col sm:flex-row shadow-2xl ring-1 ring-white/5;
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--red);
+  color: #fff;
+  border-radius: var(--radius-s);
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-red);
+  transition: opacity 0.2s ease, transform 0.15s ease;
+  border: none;
+  cursor: pointer;
+  gap: 6px;
 }
 
-.link-card-content {
-  @apply p-4 flex-1 flex flex-col justify-center gap-1;
+.btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-active);
+  color: var(--text);
+  border-radius: var(--radius-s);
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.link-card-open-icon {
-  @apply hidden sm:flex w-32 bg-zinc-800 items-center justify-center border-l border-white/5;
+.btn-ghost:hover { background: var(--surface-2); }
+
+.field {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s ease;
 }
 
-.link-card-title {
-  @apply text-sm font-black text-white uppercase tracking-tight transition-colors line-clamp-1;
+.field:focus { border-color: var(--red); }
+
+.badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.link-card-description {
-  @apply text-[10px] text-zinc-500 font-medium line-clamp-2;
+.badge-red { background: var(--red-soft); color: var(--red); }
+.badge-green { background: rgba(62,207,142,0.12); color: var(--green); }
+.badge-amber { background: var(--amber-soft); color: var(--amber); }
+
+.bubble-out { background: var(--red); color: #fff; border-radius: 18px 18px 4px 18px; }
+.bubble-in { background: var(--surface-2); color: var(--text); border-radius: 18px 18px 18px 4px; }
+
+.conv-item {
+  padding: 12px 16px;
+  border-radius: var(--radius-m);
+  transition: background 0.2s ease;
 }
 
-.link-card-url {
-  @apply text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-1 flex items-center gap-1;
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-.iframe-container {
-  @apply relative w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl ring-1 ring-white/5;
-}
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-.iframe-container iframe {
-  @apply absolute inset-0 w-full h-full;
-}
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

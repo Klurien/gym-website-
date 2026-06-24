@@ -1,831 +1,561 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { Home, MessageSquare, Calendar, Zap, Menu, Bell, MoreVertical, Plus, Heart, Share2, Bookmark, Search, Play, Send, ChevronLeft, User as UserIcon } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useState, useEffect, useRef, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Zap, Dumbbell, MessageSquare, User, Trophy, Crown, Lock, ChevronRight, Send, BarChart3, Users, LogOut, Menu, X, ArrowRight, Star, CheckCircle, Play } from 'lucide-react';
 import { cn } from './lib/utils';
-import { socket, connectSocket, disconnectSocket } from './services/socket';
-import { User, MessageUpdate } from './types';
 import Auth from './components/Auth';
 
-// --- Types ---
+type Screen = 'dashboard' | 'programs' | 'messages' | 'profile';
+type UserRole = 'trainee' | 'trainer' | 'admin';
+type Level = 'beginner' | 'intermediate' | 'advanced';
 
-type Screen = 'feed' | 'messages' | 'schedule' | 'alerts';
-
-interface Post {
+interface User {
   id: string;
-  author: {
-    name: string;
-    tier: string;
-    avatar: string;
-  };
-  time: string;
+  username: string;
+  email: string;
+  role: UserRole;
+  profile_pic?: string;
+  level?: Level;
+  premium?: boolean;
+}
+
+interface Program {
+  id: string;
+  title: string;
+  description: string;
+  level: Level;
+  duration: string;
+  sessions: number;
+  price: number;
+  trainer: string;
   image: string;
-  content: string;
-  likes: string;
-  comments: number;
-  tag?: string;
-  isVideo?: boolean;
-  is_liked?: boolean;
-  likes_count?: number;
-  comments_count?: number;
+  unlocked: boolean;
 }
 
 interface Message {
   id: string;
-  trainer: {
-    name: string;
-    avatar: string;
-    online: boolean;
-    tier?: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  created_at: string;
+  sender_name?: string;
+}
+
+const PROGRAMS: Program[] = [
+  { id: '1', title: 'Foundation Strength', description: 'Build your core foundation with basic compound movements. Perfect for first-timers.', level: 'beginner', duration: '4 weeks', sessions: 12, price: 0, trainer: 'Alex Rivers', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop', unlocked: true },
+  { id: '2', title: 'Bodyweight Mastery', description: 'Master pushups, pullups, and bodyweight fundamentals.', level: 'beginner', duration: '6 weeks', sessions: 18, price: 0, trainer: 'Sarah Kovac', image: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800&auto=format&fit=crop', unlocked: true },
+  { id: '3', title: 'Hypertrophy Accelerator', description: 'Progressive overload programming for lean muscle growth.', level: 'intermediate', duration: '8 weeks', sessions: 24, price: 29, trainer: 'Marcus Vane', image: 'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?q=80&w=800&auto=format&fit=crop', unlocked: false },
+  { id: '4', title: 'Power & Explosiveness', description: 'Olympic lifts and plyometrics for athletic performance.', level: 'intermediate', duration: '6 weeks', sessions: 18, price: 39, trainer: 'Damon Thorne', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', unlocked: false },
+  { id: '5', title: 'Elite Performance', description: 'Advanced periodization for experienced lifters.', level: 'advanced', duration: '12 weeks', sessions: 36, price: 79, trainer: 'Alex Rivers', image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=800&auto=format&fit=crop', unlocked: false },
+  { id: '6', title: 'Certified Coach Program', description: 'Become a certified trainer under expert mentorship.', level: 'advanced', duration: '16 weeks', sessions: 48, price: 149, trainer: 'Sarah Kovac', image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop', unlocked: false },
+];
+
+const TRAINERS = [
+  { id: '1', name: 'Alex Rivers', specialty: 'Strength & Conditioning', rate: '$45/session', available: true, image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=200&h=200&auto=format&fit=crop' },
+  { id: '2', name: 'Sarah Kovac', specialty: 'Mobility & Recovery', rate: '$55/session', available: true, image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=200&h=200&auto=format&fit=crop' },
+  { id: '3', name: 'Marcus Vane', specialty: 'Hypertrophy & Nutrition', rate: '$65/session', available: false, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&h=200&auto=format&fit=crop' },
+];
+
+function DashboardScreen({ user }: { user: User }) {
+  const [stats, setStats] = useState({ totalClients: 0, activeSessions: 0, unreadMessages: 0 });
+  const [trainees, setTrainees] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user.role === 'trainer' || user.role === 'admin') {
+      fetch('/api/admin/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+        .then(r => r.ok ? r.json() : [])
+        .then(data => {
+          const filtered = data.filter((u: any) => u.role === 'trainee');
+          setTrainees(filtered);
+          setStats({ totalClients: filtered.length, activeSessions: filtered.filter((t: any) => t.last_seen).length, unreadMessages: 0 });
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  const greeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Morning';
+    if (h < 18) return 'Afternoon';
+    return 'Evening';
   };
-  lastMessage: string;
-  time: string;
-  tags?: string[];
-  unread?: boolean;
-}
 
-// --- Helpers ---
-const getAuthToken = () => localStorage.getItem('token');
-
-async function fetchPosts(): Promise<Post[]> {
-  const token = getAuthToken();
-  if (!token) return POSTS;
-  try {
-    const res = await fetch('/api/posts', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!res.ok) return POSTS;
-    const data = await res.json();
-    return data.map((p: any) => ({
-      id: p.id,
-      author: {
-        name: p.trainer_name || 'Trainer',
-        tier: 'Pro Coach',
-        avatar: p.trainer?.profile_pic || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=200&h=200&auto=format&fit=crop'
-      },
-      time: new Date(p.created_at).toLocaleDateString(),
-      image: p.media_url || '',
-      content: p.description || p.title,
-      likes: String(p.likes_count || 0),
-      comments: p.comments_count || 0,
-      tag: p.type === 'video' ? 'VIDEO' : undefined,
-      isVideo: p.type === 'video',
-      is_liked: !!p.is_liked,
-      likes_count: p.likes_count,
-      comments_count: p.comments_count
-    }));
-  } catch {
-    return POSTS;
-  }
-}
-
-async function toggleLike(postId: string) {
-  const token = getAuthToken();
-  if (!token) return;
-  try {
-    await fetch('/api/posts_social?action=like', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ post_id: postId })
-    });
-  } catch { /* ignore */ }
-}
-
-// --- Mock Data ---
-
-const POSTS: Post[] = [
-  {
-    id: '1',
-    author: {
-      name: 'Alex Rivers',
-      tier: 'Elite Tier',
-      avatar: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=200&h=200&auto=format&fit=crop',
-    },
-    time: '2h ago',
-    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop',
-    content: "Crushing the morning leg session. Remember: velocity comes from the core. Stay focused on the kinetic chain. ⚡️ #LegDay #KineticPower",
-    likes: '2.4k',
-    comments: 128,
-    tag: 'POWER MOVE'
-  },
-  {
-    id: '2',
-    author: {
-      name: 'Sarah Kovac',
-      tier: 'Pro Coach',
-      avatar: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=200&h=200&auto=format&fit=crop',
-    },
-    time: '5h ago',
-    image: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800&auto=format&fit=crop',
-    content: "New mobility flow released on the dashboard. Perfect for recovery days. Check the Schedule tab for the live follow-along.",
-    likes: '856',
-    comments: 42,
-    isVideo: true
-  }
-];
-
-const MESSAGES: Message[] = [
-  {
-    id: '1',
-    trainer: {
-      name: 'Marcus Vane',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&h=200&auto=format&fit=crop',
-      online: true,
-    },
-    lastMessage: "Your macro adjustments are live in the dashboard. Let's crush those sets today.",
-    time: 'JUST NOW',
-    tags: ['TRAINING PLAN', 'NUTRITION'],
-    unread: true
-  },
-  {
-    id: '2',
-    trainer: {
-      name: 'Sarah Jenkins',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=200&h=200&auto=format&fit=crop',
-      online: false,
-    },
-    lastMessage: "The recovery session was great! Don't forget the foam rolling tonight.",
-    time: '14:20 PM',
-  },
-  {
-    id: '3',
-    trainer: {
-      name: 'Damon Thorne',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&h=200&auto=format&fit=crop',
-      online: false,
-      tier: 'ELITE'
-    },
-    lastMessage: "Heavy leg day scheduled for Monday. Be ready at 0600 sharp.",
-    time: 'YESTERDAY',
-  },
-  {
-    id: '4',
-    trainer: {
-      name: 'Coach Leo',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&h=200&auto=format&fit=crop',
-      online: false,
-    },
-    lastMessage: "Awesome form on that deadlift clip you sent. Keep that spine neutral!",
-    time: 'OCT 12',
-  }
-];
-
-// --- Components ---
-
-const TopBar = () => (
-  <header className="fixed top-0 left-0 right-0 z-50 mt-4 mx-5 px-4 h-16 kinetic-glass rounded-2xl flex justify-between items-center kinetic-gradient-glow border border-white/10">
-    <div className="flex items-center gap-4">
-      <button className="p-2 text-zinc-400 hover:text-kinetic-lime transition-colors">
-        <Menu size={24} />
-      </button>
-      <h1 className="text-xl font-black text-kinetic-lime tracking-tighter uppercase font-lexend">KINETIC</h1>
-    </div>
-    <div className="flex items-center gap-3">
-      <button className="p-2 text-zinc-400 hover:text-kinetic-lime transition-colors relative">
-        <Bell size={22} />
-        <span className="absolute top-2 right-2 w-2 h-2 bg-kinetic-lime rounded-full"></span>
-      </button>
-      <div className="w-10 h-10 rounded-full border-2 border-kinetic-lime p-0.5 overflow-hidden active:scale-95 transition-transform cursor-pointer">
-        <img 
-          src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=100&h=100&auto=format&fit=crop" 
-          alt="Profile" 
-          className="w-full h-full object-cover rounded-full shadow-lg"
-        />
-      </div>
-    </div>
-  </header>
-);
-
-const FeedScreen = () => (
-  <motion.div 
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
-    className="space-y-6 pt-24 pb-32"
-  >
-    {/* Story / Bento Section */}
-    <div className="grid grid-cols-4 gap-4 h-28 px-edge-margin">
-      <div className="col-span-1 bg-zinc-900/40 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-1 hover:border-kinetic-lime/30 transition-all cursor-pointer group">
-        <div className="w-12 h-12 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center group-hover:border-kinetic-lime">
-          <Plus size={24} className="text-zinc-500 group-hover:text-kinetic-lime" />
-        </div>
-        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest group-hover:text-kinetic-lime">Post</span>
-      </div>
-      <div className="col-span-3 bg-zinc-900/40 rounded-2xl border border-white/5 overflow-hidden relative group cursor-pointer">
-        <img 
-          src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=600&auto=format&fit=crop" 
-          className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-700" 
-          alt="Gym background" 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-        <div className="absolute bottom-3 left-4">
-          <p className="text-xs font-black text-kinetic-lime uppercase tracking-widest">Live Workout</p>
-          <p className="text-sm font-medium text-white">Join Alex in 5 mins</p>
-        </div>
-      </div>
-    </div>
-
-    {/* Post Feed */}
-    <div className="space-y-6 px-edge-margin">
-      {POSTS.map(post => (
-        <article key={post.id} className="bg-zinc-900/60 rounded-[28px] border border-white/5 overflow-hidden">
-          <div className="p-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={post.author.avatar} alt={post.author.name} className="w-10 h-10 rounded-full border border-kinetic-lime" />
-              <div>
-                <h3 className="text-sm font-bold text-white">{post.author.name}</h3>
-                <p className="text-[10px] font-medium text-zinc-500">{post.author.tier} • {post.time}</p>
-              </div>
+  if (user.role === 'trainer' || user.role === 'admin') {
+    return (
+      <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+        <header>
+          <h1 className="t-display font-anton text-white">{greeting()}, Trainer</h1>
+          <p className="t-small text-[var(--text-2)] mt-1">Command center — {stats.totalClients} active trainees</p>
+        </header>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'Trainees', value: stats.totalClients, icon: Users, color: 'var(--red)' },
+            { label: 'Active', value: stats.activeSessions, icon: BarChart3, color: 'var(--green)' },
+            { label: 'Messages', value: stats.unreadMessages, icon: MessageSquare, color: 'var(--amber)' },
+          ].map((s, i) => (
+            <div key={i} className="card flex flex-col items-center text-center gap-2 py-6">
+              <s.icon size={22} style={{ color: s.color }} />
+              <span className="t-h1" style={{ color: s.color }}>{s.value}</span>
+              <span className="t-label" style={{ color: 'var(--text-2)' }}>{s.label}</span>
             </div>
-            <button className="text-zinc-500 hover:text-white">
-              <MoreVertical size={20} />
-            </button>
+          ))}
+        </div>
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="t-h2 text-white">Your Trainees</h2>
+            <button className="btn text-xs">View All</button>
           </div>
-          
-          <div className="px-4 pb-2 relative group">
-            <div className="aspect-[4/5] rounded-[24px] overflow-hidden relative">
-              <img src={post.image} className={`w-full h-full object-cover ${post.isVideo ? 'brightness-75' : ''}`} alt="Post content" />
-              {post.tag && (
-                <div className="absolute top-4 right-4 bg-kinetic-lime text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(195,244,0,0.4)]">
-                  {post.tag}
+          <div className="space-y-3">
+            {trainees.map((t: any) => (
+              <div key={t.id} className="card flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-[var(--surface-2)] flex items-center justify-center">
+                  {t.profile_pic ? <img src={t.profile_pic} className="w-full h-full object-cover" /> : <User size={20} style={{ color: 'var(--text-2)' }} />}
                 </div>
-              )}
-              {post.isVideo && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full kinetic-glass flex items-center justify-center border-kinetic-lime/50 group-hover:scale-110 transition-transform cursor-pointer">
-                    <Play size={32} className="text-kinetic-lime fill-current ml-1" />
-                  </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="t-h3 text-white truncate">{t.username}</h3>
+                  <p className="t-small" style={{ color: 'var(--text-2)' }}>{t.email}</p>
                 </div>
-              )}
-            </div>
-            {post.isVideo && (
-              <div className="mt-3 mx-2 h-1 bg-white/10 rounded-full overflow-hidden">
-                <div className="w-1/3 h-full bg-kinetic-lime shadow-[0_0_10px_rgba(195,244,0,0.6)]"></div>
+                <div className="flex items-center gap-2">
+                  <span className={`badge ${t.last_seen ? 'badge-green' : 'badge-amber'}`}>{t.last_seen ? 'Active' : 'Away'}</span>
+                  <ChevronRight size={16} style={{ color: 'var(--text-3)' }} />
+                </div>
+              </div>
+            ))}
+            {trainees.length === 0 && (
+              <div className="card text-center py-8">
+                <p className="t-small" style={{ color: 'var(--text-2)' }}>No trainees assigned yet.</p>
               </div>
             )}
           </div>
-
-          <div className="p-5 space-y-4">
-            <p className="text-sm text-zinc-300 leading-relaxed font-normal">
-              {post.content}
-            </p>
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-6">
-                <button className="flex items-center gap-2 text-kinetic-lime group">
-                  <Heart size={20} className="group-active:scale-125 transition-transform fill-current" />
-                  <span className="text-xs font-bold">{post.likes}</span>
-                </button>
-                <button className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300">
-                  <MessageSquare size={20} />
-                  <span className="text-xs font-bold">{post.comments}</span>
-                </button>
-                <button className="text-zinc-500 hover:text-zinc-300">
-                  <Share2 size={20} />
-                </button>
-              </div>
-              <button className="text-zinc-500 hover:text-zinc-300">
-                <Bookmark size={20} />
-              </button>
+        </section>
+        <section className="card" style={{ background: 'var(--red-soft)', border: '1px solid var(--red)' }}>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[var(--red)] flex items-center justify-center">
+              <Trophy size={24} className="text-white" />
             </div>
+            <div className="flex-1">
+              <h3 className="t-h3 text-white">Create New Program</h3>
+              <p className="t-small" style={{ color: 'var(--text-2)' }}>Design a training plan for your clients</p>
+            </div>
+            <button className="btn">Create</button>
           </div>
-        </article>
-      ))}
-    </div>
-  </motion.div>
-);
-
-const TrainerDashboard = ({ user }: { key?: string | number | null; user: User }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
-    className="px-edge-margin pt-24 pb-32 space-y-8"
-  >
-    <header>
-      <h2 className="text-4xl font-black text-white mb-1 tracking-tighter uppercase">Command Center</h2>
-      <p className="text-[10px] font-bold text-kinetic-lime tracking-[0.2em] uppercase">Overseeing 12 active protocols</p>
-    </header>
-
-    {/* Client Grid */}
-    <div className="grid grid-cols-2 gap-4">
-      <div className="p-5 kinetic-glass rounded-[28px] border-white/5 space-y-3">
-        <div className="flex justify-between items-start">
-          <div className="w-10 h-10 rounded-full bg-kinetic-lime/10 flex items-center justify-center text-kinetic-lime">
-            <UserIcon size={20} />
-          </div>
-          <span className="text-[9px] font-black text-kinetic-lime bg-kinetic-lime/10 px-2 py-1 rounded-full">+12%</span>
-        </div>
-        <div>
-          <p className="text-2xl font-black text-white">48</p>
-          <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Active Clients</p>
-        </div>
+        </section>
       </div>
-      <div className="p-5 kinetic-glass rounded-[28px] border-white/5 space-y-3">
-        <div className="flex justify-between items-start">
-          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-            <Calendar size={20} />
-          </div>
-          <span className="text-[9px] font-black text-blue-500 bg-blue-500/10 px-2 py-1 rounded-full">LIVE</span>
-        </div>
-        <div>
-          <p className="text-2xl font-black text-white">08</p>
-          <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Sessions Today</p>
-        </div>
-      </div>
-    </div>
-
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em]">Priority Clients</h3>
-        <button className="text-[9px] font-bold text-kinetic-lime uppercase tracking-widest">View All</button>
-      </div>
-      <div className="space-y-3">
-        {[
-          { name: 'Jake Miller', goal: 'Hypertrophy Phase 2', progress: 75, status: 'On Track' },
-          { name: 'Elena Rossi', goal: 'Mobility Reset', progress: 30, status: 'Needs Update' }
-        ].map((client, i) => (
-          <div key={i} className="p-4 bg-zinc-900/40 rounded-2xl border border-white/5 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-white/5 flex items-center justify-center">
-              <span className="text-sm font-black text-zinc-500">{client.name.split(' ').map(n => n[0]).join('')}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="text-sm font-bold text-white truncate">{client.name}</h4>
-              <p className="text-[10px] font-medium text-zinc-500">{client.goal}</p>
-            </div>
-            <div className="text-right">
-              <p className={cn("text-[9px] font-black uppercase tracking-widest mb-1", client.status === 'On Track' ? 'text-kinetic-lime' : 'text-orange-500')}>
-                {client.status}
-              </p>
-              <div className="w-16 h-1 bg-zinc-800 rounded-full overflow-hidden">
-                <div 
-                  className={cn("h-full", client.status === 'On Track' ? 'bg-kinetic-lime' : 'bg-orange-500')} 
-                  style={{ width: `${client.progress}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <section className="p-6 rounded-[32px] bg-kinetic-lime text-black space-y-4 shadow-[0_0_30px_rgba(195,244,0,0.3)]">
-      <div>
-        <h3 className="text-lg font-black tracking-tighter uppercase leading-tight">Broadcast Protocol</h3>
-        <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Send update to all active clients</p>
-      </div>
-      <div className="flex gap-2">
-        <button className="flex-1 py-3 bg-black text-kinetic-lime rounded-xl text-[10px] font-black tracking-widest uppercase hover:opacity-90 transition-opacity">
-          Video Protocol
-        </button>
-        <button className="flex-1 py-3 bg-black/10 border border-black/20 text-black rounded-xl text-[10px] font-black tracking-widest uppercase hover:bg-black/20 transition-all">
-          Text Update
-        </button>
-      </div>
-    </section>
-  </motion.div>
-);
-
-const MessagesScreen = ({ user, onOpenChat }: { key?: string | number | null; user: User, onOpenChat: (trainer: any) => void }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
-    className="px-edge-margin pt-24 pb-32"
-  >
-    <header className="mb-8">
-      <h2 className="text-4xl font-black text-white mb-1 tracking-tighter">MESSAGES</h2>
-      <p className="text-[10px] font-bold text-zinc-500 tracking-[0.2em] uppercase">Direct line to performance</p>
-    </header>
-
-    <div className="relative mb-8">
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
-      <input 
-        type="text" 
-        placeholder="Search trainers or keywords..." 
-        className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-kinetic-lime/30 focus:ring-4 focus:ring-kinetic-lime/5 transition-all"
-      />
-    </div>
-
-    <div className="space-y-4">
-      {MESSAGES.map(msg => (
-        <div 
-          key={msg.id} 
-          onClick={() => onOpenChat(msg.trainer)}
-          className={`p-4 rounded-[28px] border border-white/5 flex flex-col gap-4 transition-all hover:border-kinetic-lime/30 cursor-pointer active:scale-[0.98] ${msg.unread ? 'bg-zinc-900' : 'bg-zinc-900/40'}`}
-        >
-          <div className="flex gap-4">
-            <div className="relative flex-shrink-0">
-              <img src={msg.trainer.avatar} className="w-14 h-14 rounded-2xl object-cover border border-white/10" alt={msg.trainer.name} />
-              {msg.trainer.online && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-kinetic-lime rounded-full border-4 border-zinc-900 shadow-[0_0_10px_rgba(195,244,0,1)]"></div>
-              )}
-              {msg.trainer.tier && (
-                <div className="absolute -bottom-1 -right-1 bg-zinc-950 text-kinetic-lime px-1 rounded border border-white/10 text-[8px] font-black italic tracking-tighter">
-                  {msg.trainer.tier}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-start mb-1">
-                <h3 className="text-base font-bold text-white truncate">{msg.trainer.name}</h3>
-                <span className={`text-[10px] font-black uppercase tracking-tighter ${msg.unread ? 'text-kinetic-lime' : 'text-zinc-600'}`}>
-                  {msg.time}
-                </span>
-              </div>
-              <p className={`text-sm line-clamp-1 ${msg.unread ? 'text-zinc-200' : 'text-zinc-500'}`}>
-                {msg.lastMessage}
-              </p>
-            </div>
-          </div>
-          {msg.tags && (
-            <div className="flex gap-2 pl-1">
-              {msg.tags.map(tag => (
-                <span key={tag} className={`px-3 py-1 rounded-full text-[9px] font-black tracking-widest ${tag === 'TRAINING PLAN' ? 'bg-kinetic-lime/10 text-kinetic-lime border border-kinetic-lime/20' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'}`}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-
-    <button className="w-full mt-10 p-5 rounded-2xl bg-zinc-950 border border-white/10 flex items-center justify-center gap-3 group hover:bg-zinc-900 transition-colors">
-      <MessageSquare size={20} className="text-kinetic-lime" />
-      <span className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em] group-hover:text-white transition-colors">Start New Conversation</span>
-    </button>
-  </motion.div>
-);
-
-const ChatRoom = ({ user, recipient, onBack }: { user: User, recipient: any, onBack: () => void }) => {
-  const [messages, setMessages] = useState<MessageUpdate[]>([]);
-  const [input, setInput] = useState('');
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    socket.on('receive_message', (data: MessageUpdate) => {
-      setMessages(prev => [...prev, data]);
-    });
-    return () => { socket.off('receive_message'); };
-  }, []);
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const sendMessage = (e: FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-
-    const msg: MessageUpdate = {
-      userId: user.id,
-      userName: user.name,
-      text: input,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    socket.emit('send_message', msg);
-    setInput('');
-  };
-
-  return (
-    <div className="fixed inset-0 z-[60] bg-kinetic-bg flex flex-col">
-      <header className="h-20 kinetic-glass border-b border-white/5 flex items-center px-6 gap-4">
-        <button onClick={onBack} className="p-2 text-zinc-400 hover:text-white transition-colors">
-          <ChevronLeft size={24} />
-        </button>
-        <div className="relative">
-          <img src={recipient.avatar} className="w-10 h-10 rounded-full object-cover border border-white/10" alt={recipient.name} />
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-kinetic-lime rounded-full border-2 border-zinc-900"></div>
-        </div>
-        <div>
-          <h3 className="text-sm font-bold text-white">{recipient.name}</h3>
-          <p className="text-[9px] font-black text-kinetic-lime tracking-widest uppercase">Protocol Active</p>
-        </div>
-      </header>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div className="text-center py-8">
-          <p className="text-[10px] font-black text-zinc-700 tracking-[0.3em] uppercase">Security Encrypted Session Established</p>
-        </div>
-        
-        {messages.map((m, i) => (
-          <div key={i} className={cn("flex flex-col max-w-[85%]", m.userId === user.id ? "ml-auto items-end" : "mr-auto items-start")}>
-             <div className={cn(
-               "p-4 rounded-[20px] text-sm leading-relaxed",
-               m.userId === user.id 
-                ? "bg-kinetic-lime text-black rounded-tr-none shadow-[0_0_20px_rgba(195,244,0,0.2)]" 
-                : "bg-zinc-900 text-zinc-200 rounded-tl-none border border-white/5"
-             )}>
-               {m.text}
-             </div>
-             <span className="text-[9px] font-bold text-zinc-600 mt-2 uppercase tracking-tighter">{m.timestamp}</span>
-          </div>
-        ))}
-        <div ref={scrollRef} />
-      </div>
-
-      <form onSubmit={sendMessage} className="p-6 bg-zinc-900/50 border-t border-white/5 flex gap-3 items-center">
-        <input 
-          type="text" 
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="SEND COMMAND..."
-          className="flex-1 bg-zinc-950 border border-white/10 rounded-2xl px-5 py-4 text-xs font-medium text-white focus:outline-none focus:border-kinetic-lime/30 transition-all placeholder:text-zinc-700"
-        />
-        <button type="submit" className="w-12 h-12 bg-kinetic-lime text-black rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(195,244,0,0.3)] hover:scale-105 active:scale-95 transition-all">
-          <Send size={20} fill="black" />
-        </button>
-      </form>
-    </div>
-  );
-};
-
-const NavBar = ({ current, setScreen }: { current: Screen, setScreen: (s: Screen) => void }) => (
-  <nav className="fixed bottom-0 left-0 right-0 z-50 mb-8 mx-8 h-20 kinetic-glass rounded-full border border-white/5 flex items-center justify-around px-6 shadow-[0px_20px_50px_rgba(0,0,0,0.5)]">
-    <button 
-      onClick={() => setScreen('feed')}
-      className={`p-3 rounded-full transition-all duration-300 relative ${current === 'feed' ? 'bg-kinetic-lime text-black shadow-[0_0_20px_rgba(195,244,0,0.6)]' : 'text-zinc-500 hover:text-zinc-300'}`}
-    >
-      <Home size={24} fill={current === 'feed' ? 'black' : 'none'} />
-    </button>
-    <button 
-      onClick={() => setScreen('messages')}
-      className={`p-3 rounded-full transition-all duration-300 relative ${current === 'messages' ? 'bg-kinetic-lime text-black shadow-[0_0_20px_rgba(195,244,0,0.6)]' : 'text-zinc-500 hover:text-zinc-300'}`}
-    >
-      <MessageSquare size={24} fill={current === 'messages' ? 'black' : 'none'} />
-      {MESSAGES.some(m => m.unread) && current !== 'messages' && (
-        <span className="absolute top-2 right-2 w-2 h-2 bg-kinetic-lime rounded-full border border-zinc-900"></span>
-      )}
-    </button>
-    <button 
-      onClick={() => setScreen('schedule')}
-      className={`p-3 rounded-full transition-all duration-300 relative ${current === 'schedule' ? 'bg-kinetic-lime text-black shadow-[0_0_20px_rgba(195,244,0,0.6)]' : 'text-zinc-500 hover:text-zinc-300'}`}
-    >
-      <Calendar size={24} fill={current === 'schedule' ? 'black' : 'none'} />
-    </button>
-    <button 
-      onClick={() => setScreen('alerts')}
-      className={`p-3 rounded-full transition-all duration-300 relative ${current === 'alerts' ? 'bg-kinetic-lime text-black shadow-[0_0_20px_rgba(195,244,0,0.6)]' : 'text-zinc-500 hover:text-zinc-300'}`}
-    >
-      <Zap size={24} fill={current === 'alerts' ? 'black' : 'none'} />
-    </button>
-  </nav>
-);
-
-const CreatePostModal = ({ onClose }: { onClose: () => void }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [mediaUrl, setMediaUrl] = useState('');
-  const [tags, setTags] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [uploaded, setUploaded] = useState(false);
-
-  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const token = localStorage.getItem('token');
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMediaUrl(data.url);
-        setUploaded(true);
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Upload failed. Try a URL instead.');
-      }
-    } catch { alert('Upload error.'); }
-    finally { setUploading(false); }
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
-    const type = mediaUrl.match(/\.(mp4|webm|ogg|mov)$/i) ? 'video' : 'static';
-    try {
-      const res = await fetch('/api/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ title, description, media_url: mediaUrl, tags, type })
-      });
-      const data = await res.json();
-      if (res.ok) { 
-        alert('Post published successfully!');
-        onClose(); 
-      } else {
-        alert(data.error || 'Failed to create post.');
-      }
-    } catch { alert('Failed to post.'); }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-    >
-      <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl" onClick={onClose} />
-      <motion.div
-        initial={{ scale: 0.92, y: 20, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        exit={{ scale: 0.92, y: 20, opacity: 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="relative bg-zinc-950 border border-white/10 rounded-[40px] p-8 w-full max-w-lg shadow-[0_0_100px_rgba(0,0,0,1)] ring-1 ring-white/5 z-10"
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-1">Create Elite Post</h2>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-kinetic-lime animate-pulse" />
-              <span className="text-[10px] font-black text-kinetic-lime uppercase tracking-[0.2em]">Global Broadcast</span>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all group"
-          >
-            <span className="material-symbols-outlined text-zinc-500 group-hover:text-white transition-colors" style={{ fontSize: '20px' }}>close</span>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Title */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Campaign Title</label>
-            <input
-              required
-              type="text"
-              placeholder="e.g. MORNING GRIND"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 px-6 focus:border-kinetic-lime/50 focus:ring-4 focus:ring-kinetic-lime/5 outline-none font-bold placeholder:text-zinc-700 transition-all"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Elite Description</label>
-            <textarea
-              required
-              placeholder="Forge your legacy..."
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              className="w-full h-28 bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 px-6 focus:border-kinetic-lime/50 focus:ring-4 focus:ring-kinetic-lime/5 resize-none outline-none font-medium placeholder:text-zinc-700 transition-all"
-            />
-          </div>
-
-          {/* Media Upload */}
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Media Asset</label>
-            
-            {/* File Upload Button */}
-            <label
-              htmlFor="elite-media-upload"
-              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-[20px] p-6 cursor-pointer transition-all group ${
-                uploaded ? 'border-kinetic-lime bg-kinetic-lime/5' : 'border-white/5 bg-zinc-900/30 hover:border-white/20'
-              }`}
-            >
-              {uploading ? (
-                <div className="w-10 h-10 border-4 border-kinetic-lime/20 border-t-kinetic-lime rounded-full animate-spin" />
-              ) : uploaded ? (
-                <span className="text-kinetic-lime text-lg">✓ Uploaded</span>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-3xl text-zinc-500 group-hover:text-kinetic-lime">upload</span>
-                  <span className="text-sm font-bold text-zinc-400 mt-2">Choose Image/Video</span>
-                  <span className="text-xs text-zinc-600 mt-1">JPG, PNG, MP4</span>
-                </>
-              )}
-              <input id="elite-media-upload" type="file" onChange={handleFile} className="hidden" accept="image/*,video/*" />
-            </label>
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-4">Tags</label>
-            <input
-              type="text"
-              placeholder="e.g. legday, strength"
-              value={tags}
-              onChange={e => setTags(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-white/5 text-white rounded-2xl py-4 px-6 focus:border-kinetic-lime/50 outline-none text-sm font-medium transition-all placeholder:text-zinc-700"
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-4 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-white/5 text-zinc-400 font-black text-[10px] uppercase tracking-widest py-5 rounded-2xl hover:bg-white/10 hover:text-white transition-all border border-white/5"
-            >
-              Discard
-            </button>
-            <button
-              type="submit"
-              disabled={uploading || !title}
-              className="flex-1 bg-kinetic-lime text-black font-black text-[10px] uppercase tracking-widest py-5 rounded-2xl shadow-[0_20px_40px_rgba(195,244,0,0.15)] hover:scale-[1.02] hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"
-            >
-              Publish Post
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </motion.div>
-  );
-};
-
-const FAB = ({ screen, onPress, userRole }: { screen: Screen, onPress: () => void, userRole?: string }) => (
-  <AnimatePresence>
-    {screen === 'feed' && (userRole === 'admin' || userRole === 'trainer') && (
-      <motion.button
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0, opacity: 0 }}
-        onClick={onPress}
-        className="fixed bottom-32 right-8 w-14 h-14 bg-kinetic-lime text-black rounded-2xl shadow-[0_0_30px_rgba(195,244,0,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40"
-      >
-        <Plus size={32} strokeWidth={3} />
-      </motion.button>
-    )}
-  </AnimatePresence>
-);
-
-export default function KineticApp() {
-  const [screen, setScreen] = useState<Screen>('feed');
-  const [user, setUser] = useState<User | null>(null);
-  const [activeChat, setActiveChat] = useState<any | null>(null);
-  const [showPostModal, setShowPostModal] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      connectSocket(user.id);
-    } else {
-      disconnectSocket();
-    }
-  }, [user]);
-
-  if (!user) {
-    return <Auth onLogin={setUser} />;
+    );
   }
 
   return (
-    <div className="min-h-screen bg-kinetic-bg overflow-x-hidden selection:bg-kinetic-lime selection:text-black">
-      <TopBar />
-      
-      <main className="max-w-xl mx-auto min-h-screen">
-        <AnimatePresence mode="wait">
-          {screen === 'feed' && <FeedScreen key="feed" />}
-          {screen === 'messages' && <MessagesScreen key="messages" user={user} onOpenChat={setActiveChat} />}
-          {screen === 'schedule' && user.role === 'trainer' && <TrainerDashboard key="trainer" user={user} />}
-          {(screen === 'schedule' && user.role !== 'trainer') || screen === 'alerts' && (
-            <motion.div 
-              key="placeholder"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center h-screen pt-24 text-zinc-600"
-            >
-              <Zap size={64} className="mb-4 opacity-20" />
-              <p className="text-sm font-black uppercase tracking-widest italic">{screen} coming soon</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+      <header>
+        <h1 className="t-display font-anton text-white">{greeting()}, {user.username || 'Trainee'}</h1>
+        <p className="t-small" style={{ color: 'var(--text-2)' }}>Your fitness journey at a glance</p>
+      </header>
+      <div className="grid grid-cols-2 gap-3">
+        {[
+          { label: 'Current Level', value: user.level || 'Beginner', icon: Dumbbell, color: 'var(--red)' },
+          { label: 'Programs Active', value: PROGRAMS.filter(p => p.unlocked).length + '/6', icon: Trophy, color: 'var(--green)' },
+        ].map((s, i) => (
+          <div key={i} className="card flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <s.icon size={20} style={{ color: s.color }} />
+              <span className="badge badge-green">Active</span>
+            </div>
+            <div>
+              <p className="t-h1" style={{ color: s.color }}>{s.value}</p>
+              <p className="t-label" style={{ color: 'var(--text-2)' }}>{s.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <section>
+        <h2 className="t-h2 text-white mb-4">Your Trainers</h2>
+        <div className="space-y-3">
+          {TRAINERS.map(t => (
+            <div key={t.id} className="card flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[var(--border)]">
+                <img src={t.image} className="w-full h-full object-cover" alt={t.name} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="t-h3 text-white">{t.name}</h3>
+                <p className="t-small" style={{ color: 'var(--text-2)' }}>{t.specialty}</p>
+                <p className="t-small" style={{ color: 'var(--amber)' }}>{t.rate}</p>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className={`badge ${t.available ? 'badge-green' : 'badge-amber'}`}>{t.available ? 'Available' : 'Busy'}</span>
+                <button className="btn text-xs">Message</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+      {!user.premium && (
+        <section className="card relative overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--red-soft), transparent)', border: '1px solid var(--red)' }}>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <Crown size={24} style={{ color: 'var(--amber)' }} />
+              <span className="badge" style={{ background: 'var(--amber-soft)', color: 'var(--amber)' }}>NEW</span>
+            </div>
+            <h3 className="t-h2 text-white mb-1">Go Premium</h3>
+            <p className="t-small mb-4" style={{ color: 'var(--text-2)' }}>Unlock intermediate & advanced programs starting at $29</p>
+            <button className="btn">Upgrade Now</button>
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function ProgramsScreen({ user }: { user: User }) {
+  const [programs, setPrograms] = useState(PROGRAMS);
+  const [activeLevel, setActiveLevel] = useState<Level | 'all'>('all');
+
+  const levels: { key: Level | 'all'; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'beginner', label: 'Beginner' },
+    { key: 'intermediate', label: 'Intermediate' },
+    { key: 'advanced', label: 'Advanced' },
+  ];
+
+  const filtered = activeLevel === 'all' ? programs : programs.filter(p => p.level === activeLevel);
+
+  const handleUnlock = (program: Program) => {
+    alert(`Premium unlock for "${program.title}" — $${program.price} (mock payment)`);
+    setPrograms(prev => prev.map(p => p.id === program.id ? { ...p, unlocked: true } : p));
+  };
+
+  return (
+    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+      <header>
+        <h1 className="t-display font-anton text-white">Programs</h1>
+        <p className="t-small" style={{ color: 'var(--text-2)' }}>Level up your training — unlock as you grow</p>
+      </header>
+
+      <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+        {levels.map(l => (
+          <button key={l.key} onClick={() => setActiveLevel(l.key)}
+            className={cn('px-5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all',
+              activeLevel === l.key ? 'bg-[var(--red)] text-white shadow-[var(--shadow-red)]' : 'bg-[var(--surface)] text-[var(--text-2)] border border-[var(--border)] hover:border-[var(--border-active)]'
+            )}>
+            {l.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-4">
+        {filtered.map(program => {
+          const isUnlocked = program.unlocked || user.premium || program.price === 0;
+          return (
+            <div key={program.id} className={cn('card overflow-hidden', !isUnlocked && 'opacity-70')}>
+              <div className="flex gap-4">
+                <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 relative">
+                  <img src={program.image} className="w-full h-full object-cover" alt={program.title} />
+                  {!isUnlocked && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <Lock size={24} className="text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between mb-1">
+                    <h3 className="t-h3 text-white truncate">{program.title}</h3>
+                    <span className={cn('badge ml-2 shrink-0',
+                      program.level === 'beginner' ? 'badge-green' :
+                      program.level === 'intermediate' ? 'badge-amber' : 'badge-red'
+                    )}>
+                      {program.level}
+                    </span>
+                  </div>
+                  <p className="t-small mb-2 line-clamp-2" style={{ color: 'var(--text-2)' }}>{program.description}</p>
+                  <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-3)' }}>
+                    <span>{program.duration}</span>
+                    <span>{program.sessions} sessions</span>
+                    <span>{program.trainer}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[var(--border)]">
+                <div className="flex items-center gap-2">
+                  {isUnlocked ? (
+                    <span className="badge badge-green flex items-center gap-1">
+                      <CheckCircle size={12} /> Unlocked
+                    </span>
+                  ) : (
+                    <span className="t-h3" style={{ color: 'var(--amber)' }}>${program.price}</span>
+                  )}
+                </div>
+                {isUnlocked ? (
+                  <button className="btn flex items-center gap-2">
+                    <Play size={14} /> Start Program
+                  </button>
+                ) : (
+                  <button onClick={() => handleUnlock(program)} className="btn flex items-center gap-2">
+                    <Crown size={14} /> Unlock for ${program.price}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MessagesScreen({ user }: { user: User }) {
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [activeChat, setActiveChat] = useState<any | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const fetchConversations = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch('/api/messages?action=conversations', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data.conversations || []);
+      }
+    } catch {}
+    finally { setLoading(false); }
+  };
+
+  const fetchThread = async (userId: string) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/messages?with=${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+      }
+    } catch {}
+  };
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || !activeChat) return;
+    const token = localStorage.getItem('token');
+    const content = input;
+    setInput('');
+    setMessages(prev => [...prev, { id: Date.now().toString(), sender_id: user.id, receiver_id: activeChat.id, content, created_at: new Date().toISOString() }]);
+    try {
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ receiver_id: activeChat.id, content })
+      });
+      fetchThread(activeChat.id);
+    } catch {}
+  };
+
+  if (activeChat) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[var(--bg)] flex flex-col">
+        <header className="flex items-center gap-4 px-5 h-16 border-b border-[var(--border)] bg-[var(--bg-2)]">
+          <button onClick={() => setActiveChat(null)} className="text-[var(--text-2)] hover:text-white"><ChevronRight size={24} className="rotate-180" /></button>
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--surface-2)]">
+            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activeChat.other_name || activeChat.username}`} className="w-full h-full object-cover" />
+          </div>
+          <div>
+            <h3 className="t-h3 text-white">{activeChat.other_name || activeChat.username}</h3>
+            <p className="t-small" style={{ color: 'var(--green)' }}>Online</p>
+          </div>
+        </header>
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {messages.map((m, i) => {
+            const isMine = String(m.sender_id) === String(user.id);
+            return (
+              <div key={m.id || i} className={cn('flex', isMine ? 'justify-end' : 'justify-start')}>
+                <div className={cn('max-w-[75%] p-4 rounded-[18px]', isMine ? 'bubble-out' : 'bubble-in')}>
+                  <p className="t-body">{m.content}</p>
+                  <p className="t-small mt-1 opacity-60">{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+              </div>
+            );
+          })}
+          <div ref={chatEndRef} />
+        </div>
+        <form onSubmit={sendMessage} className="p-5 border-t border-[var(--border)] bg-[var(--bg-2)] flex gap-3">
+          <input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message..." className="field flex-1" />
+          <button type="submit" disabled={!input.trim()} className="btn !p-3"><Send size={18} /></button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+      <header>
+        <h1 className="t-display font-anton text-white">Messages</h1>
+        <p className="t-small" style={{ color: 'var(--text-2)' }}>Connect with your trainer</p>
+      </header>
+      {loading ? (
+        <div className="flex justify-center py-10"><div className="w-8 h-8 border-4 border-[var(--red)] border-t-transparent rounded-full animate-spin" /></div>
+      ) : conversations.length === 0 ? (
+        <div className="card text-center py-12">
+          <MessageSquare size={40} style={{ color: 'var(--text-3)' }} className="mx-auto mb-4" />
+          <p className="t-body" style={{ color: 'var(--text-2)' }}>No conversations yet. Start chatting with your trainer!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {conversations.map((conv: any) => (
+            <div key={conv.other_id} onClick={() => { setActiveChat(conv); fetchThread(conv.other_id); }}
+              className="conv-item cursor-pointer hover:bg-[var(--surface)] transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-[var(--surface-2)]">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.other_name}`} className="w-full h-full object-cover" />
+                  </div>
+                  {conv.unread > 0 && <div className="absolute -top-1 -right-1 w-3 h-3 bg-[var(--red)] rounded-full border-2 border-[var(--bg)]" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start">
+                    <h3 className="t-h3 text-white">{conv.other_name}</h3>
+                    <span className="t-small" style={{ color: 'var(--text-3)' }}>{conv.last_at ? new Date(conv.last_at).toLocaleDateString() : ''}</span>
+                  </div>
+                  <p className="t-small truncate" style={{ color: 'var(--text-2)' }}>{conv.last_message || 'Start a conversation'}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProfileScreen({ user, onLogout }: { user: User; onLogout: () => void }) {
+  return (
+    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+      <div className="flex flex-col items-center text-center space-y-4">
+        <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-[var(--red)] p-1">
+          <div className="w-full h-full rounded-full overflow-hidden bg-[var(--surface-2)]">
+            {user.profile_pic ? <img src={user.profile_pic} className="w-full h-full object-cover" /> : <User size={40} style={{ color: 'var(--text-2)' }} className="w-full h-full" />}
+          </div>
+        </div>
+        <div>
+          <h1 className="t-h1 text-white">{user.username}</h1>
+          <p className="t-label" style={{ color: 'var(--red)' }}>{user.role.toUpperCase()}</p>
+          <p className="t-small" style={{ color: 'var(--text-2)' }}>{user.email}</p>
+        </div>
+      </div>
+
+      <div className="card space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="t-small" style={{ color: 'var(--text-2)' }}>Membership</span>
+          <span className="badge" style={{ background: user.premium ? 'var(--amber-soft)' : 'var(--red-soft)', color: user.premium ? 'var(--amber)' : 'var(--red)' }}>
+            {user.premium ? 'Premium' : 'Free'}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="t-small" style={{ color: 'var(--text-2)' }}>Level</span>
+          <span className="badge badge-green">{user.level || 'Beginner'}</span>
+        </div>
+      </div>
+
+      <button onClick={onLogout} className="w-full py-4 rounded-xl border border-[var(--border)] text-[var(--text-2)] hover:bg-[var(--surface)] transition-all flex items-center justify-center gap-2">
+        <LogOut size={16} /> Sign Out
+      </button>
+    </div>
+  );
+}
+
+export default function KineticApp() {
+  const [screen, setScreen] = useState<Screen>('dashboard');
+  const [user, setUser] = useState<User | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('user');
+    if (saved) {
+      try {
+        setUser(JSON.parse(saved));
+      } catch {}
+    }
+  }, []);
+
+  if (!user) return <Auth onLogin={(u) => { setUser(u); localStorage.setItem('user', JSON.stringify(u)); }} />;
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
+
+  const navItems = [
+    { key: 'dashboard' as Screen, icon: BarChart3, label: 'Dashboard' },
+    { key: 'programs' as Screen, icon: Dumbbell, label: 'Programs' },
+    { key: 'messages' as Screen, icon: MessageSquare, label: 'Messages' },
+    { key: 'profile' as Screen, icon: User, label: 'Profile' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] font-inter">
+      {/* Top Bar */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-2)] border-b border-[var(--border)]">
+        <div className="max-w-lg mx-auto px-5 h-16 flex items-center justify-between">
+          <button onClick={() => setShowMenu(!showMenu)} className="text-[var(--text-2)] hover:text-white">
+            {showMenu ? <X size={22} /> : <Menu size={22} />}
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-anton text-white tracking-tight">COMRADES</span>
+            <span className="text-[var(--red)] text-xl font-anton">GYM</span>
+          </div>
+          <div className="w-9 h-9 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--surface-2)]">
+            {user.profile_pic ? <img src={user.profile_pic} className="w-full h-full object-cover" /> : <User size={16} style={{ color: 'var(--text-2)' }} className="w-full h-full p-1.5" />}
+          </div>
+        </div>
+      </header>
+
+      {/* Menu Overlay */}
+      {showMenu && (
+        <div className="fixed inset-0 z-40 pt-16">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowMenu(false)} />
+          <div className="relative bg-[var(--bg-2)] border-b border-[var(--border)] p-5 space-y-2">
+            {navItems.map(item => (
+              <button key={item.key} onClick={() => { setScreen(item.key); setShowMenu(false); }}
+                className={cn('w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all',
+                  screen === item.key ? 'bg-[var(--red-soft)] text-[var(--red)]' : 'text-[var(--text-2)] hover:bg-[var(--surface)]')}>
+                <item.icon size={20} />
+                <span className="t-h3">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="max-w-lg mx-auto min-h-screen">
+        {screen === 'dashboard' && <DashboardScreen user={user} />}
+        {screen === 'programs' && <ProgramsScreen user={user} />}
+        {screen === 'messages' && <MessagesScreen user={user} />}
+        {screen === 'profile' && <ProfileScreen user={user} onLogout={handleLogout} />}
       </main>
 
-      <NavBar current={screen} setScreen={(s) => { setScreen(s); setActiveChat(null); }} />
-      <FAB screen={screen} userRole={user?.role} onPress={() => setShowPostModal(true)} />
-      <AnimatePresence>
-        {showPostModal && <CreatePostModal onClose={() => setShowPostModal(false)} />}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {activeChat && (
-          <motion.div 
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[70]"
-          >
-            <ChatRoom user={user} recipient={activeChat} onBack={() => setActiveChat(null)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Bottom Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-2)] border-t border-[var(--border)]">
+        <div className="max-w-lg mx-auto flex justify-around items-center h-16 px-4">
+          {navItems.map(item => (
+            <button key={item.key} onClick={() => setScreen(item.key)}
+              className={cn('flex flex-col items-center gap-0.5 transition-all',
+                screen === item.key ? 'text-[var(--red)]' : 'text-[var(--text-3)] hover:text-[var(--text-2)]')}>
+              <item.icon size={20} />
+              <span className="text-[10px] font-semibold">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }
