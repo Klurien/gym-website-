@@ -26,6 +26,211 @@ const levelConfig = { beginner: { label: 'Beginner', color: '#3ECF8E', bg: 'rgba
 
 function greeting() { const h = new Date().getHours(); if (h < 12) return 'Morning'; if (h < 18) return 'Afternoon'; return 'Evening'; }
 
+// ── M-Pesa Payment Modal ──
+function PaymentModal({ amount, programId, programName, onClose, onSuccess }: { amount: number; programId?: string; programName?: string; onClose: () => void; onSuccess: () => void }) {
+  const [phone, setPhone] = useState('');
+  const [step, setStep] = useState<'form' | 'processing' | 'success' | 'error'>('form');
+  const [statusMsg, setStatusMsg] = useState('');
+  const [checkoutId, setCheckoutId] = useState('');
+  const pollRef = useRef<ReturnType<typeof setInterval>>();
+
+  useEffect(() => {
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, []);
+
+  const formatPhone = (val: string) => {
+    const digits = val.replace(/[^0-9]/g, '');
+    if (digits.startsWith('254')) return '+' + digits.slice(0, 12);
+    if (digits.startsWith('0')) return '+254' + digits.slice(1, 10);
+    return '+254' + digits.slice(0, 9);
+  };
+
+  const handlePay = async () => {
+    const clean = phone.replace(/[^0-9]/g, '');
+    if (clean.length < 9) { setStatusMsg('Enter a valid M-Pesa phone number'); return; }
+
+    setStep('processing');
+    setStatusMsg('Sending payment request to your phone...');
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/mpesa/stkpush', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ phone: clean, amount, programId, programName })
+      });
+      const data = await res.json();
+
+      if (data.error) { setStep('error'); setStatusMsg(data.error); return; }
+
+      const cid = data.CheckoutRequestID || `demo_${Date.now()}`;
+      setCheckoutId(cid);
+      setStatusMsg('Check your phone and enter your M-Pesa PIN to complete payment...');
+
+      // Poll for status
+      pollRef.current = setInterval(async () => {
+        try {
+          const qRes = await fetch('/api/mpesa/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ checkoutRequestId: cid })
+          });
+          const qData = await qRes.json();
+
+          if (qData.demo && qData.success) {
+            clearInterval(pollRef.current);
+            setStep('success');
+            setStatusMsg('Payment successful! (Demo mode)');
+            onSuccess();
+            return;
+          }
+
+          if (qData.ResultCode === '0' || qData.ResultCode === 0) {
+            clearInterval(pollRef.current);
+            setStep('success');
+            setStatusMsg('Payment successful! Welcome to Premium.');
+            onSuccess();
+          } else if (qData.ResultCode && qData.ResultCode !== '1037') {
+            clearInterval(pollRef.current);
+            setStep('error');
+            setStatusMsg(qData.ResultDesc || 'Payment failed');
+          }
+        } catch {}
+      }, 2000);
+    } catch (err: any) {
+      setStep('error');
+      setStatusMsg(err.message || 'Payment request failed');
+    }
+  };
+
+  const handleDemoUnlock = async () => {
+    setStep('processing');
+    setStatusMsg('Activating premium (demo)...');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/mpesa/demo-unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ programId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStep('success');
+        setStatusMsg('Premium activated! (Demo)');
+        onSuccess();
+      } else {
+        setStep('error');
+        setStatusMsg(data.error || 'Activation failed');
+      }
+    } catch {
+      setStep('error');
+      setStatusMsg('Network error');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-5">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-sm rounded-[24px] p-6 animate-fade-in" style={{ background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(232,41,74,0.15)' }}>
+              <Crown size={20} style={{ color: 'var(--amber)' }} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white">Premium Unlock</h3>
+              <p className="text-xs" style={{ color: 'var(--text-2)' }}>{programName || 'All Programs'} — KES {amount.toLocaleString()}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+            <X size={18} style={{ color: 'var(--text-2)' }} />
+          </button>
+        </div>
+
+        {step === 'form' && (
+          <div className="space-y-5">
+            <div>
+              <label className="text-xs font-medium mb-2 block" style={{ color: 'var(--text-2)' }}>M-Pesa Phone Number</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium" style={{ color: 'var(--text-3)' }}>+254</span>
+                <input
+                  type="tel"
+                  value={phone.replace(/^0/, '').replace(/^254/, '')}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="712 345 678"
+                  className="w-full py-3.5 pl-14 pr-4 rounded-xl text-sm outline-none transition-all"
+                  style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                />
+              </div>
+              <p className="text-[10px] mt-1.5" style={{ color: 'var(--text-3)' }}>Enter the M-Pesa registered phone number</p>
+            </div>
+            {statusMsg && <p className="text-xs font-medium" style={{ color: 'var(--red)' }}>{statusMsg}</p>}
+            <div className="flex gap-3">
+              <button onClick={handleDemoUnlock} className="flex-1 py-3 rounded-xl text-xs font-semibold transition-all"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-2)' }}>
+                Demo Unlock
+              </button>
+              <button onClick={handlePay} className="flex-[2] py-3 rounded-xl text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                style={{ background: 'var(--red)', boxShadow: 'var(--shadow-red)' }}>
+                Pay KES {amount.toLocaleString()}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'processing' && (
+          <div className="text-center py-8 space-y-4">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: 'rgba(232,41,74,0.1)' }}>
+              <div className="w-8 h-8 border-3 border-[var(--red)] border-t-transparent rounded-full animate-spin" style={{ borderWidth: '3px' }} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white">Processing Payment</p>
+              <p className="text-xs mt-2" style={{ color: 'var(--text-2)' }}>{statusMsg}</p>
+            </div>
+          </div>
+        )}
+
+        {step === 'success' && (
+          <div className="text-center py-8 space-y-4">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: 'rgba(62,207,142,0.15)' }}>
+              <CheckCircle size={32} style={{ color: 'var(--green)' }} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">Payment Successful!</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{statusMsg}</p>
+            </div>
+            <button onClick={onClose} className="w-full py-3 rounded-xl text-xs font-semibold text-white transition-all" style={{ background: 'var(--red)' }}>
+              Continue
+            </button>
+          </div>
+        )}
+
+        {step === 'error' && (
+          <div className="text-center py-8 space-y-4">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto" style={{ background: 'rgba(232,41,74,0.15)' }}>
+              <X size={32} style={{ color: 'var(--red)' }} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">Payment Failed</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{statusMsg}</p>
+            </div>
+            <button onClick={() => { setStep('form'); setStatusMsg(''); }} className="w-full py-3 rounded-xl text-xs font-semibold text-white transition-all" style={{ background: 'var(--red)' }}>
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* M-Pesa Badge */}
+        <div className="flex items-center justify-center gap-2 mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+          <span className="text-[10px] font-medium" style={{ color: 'var(--text-3)' }}>Powered by</span>
+          <span className="text-xs font-bold" style={{ color: 'var(--green)' }}>M-Pesa</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProgressRing({ pct, size = 48, stroke = 4, color = 'var(--red)' }: { pct: number; size?: number; stroke?: number; color?: string }) {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
@@ -37,7 +242,7 @@ function ProgressRing({ pct, size = 48, stroke = 4, color = 'var(--red)' }: { pc
   );
 }
 
-function TraineeDashboard({ user }: { user: User }) {
+function TraineeDashboard({ user, onShowPayment }: { user: User; onShowPayment: (amount: number, programId?: string, name?: string) => void }) {
   const unlocked = PROGRAMS.filter(p => p.unlocked || user.premium || p.price === 0).length;
   const pct = Math.round((unlocked / PROGRAMS.length) * 100);
 
@@ -130,8 +335,8 @@ function TraineeDashboard({ user }: { user: User }) {
             </div>
             <h3 className="text-lg font-bold text-white mb-1">Unlock All Programs</h3>
             <p className="text-sm mb-4" style={{ color: 'var(--text-2)' }}>Get access to intermediate & advanced programs starting at $29</p>
-            <button className="px-6 py-2.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 active:scale-95" style={{ background: 'var(--red)', boxShadow: 'var(--shadow-red)' }}>
-              Upgrade Now
+            <button onClick={() => onShowPayment(29, '', 'All Programs')} className="px-6 py-2.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 active:scale-95" style={{ background: 'var(--red)', boxShadow: 'var(--shadow-red)' }}>
+              Upgrade from KES 29
             </button>
           </div>
         </div>
@@ -234,7 +439,7 @@ function TrainerDashboard({ user }: { user: User }) {
   );
 }
 
-function ProgramsScreen({ user }: { user: User }) {
+function ProgramsScreen({ user, onShowPayment }: { user: User; onShowPayment: (amount: number, programId?: string, name?: string) => void }) {
   const [programs, setPrograms] = useState(PROGRAMS);
   const [activeLevel, setActiveLevel] = useState<Level | 'all'>('all');
 
@@ -314,7 +519,7 @@ function ProgramsScreen({ user }: { user: User }) {
                     </button>
                   ) : (
                     <button className="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 text-white transition-all hover:opacity-90 active:scale-95" style={{ background: 'var(--red)', boxShadow: 'var(--shadow-red)' }}
-                      onClick={() => { setPrograms(prev => prev.map(p => p.id === program.id ? { ...p, unlocked: true } : p)); }}>
+                      onClick={() => onShowPayment(program.price, program.id, program.title)}>
                       <Crown size={14} /> Unlock ${program.price}
                     </button>
                   )}
@@ -528,6 +733,12 @@ export default function KineticApp() {
   const [screen, setScreen] = useState<Screen>('dashboard');
   const [user, setUser] = useState<User | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [payment, setPayment] = useState<{ amount: number; programId?: string; programName?: string } | null>(null);
+
+  const handlePaymentSuccess = () => {
+    if (user) setUser({ ...user, premium: true });
+    setPayment(null);
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('user');
@@ -580,9 +791,19 @@ export default function KineticApp() {
         </div>
       )}
 
+      {payment && (
+        <PaymentModal
+          amount={payment.amount}
+          programId={payment.programId}
+          programName={payment.programName}
+          onClose={() => setPayment(null)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
+
       <main className="max-w-lg mx-auto min-h-screen">
-        {screen === 'dashboard' && (isTrainer ? <TrainerDashboard user={user} /> : <TraineeDashboard user={user} />)}
-        {screen === 'programs' && <ProgramsScreen user={user} />}
+        {screen === 'dashboard' && (isTrainer ? <TrainerDashboard user={user} /> : <TraineeDashboard user={user} onShowPayment={(a, pid, n) => setPayment({ amount: a, programId: pid, programName: n })} />)}
+        {screen === 'programs' && <ProgramsScreen user={user} onShowPayment={(a, pid, n) => setPayment({ amount: a, programId: pid, programName: n })} />}
         {screen === 'messages' && <MessagesScreen user={user} />}
         {screen === 'profile' && <ProfileScreen user={user} onLogout={handleLogout} />}
       </main>

@@ -42,6 +42,8 @@ const fileFilter = (_req, file, cb) => {
 
 const upload = multer({ storage, fileFilter, limits: { fileSize: 50 * 1024 * 1024 } }).single('file');
 
+const mpesa = require('./mpesa');
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -54,6 +56,12 @@ module.exports = async (req, res) => {
   const urlPath = (req.url || '/').split('?')[0];
   const urlParts = urlPath.split('/').filter(Boolean);
   const apiPath = urlParts[0] === 'api' ? urlParts[1] : urlParts[0];
+
+  // ── M-Pesa (no auth needed for callback) ──
+  if (apiPath === 'mpesa' && urlParts[2] === 'callback' && method === 'POST') {
+    console.log('[MPESA CALLBACK]', JSON.stringify(req.body));
+    return res.status(200).json({ ResultCode: 0, ResultDesc: 'Success' });
+  }
 
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(' ')[1];
@@ -102,6 +110,82 @@ module.exports = async (req, res) => {
     } catch (err) {
       return res.status(500).json({ error: 'Login failed' });
     }
+  }
+
+  // ── M-Pesa Payment Routes ──
+  if (apiPath === 'mpesa' && method === 'POST') {
+    const action = urlParts[2];
+    const body = req.body || {};
+
+    if (action === 'stkpush') {
+      const { phone, amount, programId, programName } = body;
+      if (!phone || !amount) return res.status(400).json({ error: 'Phone and amount required' });
+
+      // Validate phone (254 format)
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      if (cleanPhone.length < 10) return res.status(400).json({ error: 'Invalid phone number' });
+
+      const mpesaPhone = cleanPhone.startsWith('0') ? '254' + cleanPhone.slice(1)
+        : cleanPhone.startsWith('254') ? cleanPhone
+        : '254' + cleanPhone;
+
+      try {
+        const result = await mpesa.stkPush(mpesaPhone, amount, `CG-${programId || 'PREMIUM'}`, programName || 'Comrades Gym Premium');
+
+        // Store pending payment in DB if available
+        if (db && user) {
+          try {
+            await db.query(
+              'INSERT INTO payments (user_id, phone, amount, program_id, checkout_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+              [user?.id || 0, mpesaPhone, amount, programId || null, result.CheckoutRequestID || `demo_${Date.now()}`, 'pending']
+            );
+          } catch {}
+        }
+
+        return res.status(200).json(result);
+      } catch (err) {
+        return res.status(500).json({ error: err.message || 'STK push failed' });
+      }
+    }
+
+    if (action === 'query') {
+      const { checkoutRequestId } = body;
+      if (!checkoutRequestId) return res.status(400).json({ error: 'checkoutRequestId required' });
+      try {
+        const result = await mpesa.queryStatus(checkoutRequestId);
+
+        // If successful, unlock premium
+        if (result.ResultCode === '0' || result.ResultCode === 0 || (result.demo && result.success)) {
+          if (user?.id && db) {
+            const [rows] = await db.query('SELECT program_id FROM payments WHERE checkout_id = ? AND status = ?', [checkoutRequestId, 'pending']);
+            await db.query('UPDATE users SET premium = 1 WHERE id = ?', [user.id]);
+            await db.query('UPDATE payments SET status = ? WHERE checkout_id = ?', ['completed', checkoutRequestId]);
+            if (rows[0]?.program_id) {
+              await db.query('UPDATE users SET level = (SELECT level FROM programs WHERE id = ?) WHERE id = ?', [rows[0].program_id, user.id]);
+            }
+          }
+        }
+
+        return res.status(200).json(result);
+      } catch (err) {
+        return res.status(500).json({ error: err.message || 'Query failed' });
+      }
+    }
+
+    if (action === 'demo-unlock') {
+      // Direct demo unlock (no actual payment)
+      if (user?.id && db) {
+        const programId = body.programId;
+        await db.query('UPDATE users SET premium = 1 WHERE id = ?', [user.id]);
+        if (programId) {
+          await db.query('UPDATE users SET level = (SELECT level FROM programs WHERE id = ?) WHERE id = ?', [programId, user.id]);
+        }
+        return res.status(200).json({ success: true, demo: true, message: 'Premium unlocked (demo)' });
+      }
+      return res.status(200).json({ success: true, demo: true });
+    }
+
+    return res.status(400).json({ error: 'Unknown action' });
   }
 
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
