@@ -209,17 +209,66 @@ module.exports = async (req, res) => {
 
   // ── Programs ──
   if (path === 'programs') {
+    // DEMO SEED DATA
+    const DEMO_PROGRAMS = [
+      { id: 1, title: 'Foundation Strength', description: 'Build your core foundation with compound movements. Perfect for first-timers.', level: 'beginner', duration: '4 weeks', sessions: 12, price: 0, image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop', level_sort: 1 },
+      { id: 2, title: 'Bodyweight Mastery', description: 'Master pushups, pullups, and bodyweight fundamentals anywhere.', level: 'beginner', duration: '6 weeks', sessions: 18, price: 0, image: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800&auto=format&fit=crop', level_sort: 1 },
+      { id: 3, title: 'Hypertrophy Accelerator', description: 'Progressive overload programming for lean muscle growth.', level: 'intermediate', duration: '8 weeks', sessions: 24, price: 29, image: 'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?q=80&w=800&auto=format&fit=crop', level_sort: 2 },
+      { id: 4, title: 'Power & Explosiveness', description: 'Olympic lifts and plyometrics for explosive athletic performance.', level: 'intermediate', duration: '6 weeks', sessions: 18, price: 39, image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop', level_sort: 2 },
+      { id: 5, title: 'Elite Performance', description: 'Advanced periodization for experienced lifters chasing peak results.', level: 'advanced', duration: '12 weeks', sessions: 36, price: 79, image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=800&auto=format&fit=crop', level_sort: 3 },
+      { id: 6, title: 'Certified Coach Program', description: 'Become a certified trainer under expert mentorship.', level: 'advanced', duration: '16 weeks', sessions: 48, price: 149, image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop', level_sort: 3 },
+    ];
+
+    // GET /api/programs — list all
     if (req.method === 'GET') {
-      const [rows] = await db.query('SELECT * FROM programs ORDER BY level_sort ASC');
-      return res.json(rows);
+      if (!db) return res.json(DEMO_PROGRAMS);
+      try {
+        const [rows] = await db.query('SELECT * FROM programs ORDER BY level_sort ASC');
+        return res.json(rows.length ? rows : DEMO_PROGRAMS);
+      } catch { return res.json(DEMO_PROGRAMS); }
     }
+
+    // POST /api/programs — create new
     if (req.method === 'POST') {
       if (user.role !== 'trainer' && user.role !== 'admin') return res.status(403).json({ error: 'Trainers only' });
       const { title, description, level, duration, sessions, price, image } = req.body || {};
       if (!title || !level) return res.status(400).json({ error: 'Title and level required' });
+      if (!db) return res.status(201).json({ id: Date.now(), message: 'Created (demo)' });
       const levelSort = level === 'beginner' ? 1 : level === 'intermediate' ? 2 : 3;
       await db.query('INSERT INTO programs (title, description, level, duration, sessions, price, image, level_sort, trainer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [title, description || '', level, duration || '', sessions || 0, price || 0, image || '', levelSort, user.id]);
       return res.status(201).json({ message: 'Created' });
+    }
+
+    // PUT /api/programs/:id — update program
+    if (req.method === 'PUT' && sub && !isNaN(sub)) {
+      if (user.role !== 'trainer' && user.role !== 'admin') return res.status(403).json({ error: 'Trainers only' });
+      const { title, description, level, duration, sessions, price, image } = req.body || {};
+      if (!db) {
+        const idx = DEMO_PROGRAMS.findIndex(p => p.id == sub);
+        if (idx === -1) return res.status(404).json({ error: 'Not found' });
+        return res.json({ message: 'Updated (demo)' });
+      }
+      const fields = [];
+      const vals = [];
+      if (title !== undefined) { fields.push('title = ?'); vals.push(title); }
+      if (description !== undefined) { fields.push('description = ?'); vals.push(description); }
+      if (level !== undefined) { fields.push('level = ?, level_sort = ?'); vals.push(level, level === 'beginner' ? 1 : level === 'intermediate' ? 2 : 3); }
+      if (duration !== undefined) { fields.push('duration = ?'); vals.push(duration); }
+      if (sessions !== undefined) { fields.push('sessions = ?'); vals.push(sessions); }
+      if (price !== undefined) { fields.push('price = ?'); vals.push(price); }
+      if (image !== undefined) { fields.push('image = ?'); vals.push(image); }
+      if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
+      vals.push(sub);
+      await db.query(`UPDATE programs SET ${fields.join(', ')} WHERE id = ?`, vals);
+      return res.json({ message: 'Updated' });
+    }
+
+    // DELETE /api/programs/:id — delete program
+    if (req.method === 'DELETE' && sub && !isNaN(sub)) {
+      if (user.role !== 'admin') return res.status(403).json({ error: 'Admins only' });
+      if (!db) return res.json({ message: 'Deleted (demo)' });
+      await db.query('DELETE FROM programs WHERE id = ?', [sub]);
+      return res.json({ message: 'Deleted' });
     }
   }
 
@@ -271,6 +320,88 @@ module.exports = async (req, res) => {
   if (path === 'heartbeat' && req.method === 'POST') {
     await db.query('UPDATE users SET last_seen = NOW() WHERE id = ?', [user.id]);
     return res.json({ success: true });
+  }
+
+  // ── Exercises ──
+  if (path === 'exercises') {
+    // DEMO SEED DATA
+    const DEMO_EXERCISES = [
+      { id: 1, program_id: 1, name: 'Barbell Squat', description: 'Compound leg movement', sets: 4, reps: '8-10', rest_seconds: 120, order_index: 1, video_url: '', image_url: '' },
+      { id: 2, program_id: 1, name: 'Bench Press', description: 'Upper body pushing strength', sets: 4, reps: '8-10', rest_seconds: 120, order_index: 2, video_url: '', image_url: '' },
+      { id: 3, program_id: 1, name: 'Bent Over Row', description: 'Back thickness and width', sets: 4, reps: '8-10', rest_seconds: 90, order_index: 3, video_url: '', image_url: '' },
+      { id: 4, program_id: 1, name: 'Overhead Press', description: 'Shoulder strength and stability', sets: 3, reps: '8-12', rest_seconds: 90, order_index: 4, video_url: '', image_url: '' },
+      { id: 5, program_id: 1, name: 'Deadlift', description: 'Full body posterior chain', sets: 3, reps: '6-8', rest_seconds: 180, order_index: 5, video_url: '', image_url: '' },
+      { id: 6, program_id: 2, name: 'Push-up', description: 'Chest, shoulders, triceps', sets: 3, reps: '10-15', rest_seconds: 60, order_index: 1, video_url: '', image_url: '' },
+      { id: 7, program_id: 2, name: 'Pull-up', description: 'Back and biceps', sets: 3, reps: '5-10', rest_seconds: 90, order_index: 2, video_url: '', image_url: '' },
+      { id: 8, program_id: 2, name: 'Air Squat', description: 'Leg endurance', sets: 4, reps: '15-20', rest_seconds: 60, order_index: 3, video_url: '', image_url: '' },
+      { id: 9, program_id: 2, name: 'Plank', description: 'Core stability', sets: 3, reps: '30-60s', rest_seconds: 60, order_index: 4, video_url: '', image_url: '' },
+      { id: 10, program_id: 2, name: 'Lunge', description: 'Unilateral leg strength', sets: 3, reps: '12-15', rest_seconds: 60, order_index: 5, video_url: '', image_url: '' },
+    ];
+
+    // GET /api/exercises — list all (optionally filter by program_id)
+    if (req.method === 'GET') {
+      if (!db) {
+        const programId = req.query?.program_id ? parseInt(req.query.program_id) : null;
+        const filtered = programId ? DEMO_EXERCISES.filter(e => e.program_id === programId) : DEMO_EXERCISES;
+        return res.json(filtered);
+      }
+      try {
+        const programId = req.query?.program_id ? parseInt(req.query.program_id) : null;
+        let query = 'SELECT * FROM exercises';
+        const params = [];
+        if (programId) {
+          query += ' WHERE program_id = ?';
+          params.push(programId);
+        }
+        query += ' ORDER BY order_index ASC';
+        const [rows] = await db.query(query, params);
+        return res.json(rows.length ? rows : DEMO_EXERCISES);
+      } catch { return res.json(DEMO_EXERCISES); }
+    }
+
+    // POST /api/exercises — create new exercise
+    if (req.method === 'POST') {
+      if (user.role !== 'trainer' && user.role !== 'admin') return res.status(403).json({ error: 'Trainers only' });
+      const { program_id, name, description, sets, reps, rest_seconds, order_index, video_url, image_url } = req.body || {};
+      if (!program_id || !name) return res.status(400).json({ error: 'Program ID and name required' });
+      if (!db) return res.status(201).json({ id: Date.now(), message: 'Created (demo)' });
+      await db.query('INSERT INTO exercises (program_id, name, description, sets, reps, rest_seconds, order_index, video_url, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [program_id, name, description || '', sets || 3, reps || '10', rest_seconds || 60, order_index || 0, video_url || '', image_url || '']);
+      return res.status(201).json({ message: 'Created' });
+    }
+
+    // PUT /api/exercises/:id — update exercise
+    if (req.method === 'PUT' && sub && !isNaN(sub)) {
+      if (user.role !== 'trainer' && user.role !== 'admin') return res.status(403).json({ error: 'Trainers only' });
+      const { program_id, name, description, sets, reps, rest_seconds, order_index, video_url, image_url } = req.body || {};
+      if (!db) {
+        const idx = DEMO_EXERCISES.findIndex(e => e.id == sub);
+        if (idx === -1) return res.status(404).json({ error: 'Not found' });
+        return res.json({ message: 'Updated (demo)' });
+      }
+      const fields = [];
+      const vals = [];
+      if (program_id !== undefined) { fields.push('program_id = ?'); vals.push(program_id); }
+      if (name !== undefined) { fields.push('name = ?'); vals.push(name); }
+      if (description !== undefined) { fields.push('description = ?'); vals.push(description); }
+      if (sets !== undefined) { fields.push('sets = ?'); vals.push(sets); }
+      if (reps !== undefined) { fields.push('reps = ?'); vals.push(reps); }
+      if (rest_seconds !== undefined) { fields.push('rest_seconds = ?'); vals.push(rest_seconds); }
+      if (order_index !== undefined) { fields.push('order_index = ?'); vals.push(order_index); }
+      if (video_url !== undefined) { fields.push('video_url = ?'); vals.push(video_url); }
+      if (image_url !== undefined) { fields.push('image_url = ?'); vals.push(image_url); }
+      if (!fields.length) return res.status(400).json({ error: 'No fields to update' });
+      vals.push(sub);
+      await db.query(`UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`, vals);
+      return res.json({ message: 'Updated' });
+    }
+
+    // DELETE /api/exercises/:id — delete exercise
+    if (req.method === 'DELETE' && sub && !isNaN(sub)) {
+      if (user.role !== 'admin') return res.status(403).json({ error: 'Admins only' });
+      if (!db) return res.json({ message: 'Deleted (demo)' });
+      await db.query('DELETE FROM exercises WHERE id = ?', [sub]);
+      return res.json({ message: 'Deleted' });
+    }
   }
 
   return res.status(404).json({ error: 'Not found' });

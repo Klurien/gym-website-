@@ -17,88 +17,173 @@ const PROGRAMS = [
   { id: '6', title: 'Certified Coach', level: 'advanced', price: 149 },
 ];
 
-export default function ClientDashboard({ user, onShowPayment }: { user: any; onShowPayment: (amount: number, programId?: string, name?: string) => void }) {
+export default function ClientDashboard({
+  user,
+  onShowPayment,
+}: {
+  user: any;
+  onShowPayment: (amount: number, programId?: string, name?: string) => void;
+}) {
   const [payments, setPayments] = useState<any[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     fetch('/api/my-payments', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : []).then(setPayments).catch(() => {});
+      .then(r => (r.ok ? r.json() : []))
+      .then(setPayments)
+      .catch(() => {});
   }, []);
 
   const unlocked = PROGRAMS.filter(p => p.price === 0 || user.premium).length;
   const pct = Math.round((unlocked / PROGRAMS.length) * 100);
   const lvl = levelConfig[user.level || 'beginner'];
-  const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'GOOD MORNING' : h < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING'; };
+  const greeting = () => {
+    const h = new Date().getHours();
+    return h < 12 ? 'GOOD MORNING' : h < 18 ? 'GOOD AFTERNOON' : 'GOOD EVENING';
+  };
 
   return (
     <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
-      {/* Hero */}
-      <header className="relative overflow-hidden rounded-[24px] p-6 gradient-hero" style={{ border: '1px solid var(--border)' }}>
-        <div className="absolute top-[-40px] right-[-40px] w-48 h-48 rounded-full opacity-10" style={{ background: 'var(--red)' }} />
-        <div className="absolute bottom-[-30px] left-[-30px] w-36 h-36 rounded-full opacity-10" style={{ background: 'var(--amber)' }} />
+      <header
+        className="relative overflow-hidden rounded-[24px] p-6"
+        style={{
+          background: 'linear-gradient(135deg, #1a0a0a 0%, #0a0a0a 40%, #0a0a14 100%)',
+          border: '1px solid var(--border)',
+        }}
+      >
+        <div
+          className="absolute top-[-40px] right-[-40px] w-48 h-48 rounded-full opacity-10"
+          style={{ background: 'var(--red)' }}
+        />
+        <div
+          className="absolute bottom-[-30px] left-[-30px] w-36 h-36 rounded-full opacity-10"
+          style={{ background: 'var(--amber)' }}
+        />
         <div className="relative z-10">
-          <p className="t-label" style={{ color: 'var(--text-3)' }}>{greeting()}</p>
-          <h1 className="font-anton text-4xl text-white uppercase mt-1" style={{ lineHeight: 1 }}>{user.username}</h1>
+          <p className="t-label" style={{ color: 'var(--text-3)' }}>
+            {greeting()}
+          </p>
+          <h1
+            className="font-anton text-4xl text-white uppercase mt-1"
+            style={{ lineHeight: 1 }}
+          >
+            {user.username}
+          </h1>
           <div className="flex items-center gap-3 mt-4">
-            <span className="badge" style={{ background: lvl.bg, color: lvl.color, border: `1px solid ${lvl.color}30` }}>
+            <span
+              className="badge"
+              style={{
+                background: lvl.bg,
+                color: lvl.color,
+                border: `1px solid ${lvl.color}30`,
+              }}
+            >
               <Medal size={12} /> {lvl.label}
             </span>
-            <span className="badge" style={{ background: user.premium ? 'var(--amber-soft)' : 'var(--green-soft)', color: user.premium ? 'var(--amber)' : 'var(--green)', border: `1px solid ${user.premium ? 'var(--amber)' : 'var(--green)'}30` }}>
+            <span
+              className="badge"
+              style={{
+                background: user.premium ? 'var(--amber-soft)' : 'var(--green-soft)',
+                color: user.premium ? 'var(--amber)' : 'var(--green)',
+                border: `1px solid ${user.premium ? 'var(--amber)' : 'var(--green)'}30`,
+              }}
+            >
               <Shield size={12} /> {user.premium ? 'PREMIUM' : 'FREE'}
             </span>
           </div>
         </div>
       </header>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-[20px] p-5 relative overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-10" style={{ background: 'var(--red)', transform: 'translate(30%, -30%)' }} />
+        <div
+          className="rounded-[20px] p-5 relative overflow-hidden"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        >
+          <div
+            className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-10"
+            style={{ background: 'var(--red)', transform: 'translate(30%, -30%)' }}
+          />
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--red-soft)' }}>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: 'var(--red-soft)' }}
+              >
                 <TrendingUp size={20} style={{ color: 'var(--red)' }} strokeWidth={2.5} />
               </div>
-              <span className="t-label" style={{ color: 'var(--text-3)' }}>PROGRESS</span>
+              <span className="t-label" style={{ color: 'var(--text-3)' }}>
+                PROGRESS
+              </span>
             </div>
-            <p className="font-anton text-4xl text-white" style={{ lineHeight: 1 }}>{pct}%</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>{unlocked}/{PROGRAMS.length} programs</p>
+            <p className="font-anton text-4xl text-white" style={{ lineHeight: 1 }}>
+              {pct}%
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>
+              {unlocked}/{PROGRAMS.length} programs
+            </p>
           </div>
         </div>
-        <div className="rounded-[20px] p-5 relative overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-          <div className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-10" style={{ background: 'var(--amber)', transform: 'translate(30%, -30%)' }} />
+        <div
+          className="rounded-[20px] p-5 relative overflow-hidden"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        >
+          <div
+            className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-10"
+            style={{ background: 'var(--amber)', transform: 'translate(30%, -30%)' }}
+          />
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--amber-soft)' }}>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: 'var(--amber-soft)' }}
+              >
                 <Flame size={20} style={{ color: 'var(--amber)' }} strokeWidth={2.5} />
               </div>
-              <span className="t-label" style={{ color: 'var(--text-3)' }}>PAYMENTS</span>
+              <span className="t-label" style={{ color: 'var(--text-3)' }}>
+                PAYMENTS
+              </span>
             </div>
-            <p className="font-anton text-4xl text-white" style={{ lineHeight: 1 }}>{payments.filter(p => p.status === 'completed').length}</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>completed</p>
+            <p className="font-anton text-4xl text-white" style={{ lineHeight: 1 }}>
+              {payments.filter(p => p.status === 'completed').length}
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>
+              completed
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Progress Ring */}
-      <div className="card p-5">
+      <div className="card">
         <div className="flex items-center justify-between mb-5">
           <h3 className="t-h2 text-white">YOUR PROGRESS</h3>
-          <span className="t-label" style={{ color: 'var(--text-3)' }}>{unlocked} UNLOCKED</span>
+          <span className="t-label" style={{ color: 'var(--text-3)' }}>
+            {unlocked} UNLOCKED
+          </span>
         </div>
         <div className="flex items-center gap-5">
           <ProgressRing pct={pct} size={64} stroke={6} color="var(--red)" />
           <div className="flex-1 space-y-3">
             {(['beginner', 'intermediate', 'advanced'] as const).map(l => {
               const count = PROGRAMS.filter(p => p.level === l).length;
-              const unlockedCount = PROGRAMS.filter(p => p.level === l && (p.price === 0 || user.premium)).length;
+              const unlockedCount = PROGRAMS.filter(
+                p => p.level === l && (p.price === 0 || user.premium)
+              ).length;
               const cfg = levelConfig[l];
               return (
                 <div key={l} className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: cfg.color }} />
-                  <span className="t-label flex-1" style={{ color: 'var(--text-2)', fontSize: '0.6rem' }}>{cfg.label}</span>
-                  <span className="font-anton text-lg text-white">{unlockedCount}/{count}</span>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ background: cfg.color }}
+                  />
+                  <span
+                    className="t-label flex-1"
+                    style={{ color: 'var(--text-2)' }}
+                  >
+                    {cfg.label}
+                  </span>
+                  <span className="font-anton text-lg text-white">
+                    {unlockedCount}/{count}
+                  </span>
                 </div>
               );
             })}
@@ -106,36 +191,67 @@ export default function ClientDashboard({ user, onShowPayment }: { user: any; on
         </div>
       </div>
 
-      {/* Upgrade CTA */}
       {!user.premium && (
-        <div className="relative overflow-hidden rounded-[20px] p-6 cursor-pointer" style={{ background: 'linear-gradient(135deg, rgba(255,36,66,0.15), rgba(255,184,0,0.08))', border: '1px solid rgba(255,36,66,0.25)' }}>
-          <div className="absolute top-[-30px] right-[-30px] w-32 h-32 rounded-full" style={{ background: 'rgba(255,36,66,0.1)' }} />
+        <div
+          className="relative overflow-hidden rounded-[20px] p-6 cursor-pointer"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(255,36,66,0.15), rgba(255,184,0,0.08))',
+            border: '1px solid rgba(255,36,66,0.25)',
+          }}
+        >
+          <div
+            className="absolute top-[-30px] right-[-30px] w-32 h-32 rounded-full"
+            style={{ background: 'rgba(255,36,66,0.1)' }}
+          />
           <div className="relative z-10 space-y-3">
             <div className="flex items-center gap-2">
               <Crown size={20} style={{ color: 'var(--amber)' }} />
-              <span className="t-label" style={{ color: 'var(--amber)' }}>UPGRADE</span>
+              <span className="t-label" style={{ color: 'var(--amber)' }}>
+                UPGRADE
+              </span>
             </div>
-            <h3 className="font-anton text-2xl text-white uppercase">UNLOCK ALL PROGRAMS</h3>
-            <p className="text-sm" style={{ color: 'var(--text-2)' }}>Get access to intermediate & advanced training plans</p>
-            <button onClick={() => onShowPayment(29, '', 'All Programs')} className="btn mt-2">
+            <h3 className="font-anton text-2xl text-white uppercase">
+              UNLOCK ALL PROGRAMS
+            </h3>
+            <p className="text-sm" style={{ color: 'var(--text-2)' }}>
+              Get access to intermediate & advanced training plans
+            </p>
+            <button
+              onClick={() => onShowPayment(29, '', 'All Programs')}
+              className="btn mt-2"
+            >
               <Zap size={16} strokeWidth={3} /> UPGRADE FROM KES 29
             </button>
           </div>
         </div>
       )}
 
-      {/* Recent payments */}
       {payments.length > 0 && (
-        <div className="card p-5 space-y-4">
+        <div className="card space-y-4">
           <h3 className="t-h2 text-white">RECENT PAYMENTS</h3>
           <div className="space-y-2">
             {payments.slice(0, 3).map((p, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--surface-2)' }}>
+              <div
+                key={i}
+                className="flex items-center gap-3 p-3 rounded-xl"
+                style={{ background: 'var(--surface-2)' }}
+              >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white truncate">{p.program_name || 'PREMIUM UNLOCK'}</p>
-                  <p className="t-label" style={{ color: 'var(--text-3)', fontSize: '0.5rem' }}>{new Date(p.created_at).toLocaleDateString()}</p>
+                  <p className="text-sm font-bold text-white truncate">
+                    {p.program_name || 'PREMIUM UNLOCK'}
+                  </p>
+                  <p className="t-label mt-0.5" style={{ color: 'var(--text-3)' }}>
+                    {new Date(p.created_at).toLocaleDateString()}
+                  </p>
                 </div>
-                <span className="font-anton text-lg" style={{ color: p.status === 'completed' ? 'var(--green)' : 'var(--amber)' }}>
+                <span
+                  className="font-anton text-lg"
+                  style={{
+                    color:
+                      p.status === 'completed' ? 'var(--green)' : 'var(--amber)',
+                  }}
+                >
                   KES {p.amount}
                 </span>
               </div>
