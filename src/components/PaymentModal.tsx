@@ -35,7 +35,8 @@ export default function PaymentModal({
       });
       const data = await res.json();
       if (data.error) { setStep('error'); setMsg(data.error.toUpperCase()); return; }
-      const cid = data.CheckoutRequestID || `demo_${Date.now()}`;
+      const cid = data.CheckoutRequestID;
+      if (!cid) { setStep('error'); setMsg('PAYMENT REQUEST FAILED'); return; }
       setMsg('CHECK YOUR PHONE AND ENTER YOUR M-PESA PIN...');
       pollRef.current = setInterval(async () => {
         try {
@@ -45,13 +46,6 @@ export default function PaymentModal({
             body: JSON.stringify({ checkoutRequestId: cid }),
           });
           const qd = await q.json();
-          if (qd.demo && qd.success) {
-            clearInterval(pollRef.current);
-            setStep('success');
-            setMsg('PAYMENT SUCCESSFUL (DEMO)');
-            onSuccess();
-            return;
-          }
           if (qd.ResultCode === '0' || qd.ResultCode === 0) {
             clearInterval(pollRef.current);
             setStep('success');
@@ -68,22 +62,6 @@ export default function PaymentModal({
       setStep('error');
       setMsg((e.message || 'REQUEST FAILED').toUpperCase());
     }
-  };
-
-  const handleDemo = async () => {
-    setStep('processing');
-    setMsg('ACTIVATING (DEMO)...');
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/mpesa/demo-unlock', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ programId }),
-      });
-      const data = await res.json();
-      if (data.success) { setStep('success'); setMsg('UNLOCKED! (DEMO)'); onSuccess(); }
-      else { setStep('error'); setMsg((data.error || 'FAILED').toUpperCase()); }
-    } catch { setStep('error'); setMsg('NETWORK ERROR'); }
   };
 
   return (
@@ -148,20 +126,12 @@ export default function PaymentModal({
                 {msg}
               </p>
             )}
-            <div className="flex gap-3">
-              <button
-                onClick={handleDemo}
-                className="btn-outline flex-1 py-4"
-              >
-                DEMO
-              </button>
-              <button
-                onClick={handlePay}
-                className="btn flex-[2] py-4"
-              >
-                PAY KES {amount.toLocaleString()}
-              </button>
-            </div>
+            <button
+              onClick={handlePay}
+              className="btn w-full py-4"
+            >
+              PAY KES {amount.toLocaleString()}
+            </button>
           </div>
         )}
 

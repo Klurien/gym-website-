@@ -3,20 +3,7 @@ import { Plus, Trash2, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 import ExerciseCard from '../components/ui/ExerciseCard';
 import ExerciseForm from '../components/ui/ExerciseForm';
 
-const DEMO_EXERCISES = [
-  { id: 1, program_id: 1, name: 'Barbell Squat', description: 'Compound leg movement', sets: 4, reps: '8-10', rest_seconds: 120, order_index: 1, video_url: '', image_url: '' },
-  { id: 2, program_id: 1, name: 'Bench Press', description: 'Upper body pushing strength', sets: 4, reps: '8-10', rest_seconds: 120, order_index: 2, video_url: '', image_url: '' },
-  { id: 3, program_id: 1, name: 'Bent Over Row', description: 'Back thickness and width', sets: 4, reps: '8-10', rest_seconds: 90, order_index: 3, video_url: '', image_url: '' },
-  { id: 4, program_id: 1, name: 'Overhead Press', description: 'Shoulder strength and stability', sets: 3, reps: '8-12', rest_seconds: 90, order_index: 4, video_url: '', image_url: '' },
-  { id: 5, program_id: 1, name: 'Deadlift', description: 'Full body posterior chain', sets: 3, reps: '6-8', rest_seconds: 180, order_index: 5, video_url: '', image_url: '' },
-  { id: 6, program_id: 2, name: 'Push-up', description: 'Chest, shoulders, triceps', sets: 3, reps: '10-15', rest_seconds: 60, order_index: 1, video_url: '', image_url: '' },
-  { id: 7, program_id: 2, name: 'Pull-up', description: 'Back and biceps', sets: 3, reps: '5-10', rest_seconds: 90, order_index: 2, video_url: '', image_url: '' },
-  { id: 8, program_id: 2, name: 'Air Squat', description: 'Leg endurance', sets: 4, reps: '15-20', rest_seconds: 60, order_index: 3, video_url: '', image_url: '' },
-  { id: 9, program_id: 2, name: 'Plank', description: 'Core stability', sets: 3, reps: '30-60s', rest_seconds: 60, order_index: 4, video_url: '', image_url: '' },
-  { id: 10, program_id: 2, name: 'Lunge', description: 'Unilateral leg strength', sets: 3, reps: '12-15', rest_seconds: 60, order_index: 5, video_url: '', image_url: '' },
-];
-
-const DEMO_PROGRAMS = [
+const DEFAULT_PROGRAMS = [
   { id: 1, title: 'Foundation Strength', level: 'beginner' },
   { id: 2, title: 'Bodyweight Mastery', level: 'beginner' },
   { id: 3, title: 'Hypertrophy Accelerator', level: 'intermediate' },
@@ -38,8 +25,8 @@ export default function AdminExercises({
   user: any;
   initialProgramId?: string;
 }) {
-  const [exercises, setExercises] = useState<any[]>(DEMO_EXERCISES);
-  const [programs, setPrograms] = useState<any[]>(DEMO_PROGRAMS);
+  const [exercises, setExercises] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<any[]>(DEFAULT_PROGRAMS);
   const [activeProgram, setActiveProgram] = useState<string>(initialProgramId || 'all');
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [creating, setCreating] = useState(false);

@@ -2,7 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { Pencil, Trash2, Save, X, Plus, ListTodo } from 'lucide-react';
 import ProgramCard from '../components/ui/ProgramCard';
 
-const SEED_PROGRAMS = [
+const DEFAULT_PROGRAMS = [
   { id: 1, title: 'Foundation Strength', description: 'Build your core foundation with compound movements. Perfect for first-timers.', level: 'beginner', duration: '4 weeks', sessions: 12, price: 0, image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop' },
   { id: 2, title: 'Bodyweight Mastery', description: 'Master pushups, pullups, and bodyweight fundamentals anywhere.', level: 'beginner', duration: '6 weeks', sessions: 18, price: 0, image: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800&auto=format&fit=crop' },
   { id: 3, title: 'Hypertrophy Accelerator', description: 'Progressive overload programming for lean muscle growth.', level: 'intermediate', duration: '8 weeks', sessions: 24, price: 29, image: 'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?q=80&w=800&auto=format&fit=crop' },
@@ -40,7 +40,7 @@ export default function Programs({
   onShowExercises?: (programId: number | string) => void;
   onStartCourse?: (programId: number | string) => void;
 }) {
-  const [programs, setPrograms] = useState<Program[]>(SEED_PROGRAMS);
+  const [programs, setPrograms] = useState<Program[]>(DEFAULT_PROGRAMS);
   const [activeLevel, setActiveLevel] = useState('all');
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Program>>({});

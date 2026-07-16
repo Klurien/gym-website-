@@ -1,28 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BookOpen, Clock, BarChart3, ChevronDown, ChevronUp, Dumbbell, CheckCircle } from 'lucide-react';
 
-const DEMO_EXERCISES = [
-  { id: 1, program_id: 1, name: 'Barbell Squat', description: 'Compound leg movement', sets: 4, reps: '8-10', rest_seconds: 120, order_index: 1 },
-  { id: 2, program_id: 1, name: 'Bench Press', description: 'Upper body pushing strength', sets: 4, reps: '8-10', rest_seconds: 120, order_index: 2 },
-  { id: 3, program_id: 1, name: 'Bent Over Row', description: 'Back thickness and width', sets: 4, reps: '8-10', rest_seconds: 90, order_index: 3 },
-  { id: 4, program_id: 1, name: 'Overhead Press', description: 'Shoulder strength and stability', sets: 3, reps: '8-12', rest_seconds: 90, order_index: 4 },
-  { id: 5, program_id: 1, name: 'Deadlift', description: 'Full body posterior chain', sets: 3, reps: '6-8', rest_seconds: 180, order_index: 5 },
-  { id: 6, program_id: 2, name: 'Push-up', description: 'Chest, shoulders, triceps', sets: 3, reps: '10-15', rest_seconds: 60, order_index: 1 },
-  { id: 7, program_id: 2, name: 'Pull-up', description: 'Back and biceps', sets: 3, reps: '5-10', rest_seconds: 90, order_index: 2 },
-  { id: 8, program_id: 2, name: 'Air Squat', description: 'Leg endurance', sets: 4, reps: '15-20', rest_seconds: 60, order_index: 3 },
-  { id: 9, program_id: 2, name: 'Plank', description: 'Core stability', sets: 3, reps: '30-60s', rest_seconds: 60, order_index: 4 },
-  { id: 10, program_id: 2, name: 'Lunge', description: 'Unilateral leg strength', sets: 3, reps: '12-15', rest_seconds: 60, order_index: 5 },
-];
-
-const DEMO_PROGRAMS = [
-  { id: 1, title: 'Foundation Strength', description: 'Build your core foundation with compound movements.', level: 'beginner', duration: '4 weeks', sessions: 12, price: 0, image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop' },
-  { id: 2, title: 'Bodyweight Mastery', description: 'Master pushups, pullups, and bodyweight fundamentals.', level: 'beginner', duration: '6 weeks', sessions: 18, price: 0, image: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800&auto=format&fit=crop' },
-  { id: 3, title: 'Hypertrophy Accelerator', description: 'Progressive overload programming for lean muscle growth.', level: 'intermediate', duration: '8 weeks', sessions: 24, price: 29, image: 'https://images.unsplash.com/photo-1534258936925-c58bed479fcb?q=80&w=800&auto=format&fit=crop' },
-  { id: 4, title: 'Power & Explosiveness', description: 'Olympic lifts and plyometrics for explosive athletic performance.', level: 'intermediate', duration: '6 weeks', sessions: 18, price: 39, image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=800&auto=format&fit=crop' },
-  { id: 5, title: 'Elite Performance', description: 'Advanced periodization for experienced lifters.', level: 'advanced', duration: '12 weeks', sessions: 36, price: 79, image: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=800&auto=format&fit=crop' },
-  { id: 6, title: 'Certified Coach Program', description: 'Become a certified trainer under expert mentorship.', level: 'advanced', duration: '16 weeks', sessions: 48, price: 149, image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop' },
-];
-
 const levelColors: Record<string, { color: string; bg: string }> = {
   beginner: { color: '#00D26A', bg: 'rgba(0,210,106,0.1)' },
   intermediate: { color: '#FFB800', bg: 'rgba(255,184,0,0.1)' },
@@ -112,8 +90,8 @@ function ProgramCourse({ program, exercises }: { program: any; exercises: any[];
 }
 
 export default function MyCourses({ user, selectedProgramId }: { user: any; selectedProgramId?: string }) {
-  const [exercises, setExercises] = useState<any[]>(DEMO_EXERCISES);
-  const [programs, setPrograms] = useState<any[]>(DEMO_PROGRAMS);
+  const [exercises, setExercises] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<any[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
