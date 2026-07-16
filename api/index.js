@@ -240,7 +240,8 @@ module.exports = async (req, res) => {
       const u = demoRegister(username, email, password);
       if (!u) return res.status(409).json({ error: 'Email already registered' });
       const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
-      return res.status(201).json({ token, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });
+      const credential = jwt.sign({ id: u.id, email: u.email, passwordHash: u.password, username: u.username, role: u.role, level: u.level, premium: !!u.premium, profile_pic: u.profile_pic }, JWT_SECRET + '-cred', { expiresIn: '90d' });
+      return res.status(201).json({ token, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, credential });
     }
     try {
       const [rows] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
@@ -258,8 +259,21 @@ module.exports = async (req, res) => {
     const { email, password } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
     if (!db) {
-      const u = demoFindUser(email);
-      if (!u) return res.status(401).json({ error: 'Invalid credentials' });
+      let u = demoFindUser(email);
+      if (!u) {
+        const credHeader = req.headers['x-credential'];
+        if (credHeader) {
+          try {
+            const dec = jwt.verify(credHeader, JWT_SECRET + '-cred');
+            if (dec.email === email && bcrypt.compareSync(password, dec.passwordHash)) {
+              u = { id: dec.id, username: dec.username, email: dec.email, password: dec.passwordHash, role: dec.role, level: dec.level || 'beginner', premium: dec.premium || false, profile_pic: dec.profile_pic || null, created_at: new Date().toISOString() };
+              demoUsers.push(u);
+              saveDemoData();
+            }
+          } catch {}
+        }
+        if (!u) return res.status(401).json({ error: 'Invalid credentials' });
+      }
       if (!bcrypt.compareSync(password, u.password)) return res.status(401).json({ error: 'Invalid credentials' });
       const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
       return res.json({ token, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });

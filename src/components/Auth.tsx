@@ -22,15 +22,20 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
         ? { email, password }
         : { username: name, email, password };
 
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const storedCred = localStorage.getItem('credential');
+      if (storedCred && (isTrainerFlow || isLogin)) headers['x-credential'] = storedCred;
+
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
 
       localStorage.setItem('token', data.token);
+      if (data.credential) localStorage.setItem('credential', data.credential);
       onLogin(data.user);
     } catch (err: any) {
       setError(err.message);
