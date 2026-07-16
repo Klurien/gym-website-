@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Dumbbell, User, Medal, Users, Menu, X, ListTodo } from 'lucide-react';
+import { Dumbbell, User, Medal, Users, Menu, X, ListTodo, BookOpen } from 'lucide-react';
 import { cn } from './lib/utils';
 import Auth from './components/Auth';
 import PaymentModal from './components/PaymentModal';
 import TrainerDashboard from './screens/TrainerDashboard';
 import ClientDashboard from './screens/ClientDashboard';
 import Programs from './screens/Programs';
+import MyCourses from './screens/MyCourses';
 import AdminExercises from './screens/AdminExercises';
 import Profile from './screens/Profile';
 
-type Screen = 'dashboard' | 'programs' | 'exercises' | 'profile';
+type Screen = 'dashboard' | 'programs' | 'my-courses' | 'exercises' | 'profile';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('dashboard');
@@ -17,6 +18,7 @@ export default function App() {
   const [showMenu, setShowMenu] = useState(false);
   const [payment, setPayment] = useState<{ amount: number; programId?: string; programName?: string } | null>(null);
   const [exerciseProgramId, setExerciseProgramId] = useState<string | undefined>();
+  const [selectedProgramId, setSelectedProgramId] = useState<string | undefined>();
 
   useEffect(() => {
     const saved = localStorage.getItem('user');
@@ -45,6 +47,11 @@ export default function App() {
     localStorage.setItem('user', JSON.stringify(u));
   };
 
+  const handleViewCourse = (programId: string | number) => {
+    setSelectedProgramId(String(programId));
+    setScreen('my-courses');
+  };
+
   const handleShowExercises = (programId: string | number) => {
     setExerciseProgramId(String(programId));
     setScreen('exercises');
@@ -53,12 +60,20 @@ export default function App() {
   if (!user) return <Auth onLogin={handleLogin} />;
 
   const isTrainer = user.role === 'trainer' || user.role === 'admin';
-  const navItems = [
-    { key: 'dashboard' as Screen, icon: isTrainer ? Users : Medal, label: 'HOME' },
-    { key: 'programs' as Screen, icon: Dumbbell, label: 'PROGRAMS' },
-    { key: 'exercises' as Screen, icon: ListTodo, label: 'EXERCISES', adminOnly: true },
-    { key: 'profile' as Screen, icon: User, label: 'PROFILE' },
-  ];
+
+  const navItems = isTrainer
+    ? [
+        { key: 'dashboard' as Screen, icon: Users, label: 'HOME' },
+        { key: 'programs' as Screen, icon: Dumbbell, label: 'PROGRAMS' },
+        { key: 'exercises' as Screen, icon: ListTodo, label: 'EXERCISES' },
+        { key: 'profile' as Screen, icon: User, label: 'PROFILE' },
+      ]
+    : [
+        { key: 'dashboard' as Screen, icon: Medal, label: 'HOME' },
+        { key: 'programs' as Screen, icon: Dumbbell, label: 'PROGRAMS' },
+        { key: 'my-courses' as Screen, icon: BookOpen, label: 'MY COURSES' },
+        { key: 'profile' as Screen, icon: User, label: 'PROFILE' },
+      ];
 
   const showPayment = (amount: number, programId?: string, programName?: string) =>
     setPayment({ amount, programId, programName });
@@ -119,24 +134,22 @@ export default function App() {
               borderBottom: '1px solid var(--border)',
             }}
           >
-            {navItems
-              .filter(item => !item.adminOnly || isTrainer)
-              .map(item => (
-                <button
-                  key={item.key}
-                  onClick={() => { setScreen(item.key); setShowMenu(false); }}
-                  className={cn(
-                    'w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all',
-                    screen === item.key
-                      ? 'text-white'
-                      : 'text-[var(--text-3)] hover:text-white hover:bg-white/5'
-                  )}
-                  style={screen === item.key ? { background: 'var(--red-soft)', color: 'var(--red)' } : {}}
-                >
-                  <item.icon size={20} strokeWidth={2} />
-                  <span className="t-label" style={{ fontSize: '0.7rem' }}>{item.label}</span>
-                </button>
-              ))}
+            {navItems.map(item => (
+              <button
+                key={item.key}
+                onClick={() => { setScreen(item.key); setShowMenu(false); }}
+                className={cn(
+                  'w-full flex items-center gap-4 px-5 py-4 rounded-xl transition-all',
+                  screen === item.key
+                    ? 'text-white'
+                    : 'text-[var(--text-3)] hover:text-white hover:bg-white/5'
+                )}
+                style={screen === item.key ? { background: 'var(--red-soft)', color: 'var(--red)' } : {}}
+              >
+                <item.icon size={20} strokeWidth={2} />
+                <span className="t-label" style={{ fontSize: '0.7rem' }}>{item.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -155,49 +168,50 @@ export default function App() {
         {screen === 'dashboard' && (
           isTrainer
             ? <TrainerDashboard user={user} />
-            : <ClientDashboard user={user} onShowPayment={showPayment} />
+            : <ClientDashboard user={user} onShowPayment={showPayment} onViewCourse={handleViewCourse} />
         )}
         {screen === 'programs' && (
-          <Programs user={user} onShowPayment={showPayment} onShowExercises={handleShowExercises} />
+          <Programs user={user} onShowPayment={showPayment} onShowExercises={isTrainer ? handleShowExercises : undefined} />
+        )}
+        {screen === 'my-courses' && !isTrainer && (
+          <MyCourses user={user} selectedProgramId={selectedProgramId} />
         )}
         {screen === 'exercises' && isTrainer && (
-          <AdminExercises user={user} onShowPayment={showPayment} initialProgramId={exerciseProgramId} />
+          <AdminExercises user={user} initialProgramId={exerciseProgramId} />
         )}
         {screen === 'profile' && <Profile user={user} onLogout={handleLogout} />}
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 glass" style={{ borderTop: '1px solid var(--border)' }}>
         <div className="max-w-lg mx-auto flex justify-around items-center h-16 px-2">
-          {navItems
-            .filter(item => !item.adminOnly || isTrainer)
-            .map(item => (
-              <button
-                key={item.key}
-                onClick={() => setScreen(item.key)}
-                className="flex flex-col items-center gap-1 px-5 py-1 rounded-xl transition-all relative"
-              >
-                {screen === item.key && (
-                  <span
-                    className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
-                    style={{ background: 'var(--red)' }}
-                  />
-                )}
-                <item.icon
-                  size={22}
-                  strokeWidth={screen === item.key ? 2.5 : 1.5}
-                  style={{ color: screen === item.key ? 'var(--red)' : 'var(--text-3)' }}
-                />
+          {navItems.map(item => (
+            <button
+              key={item.key}
+              onClick={() => setScreen(item.key)}
+              className="flex flex-col items-center gap-1 px-5 py-1 rounded-xl transition-all relative"
+            >
+              {screen === item.key && (
                 <span
-                  className="t-label"
-                  style={{
-                    fontSize: '0.5rem',
-                    color: screen === item.key ? 'var(--red)' : 'var(--text-3)',
-                  }}
-                >
-                  {item.label}
-                </span>
-              </button>
-            ))}
+                  className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
+                  style={{ background: 'var(--red)' }}
+                />
+              )}
+              <item.icon
+                size={22}
+                strokeWidth={screen === item.key ? 2.5 : 1.5}
+                style={{ color: screen === item.key ? 'var(--red)' : 'var(--text-3)' }}
+              />
+              <span
+                className="t-label"
+                style={{
+                  fontSize: '0.5rem',
+                  color: screen === item.key ? 'var(--red)' : 'var(--text-3)',
+                }}
+              >
+                {item.label}
+              </span>
+            </button>
+          ))}
         </div>
       </nav>
     </div>

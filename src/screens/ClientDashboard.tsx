@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Medal, Shield, Flame, Crown, TrendingUp, Zap } from 'lucide-react';
+import { Medal, Shield, Flame, Crown, TrendingUp, Zap, BookOpen, ArrowRight } from 'lucide-react';
 import ProgressRing from '../components/ui/ProgressRing';
 
 const levelConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -20,9 +20,11 @@ const PROGRAMS = [
 export default function ClientDashboard({
   user,
   onShowPayment,
+  onViewCourse,
 }: {
   user: any;
   onShowPayment: (amount: number, programId?: string, name?: string) => void;
+  onViewCourse: (programId: string | number) => void;
 }) {
   const [payments, setPayments] = useState<any[]>([]);
 
@@ -34,8 +36,8 @@ export default function ClientDashboard({
       .catch(() => {});
   }, []);
 
-  const unlocked = PROGRAMS.filter(p => p.price === 0 || user.premium).length;
-  const pct = Math.round((unlocked / PROGRAMS.length) * 100);
+  const unlocked = PROGRAMS.filter(p => p.price === 0 || user.premium);
+  const pct = Math.round((unlocked.length / PROGRAMS.length) * 100);
   const lvl = levelConfig[user.level || 'beginner'];
   const greeting = () => {
     const h = new Date().getHours();
@@ -119,7 +121,7 @@ export default function ClientDashboard({
               {pct}%
             </p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-2)' }}>
-              {unlocked}/{PROGRAMS.length} programs
+              {unlocked.length}/{PROGRAMS.length} programs
             </p>
           </div>
         </div>
@@ -157,7 +159,7 @@ export default function ClientDashboard({
         <div className="flex items-center justify-between mb-5">
           <h3 className="t-h2 text-white">YOUR PROGRESS</h3>
           <span className="t-label" style={{ color: 'var(--text-3)' }}>
-            {unlocked} UNLOCKED
+            {unlocked.length} UNLOCKED
           </span>
         </div>
         <div className="flex items-center gap-5">
@@ -191,12 +193,57 @@ export default function ClientDashboard({
         </div>
       </div>
 
+      {/* Enrolled courses quick view */}
+      {unlocked.length > 0 && (
+        <div className="card space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="t-h2 text-white">MY COURSES</h3>
+            <button
+              onClick={() => onViewCourse(unlocked[0].id)}
+              className="text-xs font-bold tracking-wider flex items-center gap-1"
+              style={{ color: 'var(--red)' }}
+            >
+              VIEW ALL <ArrowRight size={12} />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {unlocked.slice(0, 3).map(p => (
+              <button
+                key={p.id}
+                onClick={() => onViewCourse(p.id)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl transition-all hover:translate-x-1 text-left"
+                style={{ background: 'var(--surface-2)' }}
+              >
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: 'var(--red-soft)' }}
+                >
+                  <BookOpen size={18} style={{ color: 'var(--red)' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{p.title}</p>
+                  <span
+                    className="badge mt-1"
+                    style={{
+                      background: levelConfig[p.level]?.bg || 'var(--surface-2)',
+                      color: levelConfig[p.level]?.color || 'var(--text-3)',
+                    }}
+                  >
+                    {p.level}
+                  </span>
+                </div>
+                <ArrowRight size={16} style={{ color: 'var(--text-3)' }} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!user.premium && (
         <div
           className="relative overflow-hidden rounded-[20px] p-6 cursor-pointer"
           style={{
-            background:
-              'linear-gradient(135deg, rgba(255,36,66,0.15), rgba(255,184,0,0.08))',
+            background: 'linear-gradient(135deg, rgba(255,36,66,0.15), rgba(255,184,0,0.08))',
             border: '1px solid rgba(255,36,66,0.25)',
           }}
         >
@@ -248,8 +295,7 @@ export default function ClientDashboard({
                 <span
                   className="font-anton text-lg"
                   style={{
-                    color:
-                      p.status === 'completed' ? 'var(--green)' : 'var(--amber)',
+                    color: p.status === 'completed' ? 'var(--green)' : 'var(--amber)',
                   }}
                 >
                   KES {p.amount}

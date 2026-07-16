@@ -33,11 +33,9 @@ const LEVEL_COLORS: Record<string, { bg: string; color: string; border: string }
 
 export default function AdminExercises({
   user,
-  onShowPayment,
   initialProgramId,
 }: {
   user: any;
-  onShowPayment: (amount: number, programId?: string, name?: string) => void;
   initialProgramId?: string;
 }) {
   const [exercises, setExercises] = useState<any[]>(DEMO_EXERCISES);

@@ -7,7 +7,6 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'trainee' | 'trainer'>('trainee');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +18,7 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
       const url = isLogin ? '/api/login' : '/api/register';
       const body = isLogin
         ? { email, password }
-        : { username: name, email, password, role };
+        : { username: name, email, password, role: 'trainee' };
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,47 +120,21 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <>
-                <div className="relative">
-                  <User
-                    className="absolute left-4 top-1/2 -translate-y-1/2"
-                    size={18}
-                    style={{ color: 'var(--text-3)' }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="FULL NAME"
-                    required
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="field pl-12"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {(['trainee', 'trainer'] as const).map(r => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRole(r)}
-                      className="py-3.5 rounded-xl text-xs font-bold tracking-widest transition-all border-2"
-                      style={
-                        role === r
-                          ? {
-                              borderColor: 'var(--red)',
-                              background: 'var(--red-soft)',
-                              color: 'var(--red)',
-                            }
-                          : {
-                              borderColor: 'var(--border)',
-                              color: 'var(--text-3)',
-                            }
-                      }
-                    >
-                      {r === 'trainee' ? "I'M A CLIENT" : "I'M A TRAINER"}
-                    </button>
-                  ))}
-                </div>
-              </>
+              <div className="relative">
+                <User
+                  className="absolute left-4 top-1/2 -translate-y-1/2"
+                  size={18}
+                  style={{ color: 'var(--text-3)' }}
+                />
+                <input
+                  type="text"
+                  placeholder="FULL NAME"
+                  required
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="field pl-12"
+                />
+              </div>
             )}
 
             <div className="relative">
@@ -218,6 +191,16 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
               {!loading && <ArrowRight size={16} strokeWidth={3} />}
             </button>
           </form>
+
+          {isLogin && (
+            <p
+              className="text-center t-label cursor-pointer hover:text-[var(--text-2)] transition-colors"
+              style={{ color: 'var(--text-3)' }}
+              onClick={() => { setEmail('admin@comrades.com'); setPassword('admin123'); }}
+            >
+              Trainer? Sign in with admin credentials
+            </p>
+          )}
         </div>
 
         <p
