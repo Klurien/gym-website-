@@ -82,14 +82,16 @@ async function mpesaQuery(checkoutRequestId) {
 }
 
 // ── In-memory demo store (used when no DB) ──
-const demoUsers = [];
+const demoIdSeq = 100;
+const demoUsers = [
+  { id: 1, username: 'Admin', email: 'admin@comrades.com', password: bcrypt.hashSync('admin123', 10), role: 'admin', level: 'advanced', premium: true, profile_pic: null, created_at: new Date().toISOString() },
+];
 
-function demoRegister(username, email, password, role) {
+function demoRegister(username, email, password) {
   if (demoUsers.find(u => u.email === email)) return null;
   const hashed = bcrypt.hashSync(password, 10);
-  const id = demoUsers.length + 1;
-  const userRole = demoUsers.length === 0 ? 'admin' : (role === 'trainer' ? 'trainer' : 'trainee');
-  const u = { id, username, email, password: hashed, role: userRole, level: 'beginner', premium: false, profile_pic: null, created_at: new Date().toISOString() };
+  const id = demoUsers.reduce((max, u) => Math.max(max, u.id), 0) + 1;
+  const u = { id, username, email, password: hashed, role: 'trainee', level: 'beginner', premium: false, profile_pic: null, created_at: new Date().toISOString() };
   demoUsers.push(u);
   return u;
 }
@@ -188,7 +190,7 @@ module.exports = async (req, res) => {
     if (!db) {
       const existing = demoFindUser(email);
       if (existing) return res.status(409).json({ error: 'Email already registered' });
-      const u = demoRegister(username, email, password, role);
+      const u = demoRegister(username, email, password);
       if (!u) return res.status(409).json({ error: 'Email already registered' });
       return res.status(201).json({ message: 'Registered', user: u });
     }
@@ -196,9 +198,7 @@ module.exports = async (req, res) => {
       const [rows] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
       if (rows.length) return res.status(409).json({ error: 'Email already registered' });
       const hashed = await bcrypt.hash(password, 10);
-      const [[count]] = await db.query('SELECT COUNT(*) as c FROM users');
-      const userRole = count.c === 0 ? 'admin' : (role === 'trainer' ? 'trainer' : 'trainee');
-      await db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashed, userRole]);
+      await db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashed, 'trainee']);
       return res.status(201).json({ message: 'Registered' });
     } catch (e) { return res.status(500).json({ error: 'Registration failed' }); }
   }
