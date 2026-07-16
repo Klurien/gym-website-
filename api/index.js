@@ -108,6 +108,8 @@ const adminPw = bcrypt.hashSync('admin123', 10);
 const demoUsers = saved?.users?.length ? saved.users : [
   { id: 1, username: 'Admin', email: 'admin@comrades.com', password: adminPw, role: 'admin', level: 'advanced', premium: true, profile_pic: null, created_at: new Date().toISOString() },
 ];
+console.log('[INIT] Demo users loaded:', JSON.stringify(demoUsers.map(u => ({ id: u.id, email: u.email, role: u.role, hasPw: !!u.password }))));
+console.log('[INIT] Temp file exists:', fs.existsSync(DEMO_DATA_PATH));
 
 function demoRegister(username, email, password) {
   if (demoUsers.find(u => u.email === email)) return null;
@@ -259,21 +261,28 @@ module.exports = async (req, res) => {
     const { email, password } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
     if (!db) {
+      console.log('[LOGIN DEMO] body email:', email, 'password len:', password?.length);
+      console.log('[LOGIN DEMO] demoUsers count:', demoUsers.length, 'users:', demoUsers.map(u => u.email));
       let u = demoFindUser(email);
+      console.log('[LOGIN DEMO] demoFindUser result:', u ? 'found' : 'not found', 'for email:', email);
       if (!u) {
         const credHeader = req.headers['x-credential'];
+        console.log('[LOGIN DEMO] x-credential present:', !!credHeader);
         if (credHeader) {
           try {
             const dec = jwt.verify(credHeader, JWT_SECRET + '-cred');
+            console.log('[LOGIN DEMO] credential decoded email:', dec.email);
             if (dec.email === email && bcrypt.compareSync(password, dec.passwordHash)) {
               u = { id: dec.id, username: dec.username, email: dec.email, password: dec.passwordHash, role: dec.role, level: dec.level || 'beginner', premium: dec.premium || false, profile_pic: dec.profile_pic || null, created_at: new Date().toISOString() };
               demoUsers.push(u);
               saveDemoData();
+              console.log('[LOGIN DEMO] credential recovery succeeded, user reconstructed');
             }
-          } catch {}
+          } catch (e) { console.log('[LOGIN DEMO] credential verify failed:', e.message); }
         }
         if (!u) return res.status(401).json({ error: 'Invalid credentials' });
       }
+      console.log('[LOGIN DEMO] password match:', bcrypt.compareSync(password, u.password));
       if (!bcrypt.compareSync(password, u.password)) return res.status(401).json({ error: 'Invalid credentials' });
       const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
       return res.json({ token, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });
