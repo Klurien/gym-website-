@@ -168,7 +168,7 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
                   required
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="field pl-12"
+                  className="field field-icon"
                 />
               </div>
             )}
@@ -185,7 +185,7 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="field pl-12"
+                className="field field-icon"
               />
             </div>
 
@@ -201,7 +201,7 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="field pl-12"
+                className="field field-icon"
                 autoComplete={isTrainer ? 'current-password' : undefined}
               />
             </div>

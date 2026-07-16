@@ -163,9 +163,13 @@ body {
   border-color: var(--red);
 }
 
-:where(.field) {
+input.field, select.field, textarea.field {
   padding-left: 16px;
   padding-right: 16px;
+}
+
+.field-icon {
+  padding-left: 5rem !important;
 }
 
 .field::placeholder {

@@ -198,7 +198,7 @@ export default function ExerciseForm({
                   style={{ color: 'var(--text-3)' }}
                 />
                 <input
-                  className="field pl-10"
+                  className="field field-icon"
                   value={form.video_url}
                   onChange={e => setForm(f => ({ ...f, video_url: e.target.value }))}
                   placeholder="https://youtube.com/..."
@@ -213,7 +213,7 @@ export default function ExerciseForm({
                   style={{ color: 'var(--text-3)' }}
                 />
                 <input
-                  className="field pl-10"
+                  className="field field-icon"
                   value={form.image_url}
                   onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
                   placeholder="https://..."
