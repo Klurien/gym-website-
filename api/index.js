@@ -1,6 +1,7 @@
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'comrades-gym-secret-2026';
 const IS_DEMO = !process.env.MPESA_CONSUMER_KEY;
@@ -82,9 +83,30 @@ async function mpesaQuery(checkoutRequestId) {
 }
 
 // ── In-memory demo store (used when no DB) ──
-const demoPayments = [];
-const demoUsers = [
-  { id: 1, username: 'Admin', email: 'admin@comrades.com', password: bcrypt.hashSync('admin123', 10), role: 'admin', level: 'advanced', premium: true, profile_pic: null, created_at: new Date().toISOString() },
+const DEMO_DATA_PATH = '/tmp/demo-data.json';
+
+function loadDemoData() {
+  try {
+    if (fs.existsSync(DEMO_DATA_PATH)) {
+      return JSON.parse(fs.readFileSync(DEMO_DATA_PATH, 'utf-8'));
+    }
+  } catch {}
+  return null;
+}
+
+function saveDemoData() {
+  try {
+    const dir = '/tmp';
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(DEMO_DATA_PATH, JSON.stringify({ users: demoUsers, payments: demoPayments }), 'utf-8');
+  } catch {}
+}
+
+const saved = loadDemoData();
+const demoPayments = saved?.payments || [];
+const adminPw = bcrypt.hashSync('admin123', 10);
+const demoUsers = saved?.users?.length ? saved.users : [
+  { id: 1, username: 'Admin', email: 'admin@comrades.com', password: adminPw, role: 'admin', level: 'advanced', premium: true, profile_pic: null, created_at: new Date().toISOString() },
 ];
 
 function demoRegister(username, email, password) {
@@ -93,6 +115,7 @@ function demoRegister(username, email, password) {
   const id = demoUsers.reduce((max, u) => Math.max(max, u.id), 0) + 1;
   const u = { id, username, email, password: hashed, role: 'trainee', level: 'beginner', premium: false, profile_pic: null, created_at: new Date().toISOString() };
   demoUsers.push(u);
+  saveDemoData();
   return u;
 }
 
@@ -193,6 +216,7 @@ module.exports = async (req, res) => {
         if (programId) {
           demoPayments.push({ id: Date.now(), user_id: u.id, phone: 'DEMO', amount: 0, program_id: programId, checkout_id: `demo_${Date.now()}`, status: 'completed', created_at: new Date().toISOString(), username: u.username });
         }
+        saveDemoData();
       }
       return res.json({ success: true, demo: true });
     }
@@ -215,14 +239,17 @@ module.exports = async (req, res) => {
       if (existing) return res.status(409).json({ error: 'Email already registered' });
       const u = demoRegister(username, email, password);
       if (!u) return res.status(409).json({ error: 'Email already registered' });
-      return res.status(201).json({ message: 'Registered', user: u });
+      const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
+      return res.status(201).json({ token, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });
     }
     try {
       const [rows] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
       if (rows.length) return res.status(409).json({ error: 'Email already registered' });
       const hashed = await bcrypt.hash(password, 10);
       await db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashed, 'trainee']);
-      return res.status(201).json({ message: 'Registered' });
+      const [[newUser]] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+      const token = jwt.sign({ id: newUser.id, role: newUser.role, username: newUser.username, profile_pic: newUser.profile_pic, level: newUser.level || 'beginner', premium: !!newUser.premium }, JWT_SECRET, { expiresIn: '7d' });
+      return res.status(201).json({ token, user: { id: newUser.id, username: newUser.username, role: newUser.role, email: newUser.email, profile_pic: newUser.profile_pic, level: newUser.level || 'beginner', premium: !!newUser.premium } });
     } catch (e) { return res.status(500).json({ error: 'Registration failed' }); }
   }
 
@@ -268,7 +295,7 @@ module.exports = async (req, res) => {
       if (!profile_pic) return res.status(400).json({ error: 'No data' });
       if (!db) {
         const u = demoGetUser(user.id);
-        if (u) u.profile_pic = profile_pic;
+        if (u) { u.profile_pic = profile_pic; saveDemoData(); }
         return res.json({ message: 'Updated (demo)' });
       }
       await db.query('UPDATE users SET profile_pic = ? WHERE id = ?', [profile_pic, user.id]);
