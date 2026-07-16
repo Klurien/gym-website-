@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { Dumbbell, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Dumbbell, Mail, Lock, User, ArrowRight, KeyRound, ShieldCheck } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
+  const [mode, setMode] = useState<'client' | 'trainer'>('client');
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,10 +16,12 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
     setError('');
     setLoading(true);
     try {
-      const url = isLogin ? '/api/login' : '/api/register';
-      const body = isLogin
+      const isTrainerFlow = mode === 'trainer';
+      const url = (isTrainerFlow || isLogin) ? '/api/login' : '/api/register';
+      const body = (isTrainerFlow || isLogin)
         ? { email, password }
-        : { username: name, email, password, role: 'trainee' };
+        : { username: name, email, password };
+
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -27,26 +30,27 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
 
-      if (isLogin) {
-        localStorage.setItem('token', data.token);
-        onLogin(data.user);
-      } else {
-        const lr = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        const ld = await lr.json();
-        if (lr.ok) {
-          localStorage.setItem('token', ld.token);
-          onLogin(ld.user);
-        }
-      }
+      localStorage.setItem('token', data.token);
+      onLogin(data.user);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const isTrainer = mode === 'trainer';
+  const accent = isTrainer ? 'var(--amber)' : 'var(--red)';
+  const accentSoft = isTrainer ? 'var(--amber-soft)' : 'var(--red-soft)';
+  const shadowAccent = isTrainer ? '0 8px 32px rgba(255,184,0,0.25)' : 'var(--shadow-red)';
+
+  const switchMode = (m: 'client' | 'trainer') => {
+    setMode(m);
+    setError('');
+    setEmail(m === 'trainer' ? 'admin@comrades.com' : '');
+    setPassword(m === 'trainer' ? 'admin123' : '');
+    setName('');
+    setIsLogin(true);
   };
 
   return (
@@ -58,13 +62,13 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
         <div
           className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(255,36,66,0.08) 0%, transparent 70%)',
+            background: `radial-gradient(circle, ${accent}14 0%, transparent 70%)`,
           }}
         />
         <div
           className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(255,184,0,0.05) 0%, transparent 70%)',
+            background: `radial-gradient(circle, ${isTrainer ? 'rgba(255,184,0,0.05)' : 'rgba(255,36,66,0.05)'} 0%, transparent 70%)`,
           }}
         />
       </div>
@@ -73,18 +77,24 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
         <div className="text-center space-y-3">
           <div
             className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-2"
-            style={{ background: 'var(--red)', boxShadow: 'var(--shadow-red)' }}
+            style={{ background: accent, boxShadow: shadowAccent }}
           >
-            <Dumbbell size={32} className="text-white" strokeWidth={2.5} />
+            {isTrainer
+              ? <ShieldCheck size={32} className="text-white" strokeWidth={2} />
+              : <Dumbbell size={32} className="text-white" strokeWidth={2.5} />}
           </div>
           <div>
-            <h1 className="t-display text-white">COMRADES</h1>
-            <h1 className="t-display" style={{ color: 'var(--red)' }}>
-              GYM
+            <h1 className="t-display text-white">
+              {isTrainer ? 'TRAINER' : 'COMRADES'}
+            </h1>
+            <h1 className="t-display" style={{ color: accent }}>
+              {isTrainer ? 'PORTAL' : 'GYM'}
             </h1>
           </div>
           <p className="t-label mt-4" style={{ color: 'var(--text-3)' }}>
-            {isLogin ? 'Welcome back, athlete' : 'Begin your legacy'}
+            {isTrainer
+              ? 'Authorized personnel only'
+              : isLogin ? 'Welcome back, athlete' : 'Begin your legacy'}
           </p>
         </div>
 
@@ -97,29 +107,50 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
           }}
         >
           <div className="flex rounded-xl p-1" style={{ background: 'var(--surface-2)' }}>
-            {['LOGIN', 'REGISTER'].map((tab, i) => (
+            {(['trainer', 'client'] as const).map(tab => (
               <button
                 key={tab}
-                onClick={() => setIsLogin(i === 0)}
+                onClick={() => switchMode(tab)}
                 className={cn(
                   'flex-1 py-3.5 rounded-lg text-xs font-bold tracking-widest transition-all min-h-[48px]',
-                  (i === 0 ? isLogin : !isLogin)
-                    ? 'text-white shadow-lg'
-                    : 'text-[var(--text-3)] hover:text-[var(--text-2)]'
+                  mode === tab ? 'text-white shadow-lg' : 'text-[var(--text-3)] hover:text-[var(--text-2)]'
                 )}
-                style={
-                  (i === 0 ? isLogin : !isLogin)
-                    ? { background: 'var(--surface)', color: 'var(--red)' }
-                    : {}
-                }
+                style={mode === tab ? { background: 'var(--surface)', color: accent } : {}}
               >
-                {tab}
+                <span className="flex items-center justify-center gap-2">
+                  {tab === 'trainer' ? <KeyRound size={14} /> : <User size={14} />}
+                  {tab === 'trainer' ? 'TRAINER' : 'CLIENT'}
+                </span>
               </button>
             ))}
           </div>
 
+          {!isTrainer && (
+            <div className="flex rounded-xl p-1" style={{ background: 'var(--surface-2)' }}>
+              {['LOGIN', 'REGISTER'].map((tab, i) => (
+                <button
+                  key={tab}
+                  onClick={() => setIsLogin(i === 0)}
+                  className={cn(
+                    'flex-1 py-3.5 rounded-lg text-xs font-bold tracking-widest transition-all min-h-[48px]',
+                    (i === 0 ? isLogin : !isLogin)
+                      ? 'text-white shadow-lg'
+                      : 'text-[var(--text-3)] hover:text-[var(--text-2)]'
+                  )}
+                  style={
+                    (i === 0 ? isLogin : !isLogin)
+                      ? { background: 'var(--surface)', color: accent }
+                      : {}
+                  }
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
+            {!isTrainer && !isLogin && (
               <div className="relative">
                 <User
                   className="absolute left-4 top-1/2 -translate-y-1/2"
@@ -166,13 +197,14 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="field pl-12"
+                autoComplete={isTrainer ? 'current-password' : undefined}
               />
             </div>
 
             {error && (
               <div
                 className="text-center py-3 rounded-xl text-xs font-bold tracking-wider"
-                style={{ background: 'var(--red-soft)', color: 'var(--red)' }}
+                style={{ background: accentSoft, color: accent }}
               >
                 {error.toUpperCase()}
               </div>
@@ -182,25 +214,26 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
               type="submit"
               disabled={loading}
               className="btn w-full py-4 justify-center disabled:opacity-50"
+              style={{ background: accent, color: '#fff', boxShadow: shadowAccent }}
             >
               {loading
                 ? 'PROCESSING...'
-                : isLogin
-                  ? 'ENTER THE GYM'
-                  : 'JOIN COMRADES'}
+                : isTrainer
+                  ? 'ENTER PORTAL'
+                  : isLogin
+                    ? 'ENTER THE GYM'
+                    : 'JOIN COMRADES'}
               {!loading && <ArrowRight size={16} strokeWidth={3} />}
             </button>
           </form>
 
-          {isLogin && (
-            <button
-              type="button"
-              className="w-full text-center t-label py-3 cursor-pointer hover:text-[var(--text-2)] transition-colors rounded-xl"
-              style={{ color: 'var(--text-3)' }}
-              onClick={() => { setEmail('admin@comrades.com'); setPassword('admin123'); }}
+          {isTrainer && (
+            <p
+              className="text-center t-label"
+              style={{ color: 'var(--text-3)', fontSize: '0.5rem' }}
             >
-              Trainer? Sign in with admin credentials
-            </button>
+              Pre-seeded admin account &mdash; no registration required
+            </p>
           )}
         </div>
 
@@ -208,7 +241,7 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
           className="text-center t-label"
           style={{ color: 'var(--text-3)', fontSize: '0.55rem' }}
         >
-          Forge Your Legacy
+          {isTrainer ? 'Manage Your Gym' : 'Forge Your Legacy'}
         </p>
       </div>
     </div>

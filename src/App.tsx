@@ -59,7 +59,7 @@ export default function App() {
 
   if (!user) return <Auth onLogin={handleLogin} />;
 
-  const isTrainer = user.role === 'trainer' || user.role === 'admin';
+  const isTrainer = user.role === 'admin';
 
   const navItems = isTrainer
     ? [

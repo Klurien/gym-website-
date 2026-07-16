@@ -82,7 +82,7 @@ async function mpesaQuery(checkoutRequestId) {
 }
 
 // ── In-memory demo store (used when no DB) ──
-const demoIdSeq = 100;
+const demoPayments = [];
 const demoUsers = [
   { id: 1, username: 'Admin', email: 'admin@comrades.com', password: bcrypt.hashSync('admin123', 10), role: 'admin', level: 'advanced', premium: true, profile_pic: null, created_at: new Date().toISOString() },
 ];
@@ -104,6 +104,20 @@ function demoGetUser(id) {
   return demoUsers.find(u => u.id === id);
 }
 
+async function seedAdmin(db) {
+  try {
+    const [rows] = await db.query('SELECT id FROM users WHERE role = ?', ['admin']);
+    if (!rows.length) {
+      const hashed = bcrypt.hashSync('admin123', 10);
+      await db.query('INSERT INTO users (username, email, password, role, level, premium) VALUES (?, ?, ?, ?, ?, ?)',
+        ['Admin', 'admin@comrades.com', hashed, 'admin', 'advanced', true]);
+      console.log('[SEED] Default admin account created');
+    }
+  } catch (e) {
+    console.log('[SEED] Could not seed admin:', e.message);
+  }
+}
+
 // ── Auth middleware ──
 function getUser(req) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -119,6 +133,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const db = getPool();
+  if (db) seedAdmin(db);
   const url = (req.url || '/').split('?')[0];
   const parts = url.split('/').filter(Boolean);
   const path = parts[0] === 'api' ? parts[1] : parts[0];
@@ -169,15 +184,23 @@ module.exports = async (req, res) => {
 
   // ── M-Pesa demo unlock ──
   if (path === 'mpesa' && sub === 'demo-unlock' && req.method === 'POST') {
-    const user = getUser(req);
-    if (user?.id && db) {
-      const { programId } = req.body || {};
-      await db.query('UPDATE users SET premium = 1 WHERE id = ?', [user.id]);
-      if (programId) {
-        try { await db.query('UPDATE users SET level = (SELECT level FROM programs WHERE id = ?) WHERE id = ?', [programId, user.id]); } catch {}
-        try { await db.query('INSERT INTO payments (user_id, phone, amount, program_id, checkout_id, status) VALUES (?, ?, ?, ?, ?, ?)', [user.id, 'DEMO', 0, programId, `demo_${Date.now()}`, 'completed']); } catch {}
+    const decoded = getUser(req);
+    const { programId } = req.body || {};
+    if (!db) {
+      const u = demoGetUser(decoded?.id);
+      if (u) {
+        u.premium = true;
+        if (programId) {
+          demoPayments.push({ id: Date.now(), user_id: u.id, phone: 'DEMO', amount: 0, program_id: programId, checkout_id: `demo_${Date.now()}`, status: 'completed', created_at: new Date().toISOString(), username: u.username });
+        }
       }
       return res.json({ success: true, demo: true });
+    }
+    if (decoded?.id) {
+      await db.query('UPDATE users SET premium = 1 WHERE id = ?', [decoded.id]);
+      if (programId) {
+        try { await db.query('INSERT INTO payments (user_id, phone, amount, program_id, checkout_id, status) VALUES (?, ?, ?, ?, ?, ?)', [decoded.id, 'DEMO', 0, programId, `demo_${Date.now()}`, 'completed']); } catch {}
+      }
     }
     return res.json({ success: true, demo: true });
   }
@@ -231,12 +254,23 @@ module.exports = async (req, res) => {
   // ── Profile ──
   if (path === 'profile') {
     if (req.method === 'GET') {
+      if (!db) {
+        const u = demoGetUser(user.id);
+        if (!u) return res.status(404).json({ error: 'Not found' });
+        const { password, ...safe } = u;
+        return res.json({ user: safe });
+      }
       const [rows] = await db.query('SELECT id, username, email, role, profile_pic, level, premium, created_at FROM users WHERE id = ?', [user.id]);
       return rows[0] ? res.json({ user: rows[0] }) : res.status(404).json({ error: 'Not found' });
     }
     if (req.method === 'POST') {
       const { profile_pic } = req.body || {};
       if (!profile_pic) return res.status(400).json({ error: 'No data' });
+      if (!db) {
+        const u = demoGetUser(user.id);
+        if (u) u.profile_pic = profile_pic;
+        return res.json({ message: 'Updated (demo)' });
+      }
       await db.query('UPDATE users SET profile_pic = ? WHERE id = ?', [profile_pic, user.id]);
       return res.json({ message: 'Updated' });
     }
@@ -309,14 +343,19 @@ module.exports = async (req, res) => {
 
   // ── Admin: users list ──
   if (path === 'admin' && sub === 'users' && req.method === 'GET') {
-    if (user.role !== 'admin' && user.role !== 'trainer') return res.status(403).json({ error: 'Forbidden' });
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    if (!db) {
+      const safe = demoUsers.map(({ password, ...u }) => u);
+      return res.json(safe);
+    }
     const [rows] = await db.query('SELECT id, username, email, role, profile_pic, level, premium, last_seen, created_at FROM users ORDER BY last_seen DESC');
     return res.json(rows);
   }
 
   // ── Admin: payments list ──
   if (path === 'admin' && sub === 'payments' && req.method === 'GET') {
-    if (user.role !== 'admin' && user.role !== 'trainer') return res.status(403).json({ error: 'Forbidden' });
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    if (!db) return res.json(demoPayments);
     const [rows] = await db.query(`
       SELECT p.*, u.username FROM payments p
       LEFT JOIN users u ON p.user_id = u.id
@@ -327,7 +366,13 @@ module.exports = async (req, res) => {
 
   // ── Admin: stats ──
   if (path === 'admin' && sub === 'stats' && req.method === 'GET') {
-    if (user.role !== 'admin' && user.role !== 'trainer') return res.status(403).json({ error: 'Forbidden' });
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    if (!db) {
+      const totalClients = demoUsers.filter(u => u.role === 'trainee').length;
+      const completedPayments = demoPayments.filter(p => p.status === 'completed');
+      const totalRevenue = completedPayments.reduce((s, p) => s + (p.amount || 0), 0);
+      return res.json({ totalClients, totalRevenue, totalPayments: completedPayments.length, recentPayments: [], programStats: [] });
+    }
     const [[userCount]] = await db.query('SELECT COUNT(*) as c FROM users WHERE role = ?', ['trainee']);
     const [[revenue]] = await db.query('SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE status = ?', ['completed']);
     const [[payments]] = await db.query('SELECT COUNT(*) as c FROM payments WHERE status = ?', ['completed']);
@@ -347,12 +392,14 @@ module.exports = async (req, res) => {
 
   // ── Client: my payments ──
   if (path === 'my-payments' && req.method === 'GET') {
+    if (!db) return res.json(demoPayments.filter(p => p.user_id === user.id));
     const [rows] = await db.query('SELECT p.*, pr.title as program_name FROM payments p LEFT JOIN programs pr ON p.program_id = pr.id WHERE p.user_id = ? ORDER BY p.created_at DESC', [user.id]);
     return res.json(rows);
   }
 
   // ── Heartbeat ──
   if (path === 'heartbeat' && req.method === 'POST') {
+    if (!db) return res.json({ success: true });
     await db.query('UPDATE users SET last_seen = NOW() WHERE id = ?', [user.id]);
     return res.json({ success: true });
   }
