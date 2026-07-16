@@ -143,7 +143,7 @@ export default function AdminExercises({
   };
 
   return (
-    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+    <div className="px-4 sm:px-6 lg:px-8 pt-20 pb-32 space-y-6 animate-fade-in">
       <header className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="t-h1 text-white">EXERCISES</h1>
@@ -215,7 +215,7 @@ className="px-5 py-3 rounded-full text-xs font-bold tracking-wider whitespace-no
         />
       )}
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sorted.map(exercise => {
           const program = programs.find(
             p => String(p.id) === String(exercise.program_id)

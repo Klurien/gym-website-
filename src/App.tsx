@@ -84,7 +84,7 @@ export default function App() {
         className="fixed top-0 left-0 right-0 z-50 glass"
         style={{ borderBottom: '1px solid var(--border)' }}
       >
-        <div className="max-w-lg mx-auto px-3 sm:px-5 h-14 sm:h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
           <button
             onClick={() => setShowMenu(!showMenu)}
             className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors shrink-0"
@@ -164,7 +164,7 @@ export default function App() {
         />
       )}
 
-      <main className="max-w-lg mx-auto min-h-screen">
+      <main className="max-w-5xl mx-auto min-h-screen px-0">
         {screen === 'dashboard' && (
           isTrainer
             ? <TrainerDashboard user={user} />
@@ -183,7 +183,7 @@ export default function App() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 glass" style={{ borderTop: '1px solid var(--border)' }}>
-        <div className="max-w-lg mx-auto flex justify-around items-center h-16 sm:h-[72px] px-2 sm:px-5">
+        <div className="max-w-5xl mx-auto flex justify-around items-center h-16 sm:h-[72px] px-4 sm:px-6 lg:px-8">
           {navItems.map(item => (
             <button
               key={item.key}

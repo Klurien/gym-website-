@@ -135,7 +135,7 @@ export default function MyCourses({ user, selectedProgramId }: { user: any; sele
     : unlocked;
 
   return (
-    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+    <div className="px-4 sm:px-6 lg:px-8 pt-20 pb-32 space-y-6 animate-fade-in">
       <header>
         <h1 className="t-h1 text-white">MY COURSES</h1>
         <p className="text-sm mt-2" style={{ color: 'var(--text-2)' }}>
@@ -157,7 +157,7 @@ export default function MyCourses({ user, selectedProgramId }: { user: any; sele
           </p>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {displayPrograms.map(program => {
             const progExercises = exercises.filter(e => String(e.program_id) === String(program.id));
             return <ProgramCourse key={String(program.id)} program={program} exercises={progExercises} />;

@@ -45,7 +45,7 @@ export default function ClientDashboard({
   };
 
   return (
-    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+    <div className="px-4 sm:px-6 lg:px-8 pt-20 pb-32 space-y-6 animate-fade-in">
       <header
         className="relative overflow-hidden rounded-[24px] p-6"
         style={{
@@ -96,7 +96,7 @@ export default function ClientDashboard({
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
         <div
           className="rounded-[20px] p-5 relative overflow-hidden"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
@@ -206,8 +206,8 @@ export default function ClientDashboard({
               VIEW ALL <ArrowRight size={12} />
             </button>
           </div>
-          <div className="space-y-2">
-            {unlocked.slice(0, 3).map(p => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {unlocked.slice(0, 4).map(p => (
               <button
                 key={p.id}
                 onClick={() => onViewCourse(p.id)}

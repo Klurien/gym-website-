@@ -327,7 +327,7 @@ export default function Programs({
   );
 
   return (
-    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+    <div className="px-4 sm:px-6 lg:px-8 pt-20 pb-32 space-y-6 animate-fade-in">
       <header className="flex items-center justify-between">
         <div>
           <h1 className="t-h1 text-white">PROGRAMS</h1>
@@ -365,7 +365,7 @@ export default function Programs({
 
       {creating && <CreateForm />}
 
-      <div className="space-y-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filtered.map(program => {
           const isUnlocked = program.price === 0 || user.premium || isAdmin;
           const isEditing = editingId === program.id;

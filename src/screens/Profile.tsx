@@ -28,7 +28,7 @@ export default function Profile({ user, onLogout }: { user: any; onLogout: () =>
   ];
 
   return (
-    <div className="px-5 pt-20 pb-32 space-y-8 animate-fade-in">
+    <div className="px-4 sm:px-6 lg:px-8 pt-20 pb-32 space-y-8 animate-fade-in max-w-lg mx-auto">
       <div className="flex flex-col items-center text-center space-y-4">
         <div className="relative w-28 h-28">
           <div

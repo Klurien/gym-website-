@@ -34,7 +34,7 @@ export default function TrainerDashboard({ user }: { user: any }) {
   }
 
   return (
-    <div className="px-5 pt-20 pb-32 space-y-6 animate-fade-in">
+    <div className="px-4 sm:px-6 lg:px-8 pt-20 pb-32 space-y-6 animate-fade-in">
       <header
         className="relative overflow-hidden rounded-[24px] p-6"
         style={{
@@ -66,7 +66,7 @@ export default function TrainerDashboard({ user }: { user: any }) {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 xs:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-3">
         <StatCard
           label="CLIENTS"
           value={stats?.totalClients || 0}
