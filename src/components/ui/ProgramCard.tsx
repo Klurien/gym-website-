@@ -10,6 +10,7 @@ export default function ProgramCard({
   program,
   isUnlocked,
   onUnlock,
+  onStart,
 }: {
   program: {
     id: string | number;
@@ -23,6 +24,7 @@ export default function ProgramCard({
   };
   isUnlocked: boolean;
   onUnlock?: () => void;
+  onStart?: () => void;
 }) {
   const cfg = levelColors[program.level] || levelColors.beginner;
 
@@ -109,7 +111,7 @@ export default function ProgramCard({
             </span>
           )}
           {isUnlocked ? (
-            <button className="btn py-3 px-5">
+            <button onClick={onStart} className="btn py-3 px-5">
               START
             </button>
           ) : (

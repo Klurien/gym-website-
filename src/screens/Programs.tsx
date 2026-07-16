@@ -33,10 +33,12 @@ export default function Programs({
   user,
   onShowPayment,
   onShowExercises,
+  onStartCourse,
 }: {
   user: any;
   onShowPayment: (amount: number, programId?: string, name?: string) => void;
   onShowExercises?: (programId: number | string) => void;
+  onStartCourse?: (programId: number | string) => void;
 }) {
   const [programs, setPrograms] = useState<Program[]>(SEED_PROGRAMS);
   const [activeLevel, setActiveLevel] = useState('all');
@@ -412,6 +414,7 @@ export default function Programs({
                 program={program}
                 isUnlocked={isUnlocked}
                 onUnlock={() => onShowPayment(program.price, String(program.id), program.title)}
+                onStart={() => isAdmin ? onShowExercises?.(program.id) : onStartCourse?.(program.id)}
               />
             </div>
           );

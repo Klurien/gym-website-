@@ -171,7 +171,7 @@ export default function App() {
             : <ClientDashboard user={user} onShowPayment={showPayment} onViewCourse={handleViewCourse} />
         )}
         {screen === 'programs' && (
-          <Programs user={user} onShowPayment={showPayment} onShowExercises={isTrainer ? handleShowExercises : undefined} />
+          <Programs user={user} onShowPayment={showPayment} onShowExercises={isTrainer ? handleShowExercises : undefined} onStartCourse={isTrainer ? undefined : handleViewCourse} />
         )}
         {screen === 'my-courses' && !isTrainer && (
           <MyCourses user={user} selectedProgramId={selectedProgramId} />
