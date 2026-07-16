@@ -54,7 +54,7 @@ export default function Profile({ user, onLogout }: { user: any; onLogout: () =>
           </div>
         </div>
         <div>
-          <h1 className="t-h1 text-white">{user.username}</h1>
+          <h1 className="t-h1 text-white truncate max-w-[260px] sm:max-w-sm mx-auto">{user.username}</h1>
           <p className="t-label mt-1" style={{ color: 'var(--red)' }}>
             {user.role.toUpperCase()}
           </p>

@@ -53,11 +53,11 @@ function ExerciseItem({ exercise }: { exercise: any; key?: string }) {
         </div>
       </div>
       <button
-        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+        className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
         style={{ background: 'var(--green-soft)' }}
         title="Mark as complete"
       >
-        <CheckCircle size={16} style={{ color: 'var(--green)' }} />
+        <CheckCircle size={20} style={{ color: 'var(--green)' }} />
       </button>
     </div>
   );
@@ -93,7 +93,7 @@ function ProgramCourse({ program, exercises }: { program: any; exercises: any[];
         </div>
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center justify-between w-full py-2.5 px-4 rounded-xl text-xs font-bold tracking-wider transition-all"
+          className="flex items-center justify-between w-full py-3.5 px-5 rounded-xl text-xs font-bold tracking-wider transition-all min-h-[48px]"
           style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
         >
           <span>{exercises.length} EXERCISES</span>

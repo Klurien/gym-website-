@@ -66,7 +66,7 @@ export default function TrainerDashboard({ user }: { user: any }) {
         </div>
       </header>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 xs:grid-cols-3 gap-3">
         <StatCard
           label="CLIENTS"
           value={stats?.totalClients || 0}
@@ -97,18 +97,20 @@ export default function TrainerDashboard({ user }: { user: any }) {
           <Zap size={18} style={{ color: 'var(--amber)' }} />
         </div>
         {stats?.programStats?.length > 0 ? (
-          <BarChart
-            data={stats.programStats.map((p: any) => ({
-              label: p.title.split(' ')[0],
-              value: p.unlock_count,
-              color:
-                p.level === 'beginner'
-                  ? '#00D26A'
-                  : p.level === 'intermediate'
-                    ? '#FFB800'
-                    : '#FF2442',
-            }))}
-          />
+          <div className="overflow-x-auto w-full">
+            <BarChart
+              data={stats.programStats.map((p: any) => ({
+                label: p.title.split(' ')[0],
+                value: p.unlock_count,
+                color:
+                  p.level === 'beginner'
+                    ? '#00D26A'
+                    : p.level === 'intermediate'
+                      ? '#FFB800'
+                      : '#FF2442',
+              }))}
+            />
+          </div>
         ) : (
           <div className="text-center py-10">
             <p className="t-label" style={{ color: 'var(--text-3)' }}>
@@ -194,7 +196,7 @@ export default function TrainerDashboard({ user }: { user: any }) {
                   <p className="text-sm font-bold text-white truncate">
                     {p.username || 'UNKNOWN'}
                   </p>
-                  <p className="t-label mt-0.5" style={{ color: 'var(--text-3)' }}>
+                  <p className="t-label mt-0.5 truncate" style={{ color: 'var(--text-3)' }}>
                     {p.program_name || 'PREMIUM'}
                   </p>
                 </div>

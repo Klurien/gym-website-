@@ -159,10 +159,10 @@ export default function Programs({
             <Pencil size={12} /> EDITING
           </span>
           <div className="flex gap-2">
-            <button onClick={onSave} className="btn py-2 px-4 text-[10px]">
+            <button onClick={onSave} className="btn py-3 px-5 text-xs">
               <Save size={14} /> SAVE
             </button>
-            <button onClick={onCancel} className="btn-outline py-2 px-4 text-[10px]">
+            <button onClick={onCancel} className="btn-outline py-3 px-5 text-xs">
               <X size={14} /> CANCEL
             </button>
           </div>
@@ -184,7 +184,7 @@ export default function Programs({
             placeholder="Program description"
           />
         </FormField>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <FormField label="PRICE (KES)">
             <input
               className="field"
@@ -212,7 +212,7 @@ export default function Programs({
             />
           </FormField>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FormField label="LEVEL">
             <select
               className="field"
@@ -248,10 +248,10 @@ export default function Programs({
             <Plus size={12} /> NEW PROGRAM
           </span>
           <div className="flex gap-2">
-            <button onClick={createProgram} className="btn py-2 px-4 text-[10px]">
+            <button onClick={createProgram} className="btn py-3 px-5 text-xs">
               <Save size={14} /> CREATE
             </button>
-            <button onClick={() => setCreating(false)} className="btn-outline py-2 px-4 text-[10px]">
+            <button onClick={() => setCreating(false)} className="btn-outline py-3 px-5 text-xs">
               <X size={14} /> CANCEL
             </button>
           </div>
@@ -273,7 +273,7 @@ export default function Programs({
             placeholder="Program description"
           />
         </FormField>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <FormField label="PRICE (KES)">
             <input
               className="field"
@@ -301,7 +301,7 @@ export default function Programs({
             />
           </FormField>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FormField label="LEVEL">
             <select
               className="field"
@@ -351,7 +351,7 @@ export default function Programs({
           <button
             key={l.key}
             onClick={() => setActiveLevel(l.key)}
-            className="px-5 py-2.5 rounded-full text-xs font-bold tracking-wider whitespace-nowrap transition-all shrink-0"
+            className="px-5 py-3 rounded-full text-xs font-bold tracking-wider whitespace-nowrap transition-all shrink-0 min-h-[44px]"
             style={
               activeLevel === l.key
                 ? { background: 'var(--red)', color: '#fff', boxShadow: 'var(--shadow-red)' }
@@ -384,27 +384,27 @@ export default function Programs({
           return (
             <div key={String(program.id)}>
               {isAdmin && (
-                <div className="flex items-center justify-end gap-2 mb-2 px-1">
+                <div className="flex flex-wrap items-center justify-end gap-2 mb-2 px-1">
                   <button
                     onClick={() => startEdit(program)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider transition-all hover:scale-105"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all hover:scale-105 min-h-[44px]"
                     style={{ background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }}
                   >
-                    <Pencil size={12} /> EDIT
+                    <Pencil size={14} /> EDIT
                   </button>
                   <button
                     onClick={() => onShowExercises?.(program.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider transition-all hover:scale-105"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all hover:scale-105 min-h-[44px]"
                     style={{ background: 'var(--amber-soft)', color: 'var(--amber)', border: '1px solid rgba(255,184,0,0.2)' }}
                   >
-                    <ListTodo size={12} /> EXERCISES
+                    <ListTodo size={14} /> EXERCISES
                   </button>
                   <button
                     onClick={() => { if (confirm('Permanently delete this program?')) deleteProgram(program.id); }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider transition-all hover:scale-105"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all hover:scale-105 min-h-[44px]"
                     style={{ background: 'var(--red-soft)', color: 'var(--red)', border: '1px solid rgba(255,36,66,0.2)' }}
                   >
-                    <Trash2 size={12} /> DELETE
+                    <Trash2 size={14} /> DELETE
                   </button>
                 </div>
               )}

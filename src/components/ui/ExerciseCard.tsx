@@ -89,19 +89,19 @@ export default function ExerciseCard({
             {onEdit && (
               <button
                 onClick={() => onEdit(exercise)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider transition-all hover:scale-105"
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold tracking-wider transition-all hover:scale-105 min-h-[44px]"
                 style={{ background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }}
               >
-                <Pencil size={12} /> EDIT
+                <Pencil size={14} /> EDIT
               </button>
             )}
             {onDelete && (
               <button
                 onClick={() => onDelete(exercise.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider transition-all hover:scale-105"
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-bold tracking-wider transition-all hover:scale-105 min-h-[44px]"
                 style={{ background: 'var(--red-soft)', color: 'var(--red)', border: '1px solid rgba(255,36,66,0.2)' }}
               >
-                <Trash2 size={12} /> DELETE
+                <Trash2 size={14} /> DELETE
               </button>
             )}
           </div>

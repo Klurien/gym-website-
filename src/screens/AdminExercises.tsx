@@ -181,7 +181,7 @@ export default function AdminExercises({
               <button
                 key={String(p.id)}
                 onClick={() => setActiveProgram(String(p.id))}
-                className="px-5 py-2.5 rounded-full text-xs font-bold tracking-wider whitespace-nowrap transition-all shrink-0"
+className="px-5 py-3 rounded-full text-xs font-bold tracking-wider whitespace-nowrap transition-all shrink-0 min-h-[44px]"
                 style={
                   activeProgram === String(p.id)
                     ? { background: cfg.color, color: '#000', boxShadow: `0 4px 16px ${cfg.color}40` }
@@ -196,7 +196,7 @@ export default function AdminExercises({
         {isAdmin && (
           <button
             onClick={() => setSortAsc(!sortAsc)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-[10px] font-bold tracking-wider transition-all shrink-0"
+            className="flex items-center gap-1.5 px-4 py-3 rounded-full text-xs font-bold tracking-wider transition-all shrink-0 min-h-[44px]"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-2)' }}
           >
             {sortAsc ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -249,17 +249,17 @@ export default function AdminExercises({
                 <div className="flex items-center justify-end gap-2 mb-2 px-1">
                   <button
                     onClick={() => startEdit(exercise)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider transition-all hover:scale-105"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all hover:scale-105 min-h-[44px]"
                     style={{ background: 'var(--surface-2)', color: 'var(--text-2)', border: '1px solid var(--border)' }}
                   >
-                    <Pencil size={12} /> EDIT
+                    <Pencil size={14} /> EDIT
                   </button>
                   <button
                     onClick={() => handleDelete(exercise.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider transition-all hover:scale-105"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold tracking-wider transition-all hover:scale-105 min-h-[44px]"
                     style={{ background: 'var(--red-soft)', color: 'var(--red)', border: '1px solid rgba(255,36,66,0.2)' }}
                   >
-                    <Trash2 size={12} /> DELETE
+                    <Trash2 size={14} /> DELETE
                   </button>
                 </div>
               )}

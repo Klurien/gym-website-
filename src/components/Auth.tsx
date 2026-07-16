@@ -102,7 +102,7 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
                 key={tab}
                 onClick={() => setIsLogin(i === 0)}
                 className={cn(
-                  'flex-1 py-3 rounded-lg text-xs font-bold tracking-widest transition-all',
+                  'flex-1 py-3.5 rounded-lg text-xs font-bold tracking-widest transition-all min-h-[48px]',
                   (i === 0 ? isLogin : !isLogin)
                     ? 'text-white shadow-lg'
                     : 'text-[var(--text-3)] hover:text-[var(--text-2)]'
@@ -193,13 +193,14 @@ export default function Auth({ onLogin }: { onLogin: (user: any) => void }) {
           </form>
 
           {isLogin && (
-            <p
-              className="text-center t-label cursor-pointer hover:text-[var(--text-2)] transition-colors"
+            <button
+              type="button"
+              className="w-full text-center t-label py-3 cursor-pointer hover:text-[var(--text-2)] transition-colors rounded-xl"
               style={{ color: 'var(--text-3)' }}
               onClick={() => { setEmail('admin@comrades.com'); setPassword('admin123'); }}
             >
               Trainer? Sign in with admin credentials
-            </p>
+            </button>
           )}
         </div>
 

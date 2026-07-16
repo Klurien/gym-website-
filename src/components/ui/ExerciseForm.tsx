@@ -100,12 +100,12 @@ export default function ExerciseForm({
           <div className="flex gap-2">
             <button
               onClick={handleSubmit}
-              className="btn py-2 px-4 text-[10px]"
+              className="btn py-3 px-5 text-xs"
               disabled={loading}
             >
               <Save size={14} /> {loading ? 'SAVING...' : 'SAVE'}
             </button>
-            <button onClick={onCancel} className="btn-outline py-2 px-4 text-[10px]">
+            <button onClick={onCancel} className="btn-outline py-3 px-5 text-xs">
               <X size={14} /> CANCEL
             </button>
           </div>
@@ -148,7 +148,7 @@ export default function ExerciseForm({
             />
           </FormField>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <FormField label="SETS">
               <input
                 className="field"
@@ -189,7 +189,7 @@ export default function ExerciseForm({
             />
           </FormField>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <FormField label="VIDEO URL">
               <div className="relative">
                 <Video

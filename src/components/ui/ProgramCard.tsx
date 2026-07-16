@@ -109,15 +109,11 @@ export default function ProgramCard({
             </span>
           )}
           {isUnlocked ? (
-            <button className="btn py-2.5 px-6" style={{ fontSize: '0.7rem' }}>
+            <button className="btn py-3 px-5">
               START
             </button>
           ) : (
-            <button
-              onClick={onUnlock}
-              className="btn py-2.5 px-6"
-              style={{ fontSize: '0.7rem' }}
-            >
+            <button onClick={onUnlock} className="btn py-3 px-5">
               <Crown size={14} strokeWidth={2.5} /> UNLOCK
             </button>
           )}

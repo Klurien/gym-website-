@@ -96,7 +96,7 @@ export default function ClientDashboard({
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         <div
           className="rounded-[20px] p-5 relative overflow-hidden"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}

@@ -114,10 +114,10 @@ export default function PaymentModal({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            className="w-11 h-11 rounded-lg flex items-center justify-center transition-colors"
             style={{ background: 'var(--surface-2)' }}
           >
-            <X size={16} style={{ color: 'var(--text-3)' }} />
+            <X size={18} style={{ color: 'var(--text-3)' }} />
           </button>
         </div>
 
@@ -151,15 +151,13 @@ export default function PaymentModal({
             <div className="flex gap-3">
               <button
                 onClick={handleDemo}
-                className="btn-outline flex-1 py-3.5"
-                style={{ fontSize: '0.7rem' }}
+                className="btn-outline flex-1 py-4"
               >
                 DEMO
               </button>
               <button
                 onClick={handlePay}
-                className="btn flex-[2] py-3.5"
-                style={{ fontSize: '0.7rem' }}
+                className="btn flex-[2] py-4"
               >
                 PAY KES {amount.toLocaleString()}
               </button>

@@ -1,6 +1,6 @@
 export default function BarChart({
   data,
-  maxWidth = 300,
+  maxWidth,
 }: {
   data: { label: string; value: number; color?: string }[];
   maxWidth?: number;
@@ -8,7 +8,7 @@ export default function BarChart({
   const max = Math.max(...data.map(d => d.value), 1);
 
   return (
-    <div className="flex items-end gap-3" style={{ height: 140, maxWidth }}>
+    <div className="flex items-end gap-3" style={{ height: 140, maxWidth: maxWidth || '100%' }}>
       {data.map((d, i) => {
         const h = Math.max((d.value / max) * 100, 8);
         return (

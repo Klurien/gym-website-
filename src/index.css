@@ -46,7 +46,6 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-inter);
-  overflow-x: hidden;
 }
 
 .t-display {
@@ -59,7 +58,7 @@ body {
 
 .t-h1 {
   font-family: var(--font-anton);
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
   line-height: 1;
   letter-spacing: -0.01em;
   text-transform: uppercase;
@@ -67,13 +66,13 @@ body {
 
 .t-h2 {
   font-family: var(--font-anton);
-  font-size: 1.4rem;
+  font-size: clamp(1.1rem, 4vw, 1.4rem);
   line-height: 1.1;
   text-transform: uppercase;
 }
 
 .t-label {
-  font-size: 0.6rem;
+  font-size: clamp(0.55rem, 1.5vw, 0.65rem);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -102,13 +101,14 @@ body {
   border: none;
   border-radius: 9999px;
   padding: 14px 28px;
-  font-size: 0.75rem;
+  font-size: clamp(0.7rem, 2vw, 0.8rem);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.15s ease;
   box-shadow: var(--shadow-red);
+  min-height: 44px;
 }
 
 .btn:hover {
@@ -130,12 +130,13 @@ body {
   color: var(--text);
   border-radius: 9999px;
   padding: 12px 24px;
-  font-size: 0.75rem;
+  font-size: clamp(0.65rem, 2vw, 0.75rem);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 44px;
 }
 
 .btn-outline:hover {
@@ -148,12 +149,13 @@ body {
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text);
-  padding: 14px 16px;
-  font-size: 0.85rem;
+  padding: clamp(10px, 2.5vw, 14px) clamp(12px, 3vw, 16px);
+  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   font-weight: 500;
   outline: none;
   width: 100%;
   transition: border-color 0.2s;
+  min-height: 44px;
 }
 
 .field:focus {
@@ -163,7 +165,7 @@ body {
 .field::placeholder {
   color: var(--text-3);
   text-transform: uppercase;
-  font-size: 0.7rem;
+  font-size: clamp(0.6rem, 1.5vw, 0.7rem);
   letter-spacing: 0.08em;
   font-weight: 600;
 }
@@ -174,10 +176,11 @@ body {
   gap: 4px;
   padding: 4px 12px;
   border-radius: 9999px;
-  font-size: 0.55rem;
+  font-size: clamp(0.5rem, 1.5vw, 0.6rem);
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .glass {
