@@ -149,7 +149,10 @@ body {
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text);
-  padding: clamp(10px, 2.5vw, 14px) clamp(12px, 3vw, 16px);
+  padding-top: clamp(10px, 2.5vw, 14px);
+  padding-bottom: clamp(10px, 2.5vw, 14px);
+  padding-left: 16px;
+  padding-right: 16px;
   font-size: clamp(0.8rem, 2.5vw, 0.9rem);
   font-weight: 500;
   outline: none;
