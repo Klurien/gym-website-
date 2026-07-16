@@ -81,6 +81,27 @@ async function mpesaQuery(checkoutRequestId) {
   return await httpsRequest(new URL(`${MPESA_BASE}/mpesa/stkpushquery/v1/query`), { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }, body);
 }
 
+// ── In-memory demo store (used when no DB) ──
+const demoUsers = [];
+
+function demoRegister(username, email, password, role) {
+  if (demoUsers.find(u => u.email === email)) return null;
+  const hashed = bcrypt.hashSync(password, 10);
+  const id = demoUsers.length + 1;
+  const userRole = demoUsers.length === 0 ? 'admin' : (role === 'trainer' ? 'trainer' : 'trainee');
+  const u = { id, username, email, password: hashed, role: userRole, level: 'beginner', premium: false, profile_pic: null, created_at: new Date().toISOString() };
+  demoUsers.push(u);
+  return u;
+}
+
+function demoFindUser(email) {
+  return demoUsers.find(u => u.email === email);
+}
+
+function demoGetUser(id) {
+  return demoUsers.find(u => u.id === id);
+}
+
 // ── Auth middleware ──
 function getUser(req) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -164,21 +185,35 @@ module.exports = async (req, res) => {
     const { username, email, password, role } = req.body || {};
     if (!username || !email || !password) return res.status(400).json({ error: 'Missing fields' });
     if (password.length < 6) return res.status(400).json({ error: 'Password too short' });
+    if (!db) {
+      const existing = demoFindUser(email);
+      if (existing) return res.status(409).json({ error: 'Email already registered' });
+      const u = demoRegister(username, email, password, role);
+      if (!u) return res.status(409).json({ error: 'Email already registered' });
+      return res.status(201).json({ message: 'Registered', user: u });
+    }
     try {
-      const [existing] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-      if (existing.length) return res.status(409).json({ error: 'Email already registered' });
+      const [rows] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+      if (rows.length) return res.status(409).json({ error: 'Email already registered' });
       const hashed = await bcrypt.hash(password, 10);
-      const [rows] = await db.query('SELECT COUNT(*) as c FROM users');
-      const userRole = rows[0].c === 0 ? 'admin' : (role === 'trainer' ? 'trainer' : 'trainee');
+      const [[count]] = await db.query('SELECT COUNT(*) as c FROM users');
+      const userRole = count.c === 0 ? 'admin' : (role === 'trainer' ? 'trainer' : 'trainee');
       await db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashed, userRole]);
       return res.status(201).json({ message: 'Registered' });
-    } catch { return res.status(500).json({ error: 'Registration failed' }); }
+    } catch (e) { return res.status(500).json({ error: 'Registration failed' }); }
   }
 
   // ── Auth: Login ──
   if (path === 'login' && req.method === 'POST') {
     const { email, password } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
+    if (!db) {
+      const u = demoFindUser(email);
+      if (!u) return res.status(401).json({ error: 'Invalid credentials' });
+      if (!bcrypt.compareSync(password, u.password)) return res.status(401).json({ error: 'Invalid credentials' });
+      const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
+      return res.json({ token, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });
+    }
     try {
       const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
       if (!rows.length) return res.status(401).json({ error: 'Invalid credentials' });
