@@ -30,10 +30,15 @@ let pool;
 function getPool() {
   if (pool) return pool;
 
-  // PostgreSQL via DATABASE_URL
+  // PostgreSQL via DATABASE_URL (bazaar motors Neon cloud database)
   if (USE_POSTGRES) {
-    pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+    pgPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
     console.log('🚀 PostgreSQL Pool Created');
+    // Return wrapper with mysql2-compatible interface
+    pool = {
+      query: (sql, params) => pgQuery(sql, params).then(r => [r.rows, r.fields || []]),
+      execute: (sql, params) => pgExecute(sql, params).then(r => [{ affectedRows: r.rowCount, insertId: r.rows[0]?.id || 0 }, []])
+    };
     return pool;
   }
 
@@ -56,37 +61,24 @@ function getPool() {
 }
 
 // Wrapper to make postgres queries compatible with mysql2 result format
-const db = {
-  async query(sql, params = []) {
-    const p = getPool();
-    if (!p) throw new Error('Database not configured');
-    if (USE_POSTGRES) {
-      const converted = pgParams(translatePg(sql), params);
-      const result = await p.query(converted.sql, converted.params);
-      return [result.rows, result.fields || []];
-    }
-    return await p.query(sql, params);
-  },
-  async execute(sql, params = []) {
-    const p = getPool();
-    if (!p) throw new Error('Database not configured');
-    if (USE_POSTGRES) {
-      const translated = translatePg(sql);
-      const isInsert = /^\s*INSERT\s/i.test(translated);
-      const finalSql = isInsert ? translated + ' RETURNING id' : translated;
-      const converted = pgParams(finalSql, params);
-      const result = await p.query(converted.sql, converted.params);
-      return [{ affectedRows: result.rowCount, insertId: result.rows[0]?.id || 0 }, []];
-    }
-    return await p.execute(sql, params);
-  }
-};
+// PostgreSQL pool — wrapped to match mysql2 query/execute interface
+let pgPool;
+function pgQuery(sql, params = []) {
+  const converted = pgParams(translatePg(sql), params);
+  return pgPool.query(converted.sql, converted.params);
+}
+function pgExecute(sql, params = []) {
+  const translated = translatePg(sql);
+  const isInsert = /^\s*INSERT\s/i.test(translated);
+  const finalSql = isInsert ? translated + ' RETURNING id' : translated;
+  const converted = pgParams(finalSql, params);
+  return pgPool.query(converted.sql, converted.params);
+}
 
-// Replace direct pool references with db wrapper
 function requireDb() {
   const p = getPool();
   if (!p) throw new Error('Database not configured. Set DATABASE_URL, or DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME environment variables.');
-  return db;
+  return p;
 }
 
 // ── M-Pesa helpers ──
@@ -304,7 +296,7 @@ const SCHEMA_SQL = USE_POSTGRES ? [
 
 async function seedIfEmpty() {
   let d;
-  try { d = requireDb(); } catch { return; }
+  try { d = requireDb(); if (!d) return; } catch { return; }
   try {
     // Create tables if they don't exist (for cloud databases)
     for (const sql of SCHEMA_SQL) {
@@ -352,8 +344,8 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  let hasDb;
-  try { hasDb = !!requireDb(); seedIfEmpty(); } catch { hasDb = false; }
+  const db = getPool();
+  if (db) seedIfEmpty();
 
   const url = (req.url || '/').split('?')[0];
   const parts = url.split('/').filter(Boolean);
@@ -361,7 +353,7 @@ module.exports = async (req, res) => {
   const sub = parts[0] === 'api' ? parts[2] : parts[1];
 
   // ── Health ──
-  if (path === 'health') return res.json({ status: 'ok', db: hasDb, mpesa: !!MPESA_CONSUMER_KEY });
+  if (path === 'health') return res.json({ status: 'ok', db: !!db, mpesa: !!MPESA_CONSUMER_KEY });
 
   // ── M-Pesa callback (no auth, called by Safaricom) ──
   if (path === 'mpesa' && sub === 'callback' && req.method === 'POST') {
