@@ -244,6 +244,7 @@ function demoLoginFallback(email, password) {
 }
 
 const SCHEMA_SQL = USE_POSTGRES ? [
+  // -- Create tables --
   `CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
@@ -291,7 +292,19 @@ const SCHEMA_SQL = USE_POSTGRES ? [
     checkout_id VARCHAR(255),
     status VARCHAR(20) DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )`
+  )`,
+  // -- Migrate existing tables — add missing columns --
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(255) UNIQUE`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS level VARCHAR(20) DEFAULT 'beginner'`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS premium BOOLEAN DEFAULT FALSE`,
+  `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP`,
+  `ALTER TABLE programs ADD COLUMN IF NOT EXISTS level_sort INT DEFAULT 1`,
+  `ALTER TABLE exercises ADD COLUMN IF NOT EXISTS order_index INT DEFAULT 0`,
+  `ALTER TABLE exercises ADD COLUMN IF NOT EXISTS video_url VARCHAR(500) DEFAULT ''`,
+  `ALTER TABLE exercises ADD COLUMN IF NOT EXISTS image_url VARCHAR(500) DEFAULT ''`,
+  `ALTER TABLE payments ADD COLUMN IF NOT EXISTS checkout_id VARCHAR(255)`,
+  `ALTER TABLE payments ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending'`
 ] : [];
 
 async function seedIfEmpty() {
@@ -302,7 +315,8 @@ async function seedIfEmpty() {
     for (const sql of SCHEMA_SQL) {
       try { await d.query(sql); } catch (e) { console.log('[SCHEMA] Skipped:', e.message.substring(0, 60)); }
     }
-    const [adminRows] = await d.query('SELECT id FROM users WHERE role = ?', ['admin']);
+    // Check if specific admin exists by email
+    const [adminRows] = await d.query('SELECT id FROM users WHERE email = ?', ['admin@comrades.com']);
     if (!adminRows.length) {
       const hashed = bcrypt.hashSync('admin123', 10);
       await d.query('INSERT INTO users (username, email, password, role, level, premium) VALUES (?, ?, ?, ?, ?, ?)',
