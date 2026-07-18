@@ -61,9 +61,8 @@ const db = {
     const p = getPool();
     if (!p) throw new Error('Database not configured');
     if (USE_POSTGRES) {
-      const { sql: pgSql, params: pgParams } = pgParams(translatePg(sql), params);
-      const result = await p.query(pgSql, pgParams);
-      // Return mysql2-compatible [rows, fields]
+      const converted = pgParams(translatePg(sql), params);
+      const result = await p.query(converted.sql, converted.params);
       return [result.rows, result.fields || []];
     }
     return await p.query(sql, params);
@@ -75,9 +74,8 @@ const db = {
       const translated = translatePg(sql);
       const isInsert = /^\s*INSERT\s/i.test(translated);
       const finalSql = isInsert ? translated + ' RETURNING id' : translated;
-      const { sql: pgSql, params: pgParams } = pgParams(finalSql, params);
-      const result = await p.query(pgSql, pgParams);
-      // Return mysql2-compatible [{ affectedRows, insertId }]
+      const converted = pgParams(finalSql, params);
+      const result = await p.query(converted.sql, converted.params);
       return [{ affectedRows: result.rowCount, insertId: result.rows[0]?.id || 0 }, []];
     }
     return await p.execute(sql, params);
