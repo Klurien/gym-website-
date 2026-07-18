@@ -3,6 +3,20 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const schema = [
+  `CREATE TABLE IF NOT EXISTS exercises (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    program_id INT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    sets INT DEFAULT 3,
+    reps VARCHAR(20) DEFAULT '10',
+    rest_seconds INT DEFAULT 60,
+    order_index INT DEFAULT 0,
+    video_url VARCHAR(500) DEFAULT '',
+    image_url VARCHAR(500) DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
+  )`,
   `CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
