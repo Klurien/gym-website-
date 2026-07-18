@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
@@ -6,11 +7,39 @@ const path = require('path');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'comrades-gym-secret-2026';
 
+const USE_POSTGRES = process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://');
+
+// Convert ? placeholders to $1, $2, ... for PostgreSQL
+function pgParams(sql, params) {
+  let idx = 0;
+  const converted = sql.replace(/\?/g, () => `$${++idx}`);
+  return { sql: converted, params };
+}
+
+// Translate MySQL SQL syntax to PostgreSQL
+function translatePg(sql) {
+  let s = sql;
+  s = s.replace(/INT\s+AUTO_INCREMENT\s+PRIMARY\s+KEY/gi, 'SERIAL PRIMARY KEY');
+  s = s.replace(/VARCHAR\s*\(\d+\)/gi, 'VARCHAR(255)');
+  s = s.replace(/TINYINT\s*\(\d+\)/gi, 'SMALLINT');
+  s = s.replace(/`(\w+)`/g, '"$1"');
+  return s;
+}
+
 let pool;
 function getPool() {
-  if (!pool && process.env.DB_HOST) {
+  if (pool) return pool;
+
+  // PostgreSQL via DATABASE_URL
+  if (USE_POSTGRES) {
+    pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+    console.log('🚀 PostgreSQL Pool Created');
+    return pool;
+  }
+
+  // MySQL / TiDB via individual env vars
+  if (process.env.DB_HOST) {
     const dbPort = parseInt(process.env.DB_PORT || '4000', 10);
-    // Only use SSL when explicitly opted in or using TiDB standard port 4000
     const useSsl = process.env.DB_SSL === 'true' || dbPort === 4000;
     pool = mysql.createPool({
       host: process.env.DB_HOST,
@@ -26,6 +55,42 @@ function getPool() {
   return pool;
 }
 
+// Wrapper to make postgres queries compatible with mysql2 result format
+const db = {
+  async query(sql, params = []) {
+    const p = getPool();
+    if (!p) throw new Error('Database not configured');
+    if (USE_POSTGRES) {
+      const { sql: pgSql, params: pgParams } = pgParams(translatePg(sql), params);
+      const result = await p.query(pgSql, pgParams);
+      // Return mysql2-compatible [rows, fields]
+      return [result.rows, result.fields || []];
+    }
+    return await p.query(sql, params);
+  },
+  async execute(sql, params = []) {
+    const p = getPool();
+    if (!p) throw new Error('Database not configured');
+    if (USE_POSTGRES) {
+      const translated = translatePg(sql);
+      const isInsert = /^\s*INSERT\s/i.test(translated);
+      const finalSql = isInsert ? translated + ' RETURNING id' : translated;
+      const { sql: pgSql, params: pgParams } = pgParams(finalSql, params);
+      const result = await p.query(pgSql, pgParams);
+      // Return mysql2-compatible [{ affectedRows, insertId }]
+      return [{ affectedRows: result.rowCount, insertId: result.rows[0]?.id || 0 }, []];
+    }
+    return await p.execute(sql, params);
+  }
+};
+
+// Replace direct pool references with db wrapper
+function requireDb() {
+  const p = getPool();
+  if (!p) throw new Error('Database not configured. Set DATABASE_URL, or DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME environment variables.');
+  return db;
+}
+
 // ── M-Pesa helpers ──
 const https = require('https');
 const MPESA_BASE = (process.env.MPESA_ENV === 'production' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke');
@@ -39,12 +104,6 @@ function requireMpesaConfig() {
   if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET || !MPESA_SHORTCODE || !MPESA_PASSKEY) {
     throw new Error('M-Pesa is not configured. Set MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, and MPESA_PASSKEY environment variables.');
   }
-}
-
-function requireDb() {
-  const db = getPool();
-  if (!db) throw new Error('Database not configured. Set DB_HOST, DB_USER, DB_PASSWORD, and DB_NAME environment variables.');
-  return db;
 }
 
 function httpsRequest(url, options, body) {
@@ -194,29 +253,84 @@ function demoLoginFallback(email, password) {
   return null;
 }
 
+const SCHEMA_SQL = USE_POSTGRES ? [
+  `CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'trainee',
+    profile_pic TEXT,
+    level VARCHAR(20) DEFAULT 'beginner',
+    premium BOOLEAN DEFAULT FALSE,
+    last_seen TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS programs (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    level VARCHAR(20) NOT NULL,
+    level_sort INT DEFAULT 1,
+    duration VARCHAR(50),
+    sessions INT DEFAULT 0,
+    price DECIMAL(10,2) DEFAULT 0,
+    image VARCHAR(500),
+    trainer_id INT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS exercises (
+    id SERIAL PRIMARY KEY,
+    program_id INT NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    sets INT DEFAULT 3,
+    reps VARCHAR(20) DEFAULT '10',
+    rest_seconds INT DEFAULT 60,
+    order_index INT DEFAULT 0,
+    video_url VARCHAR(500) DEFAULT '',
+    image_url VARCHAR(500) DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `CREATE TABLE IF NOT EXISTS payments (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    phone VARCHAR(50),
+    amount DECIMAL(10,2) DEFAULT 0,
+    program_id INT REFERENCES programs(id) ON DELETE SET NULL,
+    checkout_id VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`
+] : [];
+
 async function seedIfEmpty() {
-  const db = getPool();
-  if (!db) return;
+  let d;
+  try { d = requireDb(); } catch { return; }
   try {
-    const [adminRows] = await db.query('SELECT id FROM users WHERE role = ?', ['admin']);
+    // Create tables if they don't exist (for cloud databases)
+    for (const sql of SCHEMA_SQL) {
+      try { await d.query(sql); } catch (e) { console.log('[SCHEMA] Skipped:', e.message.substring(0, 60)); }
+    }
+    const [adminRows] = await d.query('SELECT id FROM users WHERE role = ?', ['admin']);
     if (!adminRows.length) {
       const hashed = bcrypt.hashSync('admin123', 10);
-      await db.query('INSERT INTO users (username, email, password, role, level, premium) VALUES (?, ?, ?, ?, ?, ?)',
+      await d.query('INSERT INTO users (username, email, password, role, level, premium) VALUES (?, ?, ?, ?, ?, ?)',
         ['Admin', 'admin@comrades.com', hashed, 'admin', 'advanced', true]);
       console.log('[SEED] Default admin account created (admin@comrades.com / admin123)');
     }
-    const [progRows] = await db.query('SELECT id FROM programs LIMIT 1');
+    const [progRows] = await d.query('SELECT id FROM programs LIMIT 1');
     if (!progRows.length) {
       for (const p of SEED_PROGRAMS) {
-        await db.query('INSERT INTO programs (title, description, level, duration, sessions, price, image, level_sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        await d.query('INSERT INTO programs (title, description, level, duration, sessions, price, image, level_sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
           [p.title, p.description, p.level, p.duration, p.sessions, p.price, p.image, p.level_sort]);
       }
       console.log('[SEED] Default programs created');
     }
-    const [exRows] = await db.query('SELECT id FROM exercises LIMIT 1');
+    const [exRows] = await d.query('SELECT id FROM exercises LIMIT 1');
     if (!exRows.length) {
       for (const e of SEED_EXERCISES) {
-        await db.query('INSERT INTO exercises (program_id, name, description, sets, reps, rest_seconds, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        await d.query('INSERT INTO exercises (program_id, name, description, sets, reps, rest_seconds, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)',
           [e.program_id, e.name, e.description, e.sets, e.reps, e.rest_seconds, e.order_index]);
       }
       console.log('[SEED] Default exercises created');
@@ -240,8 +354,8 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const db = getPool();
-  if (db) seedIfEmpty();
+  let hasDb;
+  try { hasDb = !!requireDb(); seedIfEmpty(); } catch { hasDb = false; }
 
   const url = (req.url || '/').split('?')[0];
   const parts = url.split('/').filter(Boolean);
@@ -249,7 +363,7 @@ module.exports = async (req, res) => {
   const sub = parts[0] === 'api' ? parts[2] : parts[1];
 
   // ── Health ──
-  if (path === 'health') return res.json({ status: 'ok', db: !!db, mpesa: !!MPESA_CONSUMER_KEY });
+  if (path === 'health') return res.json({ status: 'ok', db: hasDb, mpesa: !!MPESA_CONSUMER_KEY });
 
   // ── M-Pesa callback (no auth, called by Safaricom) ──
   if (path === 'mpesa' && sub === 'callback' && req.method === 'POST') {
