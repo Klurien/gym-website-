@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dumbbell, User, Medal, Users, Menu, X, ListTodo, BookOpen } from 'lucide-react';
+import { Dumbbell, User, Medal, Users, Menu, X, ListTodo, BookOpen, ClipboardList } from 'lucide-react';
 import { cn } from './lib/utils';
 import Auth from './components/Auth';
 import PaymentModal from './components/PaymentModal';
@@ -8,9 +8,10 @@ import ClientDashboard from './screens/ClientDashboard';
 import Programs from './screens/Programs';
 import MyCourses from './screens/MyCourses';
 import AdminExercises from './screens/AdminExercises';
+import AdminLogs from './screens/AdminLogs';
 import Profile from './screens/Profile';
 
-type Screen = 'dashboard' | 'programs' | 'my-courses' | 'exercises' | 'profile';
+type Screen = 'dashboard' | 'programs' | 'my-courses' | 'exercises' | 'logs' | 'profile';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('dashboard');
@@ -67,6 +68,7 @@ export default function App() {
         { key: 'dashboard' as Screen, icon: Users, label: 'HOME' },
         { key: 'programs' as Screen, icon: Dumbbell, label: 'PROGRAMS' },
         { key: 'exercises' as Screen, icon: ListTodo, label: 'EXERCISES' },
+        { key: 'logs' as Screen, icon: ClipboardList, label: 'LOGS' },
         { key: 'profile' as Screen, icon: User, label: 'PROFILE' },
       ]
     : [
@@ -179,6 +181,9 @@ export default function App() {
         )}
         {screen === 'exercises' && isTrainer && (
           <AdminExercises user={user} initialProgramId={exerciseProgramId} />
+        )}
+        {screen === 'logs' && isTrainer && (
+          <AdminLogs user={user} />
         )}
         {screen === 'profile' && <Profile user={user} onLogout={handleLogout} />}
       </main>

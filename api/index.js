@@ -81,6 +81,41 @@ function requireDb() {
   return p;
 }
 
+// ── Paystack helpers ──
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_API = 'https://api.paystack.co';
+const NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+
+function requirePaystackConfig() {
+  if (!PAYSTACK_SECRET_KEY) {
+    throw new Error('Paystack is not configured. Set PAYSTACK_SECRET_KEY environment variable.');
+  }
+}
+
+async function paystackInitialize(email, amount, reference, metadata = {}) {
+  requirePaystackConfig();
+  const res = await fetch(`${PAYSTACK_API}/transaction/initialize`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      amount: Math.round(amount * 100),
+      currency: 'KES',
+      reference,
+      metadata,
+    }),
+  });
+  return await res.json();
+}
+
+async function paystackVerify(reference) {
+  requirePaystackConfig();
+  const res = await fetch(`${PAYSTACK_API}/transaction/verify/${reference}`, {
+    headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
+  });
+  return await res.json();
+}
+
 // ── M-Pesa helpers ──
 const https = require('https');
 const MPESA_BASE = (process.env.MPESA_ENV === 'production' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke');
@@ -146,6 +181,33 @@ async function mpesaQuery(checkoutRequestId) {
   const password = Buffer.from(`${MPESA_SHORTCODE}${MPESA_PASSKEY}${ts}`).toString('base64');
   const body = JSON.stringify({ BusinessShortCode: MPESA_SHORTCODE, Password: password, Timestamp: ts, CheckoutRequestID: checkoutRequestId });
   return await httpsRequest(new URL(`${MPESA_BASE}/mpesa/stkpushquery/v1/query`), { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }, body);
+}
+
+// ── Activity log helper ──
+const activityLogs = [];
+
+function addLog({ userId, type, description, reference, amount, metadata = {} }) {
+  const entry = {
+    id: activityLogs.length + 1,
+    user_id: userId || null,
+    type: type || 'general',
+    description: description || '',
+    reference: reference || null,
+    amount: amount || null,
+    status: 'pending',
+    metadata: metadata,
+    created_at: new Date().toISOString(),
+    confirmed_at: null,
+    confirmed_by: null,
+  };
+  activityLogs.push(entry);
+  if (db) {
+    db.query(`INSERT INTO activity_logs (user_id, type, description, reference, amount, status, metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [userId, type, description, reference, amount, 'pending', JSON.stringify(metadata)])
+      .catch((e) => console.error('[LOG] DB insert error:', e.message));
+  }
+  return entry;
 }
 
 // ── Seed data (used when DB tables are empty OR as demo fallback) ──
@@ -286,10 +348,10 @@ const SCHEMA_SQL = USE_POSTGRES ? [
   `CREATE TABLE IF NOT EXISTS payments (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    phone VARCHAR(50),
+    email VARCHAR(255),
     amount DECIMAL(10,2) DEFAULT 0,
     program_id INT REFERENCES programs(id) ON DELETE SET NULL,
-    checkout_id VARCHAR(255),
+    reference VARCHAR(255),
     status VARCHAR(20) DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`,
@@ -303,8 +365,26 @@ const SCHEMA_SQL = USE_POSTGRES ? [
   `ALTER TABLE exercises ADD COLUMN IF NOT EXISTS order_index INT DEFAULT 0`,
   `ALTER TABLE exercises ADD COLUMN IF NOT EXISTS video_url VARCHAR(500) DEFAULT ''`,
   `ALTER TABLE exercises ADD COLUMN IF NOT EXISTS image_url VARCHAR(500) DEFAULT ''`,
-  `ALTER TABLE payments ADD COLUMN IF NOT EXISTS checkout_id VARCHAR(255)`,
-  `ALTER TABLE payments ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending'`
+  `ALTER TABLE payments ADD COLUMN IF NOT EXISTS email VARCHAR(255)`,
+  `ALTER TABLE payments ADD COLUMN IF NOT EXISTS reference VARCHAR(255)`,
+  `ALTER TABLE payments ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending'`,
+  // -- Activity logs --
+  `CREATE TABLE IF NOT EXISTS activity_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    type VARCHAR(50) NOT NULL DEFAULT 'general',
+    description TEXT,
+    reference VARCHAR(255),
+    amount DECIMAL(10,2) DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'pending',
+    metadata TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    confirmed_at TIMESTAMP,
+    confirmed_by INT REFERENCES users(id) ON DELETE SET NULL
+  )`,
+  `ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending'`,
+  `ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMP`,
+  `ALTER TABLE activity_logs ADD COLUMN IF NOT EXISTS confirmed_by INT REFERENCES users(id) ON DELETE SET NULL`
 ] : [];
 
 async function seedIfEmpty() {
@@ -367,26 +447,123 @@ module.exports = async (req, res) => {
   const sub = parts[0] === 'api' ? parts[2] : parts[1];
 
   // ── Health ──
-  if (path === 'health') return res.json({ status: 'ok', db: !!db, mpesa: !!MPESA_CONSUMER_KEY });
+  if (path === 'health') return res.json({ status: 'ok', db: !!db, paystack: !!PAYSTACK_SECRET_KEY, mpesa: !!(MPESA_CONSUMER_KEY && MPESA_CONSUMER_SECRET) });
 
-  // ── M-Pesa callback (no auth, called by Safaricom) ──
-  if (path === 'mpesa' && sub === 'callback' && req.method === 'POST') {
-    console.log('[MPESA CALLBACK]', JSON.stringify(req.body));
-    return res.json({ ResultCode: 0, ResultDesc: 'Success' });
+  // ── Paystack: Initialize transaction ──
+  if (path === 'paystack' && sub === 'initialize' && req.method === 'POST') {
+    try {
+      const user = getUser(req);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
+      const { amount, programId, programName } = req.body || {};
+      if (!amount) return res.status(400).json({ error: 'Amount required' });
+      if (!user.email) return res.status(400).json({ error: 'User email required for payment' });
+
+      const reference = `CG-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const result = await paystackInitialize(user.email, amount, reference, {
+        userId: user.id,
+        programId: programId || '',
+        programName: programName || 'Premium',
+      });
+
+      if (!result.status) {
+        return res.status(400).json({ error: result.message || 'Payment initialization failed' });
+      }
+
+      addLog({ userId: user.id, type: 'payment_init', description: `Payment initiated for ${programName || 'Premium'} — KES ${amount}`, reference, amount, metadata: { programId, programName, email: user.email } });
+
+      if (db) {
+        try {
+          await db.query('INSERT INTO payments (user_id, email, amount, program_id, reference, status) VALUES (?, ?, ?, ?, ?, ?)',
+            [user.id, user.email, amount, programId || null, reference, 'pending']);
+        } catch (e) { console.error('[PAYSTACK] DB insert error:', e.message); }
+      }
+
+      return res.json({ reference, authorization_url: result.data.authorization_url, access_code: result.data.access_code });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   }
 
-  // ── M-Pesa STK Push ──
+  // ── Paystack: Verify transaction ──
+  if (path === 'paystack' && sub === 'verify' && req.method === 'POST') {
+    try {
+      const authUser = getUser(req);
+      const { reference } = req.body || {};
+      if (!reference) return res.status(400).json({ error: 'Reference required' });
+
+      const result = await paystackVerify(reference);
+      if (!result.status) {
+        return res.json({ verified: false, message: result.message || 'Verification failed' });
+      }
+
+      const tx = result.data;
+      if (tx.status === 'success' && db) {
+        const [rows] = await db.query('SELECT program_id, user_id FROM payments WHERE reference = ? AND status = ?', [reference, 'pending']);
+        if (rows.length) {
+          const { program_id, user_id } = rows[0];
+          await db.query('UPDATE users SET premium = 1 WHERE id = ?', [user_id]);
+          await db.query('UPDATE payments SET status = ? WHERE reference = ?', ['completed', reference]);
+          if (program_id) {
+            const [[prog]] = await db.query('SELECT level FROM programs WHERE id = ?', [program_id]);
+            if (prog) await db.query('UPDATE users SET level = ? WHERE id = ?', [prog.level, user_id]);
+          }
+          addLog({ userId: user_id, type: 'payment_complete', description: `Payment completed — KES ${tx.amount / 100}`, reference, amount: tx.amount / 100, metadata: { program_id } });
+        }
+      }
+
+      return res.json({
+        verified: tx.status === 'success',
+        status: tx.status,
+        amount: tx.amount / 100,
+        currency: tx.currency,
+        reference: tx.reference,
+        paidAt: tx.paidAt,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // ── M-Pesa: STK Push ──
   if (path === 'mpesa' && sub === 'stkpush' && req.method === 'POST') {
     try {
       const user = getUser(req);
+      if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { phone, amount, programId, programName } = req.body || {};
       if (!phone || !amount) return res.status(400).json({ error: 'Phone and amount required' });
       const clean = phone.replace(/[^0-9]/g, '');
       if (clean.length < 9) return res.status(400).json({ error: 'Invalid phone' });
       const mpesaPhone = clean.startsWith('254') ? clean : clean.startsWith('0') ? '254' + clean.slice(1) : '254' + clean;
+      const reference = `CG-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const result = await mpesaStkPush(mpesaPhone, amount, `CG-${programId || 'PREMIUM'}`, programName || 'Comrades Gym');
+      const checkoutId = result.CheckoutRequestID || '';
+      addLog({ userId: user.id, type: 'payment_init', description: `M-Pesa payment initiated for ${programName || 'Premium'} — KES ${amount}`, reference, amount, metadata: { programId, programName, phone: mpesaPhone, checkoutId } });
       if (db && user) {
-        try { await db.query('INSERT INTO payments (user_id, phone, amount, program_id, checkout_id, status) VALUES (?, ?, ?, ?, ?, ?)', [user.id, mpesaPhone, amount, programId || null, result.CheckoutRequestID || '', 'pending']); } catch (e) { console.error('[MPESA] DB insert error:', e.message); }
+        try { await db.query('INSERT INTO payments (user_id, email, amount, program_id, reference, status) VALUES (?, ?, ?, ?, ?, ?)', [user.id, user.email, amount, programId || null, reference, 'pending']); } catch (e) { console.error('[MPESA] DB insert error:', e.message); }
+      }
+      return res.json({ ...result, reference });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
+  // ── M-Pesa: Query ──
+  if (path === 'mpesa' && sub === 'query' && req.method === 'POST') {
+    try {
+      const user = getUser(req);
+      const { checkoutRequestId, reference } = req.body || {};
+      if (!checkoutRequestId) return res.status(400).json({ error: 'checkoutRequestId required' });
+      const result = await mpesaQuery(checkoutRequestId);
+      if ((result.ResultCode === '0' || result.ResultCode === 0) && user?.id && db) {
+        const ref = reference || checkoutRequestId;
+        const [rows] = await db.query('SELECT program_id, amount FROM payments WHERE reference = ? AND status = ?', [ref, 'pending']);
+        await db.query('UPDATE users SET premium = 1 WHERE id = ?', [user.id]);
+        await db.query("UPDATE payments SET status = 'completed' WHERE reference = ?", [ref]);
+        if (rows[0]?.program_id) {
+          const [[prog]] = await db.query('SELECT level FROM programs WHERE id = ?', [rows[0].program_id]);
+          if (prog) await db.query('UPDATE users SET level = ? WHERE id = ?', [prog.level, user.id]);
+        }
+        addLog({ userId: user.id, type: 'payment_complete', description: `M-Pesa payment completed — KES ${rows[0]?.amount || ''}`, reference: ref, amount: rows[0]?.amount || null, metadata: { program_id: rows[0]?.program_id } });
       }
       return res.json(result);
     } catch (err) {
@@ -394,26 +571,10 @@ module.exports = async (req, res) => {
     }
   }
 
-  // ── M-Pesa query ──
-  if (path === 'mpesa' && sub === 'query' && req.method === 'POST') {
-    try {
-      const user = getUser(req);
-      const { checkoutRequestId } = req.body || {};
-      if (!checkoutRequestId) return res.status(400).json({ error: 'checkoutRequestId required' });
-      const result = await mpesaQuery(checkoutRequestId);
-      if ((result.ResultCode === '0' || result.ResultCode === 0) && user?.id && db) {
-        const [rows] = await db.query('SELECT program_id FROM payments WHERE checkout_id = ? AND status = ?', [checkoutRequestId, 'pending']);
-        await db.query('UPDATE users SET premium = 1 WHERE id = ?', [user.id]);
-        await db.query('UPDATE payments SET status = ? WHERE checkout_id = ?', ['completed', checkoutRequestId]);
-        if (rows[0]?.program_id) {
-          const [[prog]] = await db.query('SELECT level FROM programs WHERE id = ?', [rows[0].program_id]);
-          if (prog) await db.query('UPDATE users SET level = ? WHERE id = ?', [prog.level, user.id]);
-        }
-      }
-      return res.json(result);
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  // ── M-Pesa: Callback (no auth, called by Safaricom) ──
+  if (path === 'mpesa' && sub === 'callback' && req.method === 'POST') {
+    console.log('[MPESA CALLBACK]', JSON.stringify(req.body));
+    return res.json({ ResultCode: 0, ResultDesc: 'Success' });
   }
 
   // ── Auth: Register ──
@@ -428,6 +589,7 @@ module.exports = async (req, res) => {
       if (existing) return res.status(409).json({ error: 'Email already registered' });
       const u = demoRegister(username, email, password, role);
       if (!u) return res.status(409).json({ error: 'Email already registered' });
+      addLog({ userId: u.id, type: 'registration', description: `User registered: ${username} (${email})`, metadata: { username, email, role: u.role } });
       const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
       const credential = buildCredential(u);
       return res.status(201).json({ token, credential, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });
@@ -440,6 +602,7 @@ module.exports = async (req, res) => {
       const hashed = await bcrypt.hash(password, 10);
       await db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashed, 'trainee']);
       const [[newUser]] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
+      addLog({ userId: newUser.id, type: 'registration', description: `User registered: ${username} (${email})`, metadata: { username, email, role: 'trainee' } });
       const token = jwt.sign({ id: newUser.id, role: newUser.role, username: newUser.username, profile_pic: newUser.profile_pic, level: newUser.level || 'beginner', premium: !!newUser.premium }, JWT_SECRET, { expiresIn: '7d' });
       return res.status(201).json({ token, user: { id: newUser.id, username: newUser.username, role: newUser.role, email: newUser.email, profile_pic: newUser.profile_pic, level: newUser.level || 'beginner', premium: !!newUser.premium } });
     } catch (e) {
@@ -645,6 +808,82 @@ module.exports = async (req, res) => {
       return res.json({ totalClients: userCount.c, totalRevenue: revenue.total, totalPayments: payments.c, recentPayments, programStats });
     } catch (e) {
       return res.status(500).json({ error: 'Stats fetch failed' });
+    }
+  }
+
+  // ── Admin: activity logs ──
+  if (path === 'admin' && sub === 'logs' && req.method === 'GET') {
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    const typeFilter = req.query?.type || '';
+    const statusFilter = req.query?.status || '';
+    if (!db) {
+      let filtered = activityLogs;
+      if (typeFilter) filtered = filtered.filter(l => l.type === typeFilter);
+      if (statusFilter) filtered = filtered.filter(l => l.status === statusFilter);
+      return res.json(filtered.reverse());
+    }
+    try {
+      let query = `SELECT l.*, u.username FROM activity_logs l LEFT JOIN users u ON l.user_id = u.id`;
+      const params = [];
+      const wheres = [];
+      if (typeFilter) { wheres.push('l.type = ?'); params.push(typeFilter); }
+      if (statusFilter) { wheres.push('l.status = ?'); params.push(statusFilter); }
+      if (wheres.length) query += ' WHERE ' + wheres.join(' AND ');
+      query += ' ORDER BY l.created_at DESC LIMIT 200';
+      const [rows] = await db.query(query, params);
+      return res.json(rows);
+    } catch (e) {
+      return res.status(500).json({ error: 'Failed to fetch logs' });
+    }
+  }
+
+  // ── Admin: confirm/flag log ──
+  if (path === 'admin' && sub === 'logs' && parts.length >= 4 && req.method === 'POST') {
+    if (user.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    const logId = parts[3];
+    const action = req.body?.action || 'confirm'; // 'confirm' or 'flag'
+    if (!db) {
+      const entry = activityLogs.find(l => l.id === Number(logId));
+      if (entry) {
+        entry.status = action === 'confirm' ? 'confirmed' : 'flagged';
+        entry.confirmed_at = new Date().toISOString();
+        entry.confirmed_by = user.id;
+      }
+      return res.json({ message: 'Updated' });
+    }
+    try {
+      const newStatus = action === 'confirm' ? 'confirmed' : 'flagged';
+      await db.query('UPDATE activity_logs SET status = ?, confirmed_at = NOW(), confirmed_by = ? WHERE id = ?', [newStatus, user.id, logId]);
+      if (action === 'confirm') {
+        const [[logRow]] = await db.query('SELECT reference FROM activity_logs WHERE id = ?', [logId]);
+        if (logRow?.reference) {
+          await db.query("UPDATE payments SET status = 'confirmed' WHERE reference = ?", [logRow.reference]);
+        }
+      }
+      return res.json({ message: 'Updated' });
+    } catch (e) {
+      return res.status(500).json({ error: 'Failed to update log' });
+    }
+  }
+
+  // ── Client: recently confirmed payments ──
+  if (path === 'payments' && sub === 'recent-confirmed' && req.method === 'GET') {
+    try {
+      if (!db) {
+        const mine = activityLogs.filter(l => l.user_id === user.id && l.type === 'payment_complete' && l.status === 'confirmed');
+        return res.json(mine.slice(-3).reverse());
+      }
+      const [rows] = await db.query(`
+        SELECT p.*, l.confirmed_at, l.confirmed_by, u2.username as confirmed_by_name
+        FROM payments p
+        JOIN activity_logs l ON l.reference = p.reference AND l.type = 'payment_complete'
+        LEFT JOIN users u2 ON l.confirmed_by = u2.id
+        WHERE p.user_id = ? AND l.status = 'confirmed'
+        ORDER BY l.confirmed_at DESC LIMIT 5
+      `, [user.id]);
+      return res.json(rows);
+    } catch (e) {
+      return res.status(500).json({ error: 'Failed to fetch confirmed payments' });
     }
   }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Medal, Shield, Flame, Crown, TrendingUp, Zap, BookOpen, ArrowRight } from 'lucide-react';
 import ProgressRing from '../components/ui/ProgressRing';
+import PaymentConfirmedModal from '../components/PaymentConfirmedModal';
 
 const levelConfig: Record<string, { label: string; color: string; bg: string }> = {
   beginner: { label: 'BEGINNER', color: '#00D26A', bg: 'rgba(0,210,106,0.1)' },
@@ -45,7 +46,9 @@ export default function ClientDashboard({
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 pt-20 pb-32 space-y-6 animate-fade-in">
+    <>
+      <PaymentConfirmedModal user={user} />
+      <div className="px-4 sm:px-6 lg:px-8 pt-20 pb-32 space-y-6 animate-fade-in">
       <header
         className="relative overflow-hidden rounded-[24px] p-6"
         style={{
@@ -306,5 +309,6 @@ export default function ClientDashboard({
         </div>
       )}
     </div>
+    </>
   );
 }
