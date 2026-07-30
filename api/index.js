@@ -116,73 +116,6 @@ async function paystackVerify(reference) {
   return await res.json();
 }
 
-// ── M-Pesa helpers ──
-const https = require('https');
-const MPESA_BASE = (process.env.MPESA_ENV === 'production' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke');
-
-const MPESA_CONSUMER_KEY = process.env.MPESA_CONSUMER_KEY;
-const MPESA_CONSUMER_SECRET = process.env.MPESA_CONSUMER_SECRET;
-const MPESA_SHORTCODE = process.env.MPESA_SHORTCODE;
-const MPESA_PASSKEY = process.env.MPESA_PASSKEY;
-
-function requireMpesaConfig() {
-  if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET || !MPESA_SHORTCODE || !MPESA_PASSKEY) {
-    throw new Error('M-Pesa is not configured. Set MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET, MPESA_SHORTCODE, and MPESA_PASSKEY environment variables.');
-  }
-}
-
-function httpsRequest(url, options, body) {
-  return new Promise((resolve, reject) => {
-    const req = https.request(url, options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => data += chunk);
-      res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve(data); } });
-    });
-    req.on('error', reject);
-    if (body) req.write(body);
-    req.end();
-  });
-}
-
-function mpesaTimestamp() {
-  const d = new Date();
-  const pad = n => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-}
-
-async function mpesaToken() {
-  requireMpesaConfig();
-  const auth = Buffer.from(`${MPESA_CONSUMER_KEY}:${MPESA_CONSUMER_SECRET}`).toString('base64');
-  const url = new URL(`${MPESA_BASE}/oauth/v1/generate?grant_type=client_credentials`);
-  const res = await httpsRequest(url, { method: 'GET', headers: { Authorization: `Basic ${auth}` } });
-  if (res.access_token) return res.access_token;
-  throw new Error(res.errorMessage || 'OAuth failed');
-}
-
-async function mpesaStkPush(phone, amount, accountRef, desc) {
-  requireMpesaConfig();
-  const token = await mpesaToken();
-  const ts = mpesaTimestamp();
-  const password = Buffer.from(`${MPESA_SHORTCODE}${MPESA_PASSKEY}${ts}`).toString('base64');
-  const body = JSON.stringify({
-    BusinessShortCode: MPESA_SHORTCODE, Password: password, Timestamp: ts,
-    TransactionType: 'CustomerPayBillOnline', Amount: Math.floor(amount),
-    PartyA: phone, PartyB: MPESA_SHORTCODE, PhoneNumber: phone,
-    CallBackURL: process.env.MPESA_CALLBACK_URL || 'https://gym-website-ochre-one.vercel.app/api/mpesa/callback',
-    AccountReference: accountRef, TransactionDesc: desc || 'Comrades Gym'
-  });
-  return await httpsRequest(new URL(`${MPESA_BASE}/mpesa/stkpush/v1/processrequest`), { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }, body);
-}
-
-async function mpesaQuery(checkoutRequestId) {
-  requireMpesaConfig();
-  const token = await mpesaToken();
-  const ts = mpesaTimestamp();
-  const password = Buffer.from(`${MPESA_SHORTCODE}${MPESA_PASSKEY}${ts}`).toString('base64');
-  const body = JSON.stringify({ BusinessShortCode: MPESA_SHORTCODE, Password: password, Timestamp: ts, CheckoutRequestID: checkoutRequestId });
-  return await httpsRequest(new URL(`${MPESA_BASE}/mpesa/stkpushquery/v1/query`), { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }, body);
-}
-
 // ── Activity log helper ──
 const activityLogs = [];
 
@@ -447,7 +380,7 @@ module.exports = async (req, res) => {
   const sub = parts[0] === 'api' ? parts[2] : parts[1];
 
   // ── Health ──
-  if (path === 'health') return res.json({ status: 'ok', db: !!db, paystack: !!PAYSTACK_SECRET_KEY, mpesa: !!(MPESA_CONSUMER_KEY && MPESA_CONSUMER_SECRET) });
+  if (path === 'health') return res.json({ status: 'ok', db: !!db, paystack: !!PAYSTACK_SECRET_KEY });
 
   // ── Paystack: Initialize transaction ──
   if (path === 'paystack' && sub === 'initialize' && req.method === 'POST') {
@@ -522,59 +455,6 @@ module.exports = async (req, res) => {
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
-  }
-
-  // ── M-Pesa: STK Push ──
-  if (path === 'mpesa' && sub === 'stkpush' && req.method === 'POST') {
-    try {
-      const user = getUser(req);
-      if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const { phone, amount, programId, programName } = req.body || {};
-      if (!phone || !amount) return res.status(400).json({ error: 'Phone and amount required' });
-      const clean = phone.replace(/[^0-9]/g, '');
-      if (clean.length < 9) return res.status(400).json({ error: 'Invalid phone' });
-      const mpesaPhone = clean.startsWith('254') ? clean : clean.startsWith('0') ? '254' + clean.slice(1) : '254' + clean;
-      const reference = `CG-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      const result = await mpesaStkPush(mpesaPhone, amount, `CG-${programId || 'PREMIUM'}`, programName || 'Comrades Gym');
-      const checkoutId = result.CheckoutRequestID || '';
-      addLog({ userId: user.id, type: 'payment_init', description: `M-Pesa payment initiated for ${programName || 'Premium'} — KES ${amount}`, reference, amount, metadata: { programId, programName, phone: mpesaPhone, checkoutId } });
-      if (db && user) {
-        try { await db.query('INSERT INTO payments (user_id, email, amount, program_id, reference, status) VALUES (?, ?, ?, ?, ?, ?)', [user.id, user.email, amount, programId || null, reference, 'pending']); } catch (e) { console.error('[MPESA] DB insert error:', e.message); }
-      }
-      return res.json({ ...result, reference });
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
-    }
-  }
-
-  // ── M-Pesa: Query ──
-  if (path === 'mpesa' && sub === 'query' && req.method === 'POST') {
-    try {
-      const user = getUser(req);
-      const { checkoutRequestId, reference } = req.body || {};
-      if (!checkoutRequestId) return res.status(400).json({ error: 'checkoutRequestId required' });
-      const result = await mpesaQuery(checkoutRequestId);
-      if ((result.ResultCode === '0' || result.ResultCode === 0) && user?.id && db) {
-        const ref = reference || checkoutRequestId;
-        const [rows] = await db.query('SELECT program_id, amount FROM payments WHERE reference = ? AND status = ?', [ref, 'pending']);
-        await db.query('UPDATE users SET premium = 1 WHERE id = ?', [user.id]);
-        await db.query("UPDATE payments SET status = 'completed' WHERE reference = ?", [ref]);
-        if (rows[0]?.program_id) {
-          const [[prog]] = await db.query('SELECT level FROM programs WHERE id = ?', [rows[0].program_id]);
-          if (prog) await db.query('UPDATE users SET level = ? WHERE id = ?', [prog.level, user.id]);
-        }
-        addLog({ userId: user.id, type: 'payment_complete', description: `M-Pesa payment completed — KES ${rows[0]?.amount || ''}`, reference: ref, amount: rows[0]?.amount || null, metadata: { program_id: rows[0]?.program_id } });
-      }
-      return res.json(result);
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
-    }
-  }
-
-  // ── M-Pesa: Callback (no auth, called by Safaricom) ──
-  if (path === 'mpesa' && sub === 'callback' && req.method === 'POST') {
-    console.log('[MPESA CALLBACK]', JSON.stringify(req.body));
-    return res.json({ ResultCode: 0, ResultDesc: 'Success' });
   }
 
   // ── Auth: Register ──

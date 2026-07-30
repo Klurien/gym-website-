@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Crown, X, CheckCircle, Smartphone, CreditCard } from 'lucide-react';
+import { useState } from 'react';
+import { Crown, X, CheckCircle } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -8,8 +8,6 @@ declare global {
 }
 
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_def8e817b833e83cc10e038b85e8ca8d262b6d6f';
-
-type Method = 'mpesa' | 'paystack';
 
 export default function PaymentModal({
   amount,
@@ -24,59 +22,10 @@ export default function PaymentModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const [method, setMethod] = useState<Method>('paystack');
   const [step, setStep] = useState<'form' | 'processing' | 'success' | 'error'>('form');
-  const [phone, setPhone] = useState('');
   const [msg, setMsg] = useState('');
-  const pollRef = useRef<ReturnType<typeof setInterval>>();
 
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
-
-  const handleMpesaPay = async () => {
-    const clean = phone.replace(/[^0-9]/g, '');
-    if (clean.length < 9) { setMsg('ENTER A VALID M-PESA NUMBER'); return; }
-    setStep('processing');
-    setMsg('Sending payment request...');
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/mpesa/stkpush', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ phone: clean, amount, programId, programName }),
-      });
-      const data = await res.json();
-      if (data.error) { setStep('error'); setMsg(data.error.toUpperCase()); return; }
-      const cid = data.CheckoutRequestID;
-      const ref = data.reference;
-      if (!cid) { setStep('error'); setMsg('PAYMENT REQUEST FAILED'); return; }
-      setMsg('CHECK YOUR PHONE AND ENTER YOUR M-PESA PIN...');
-      pollRef.current = setInterval(async () => {
-        try {
-          const q = await fetch('/api/mpesa/query', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ checkoutRequestId: cid, reference: ref }),
-          });
-          const qd = await q.json();
-          if (qd.ResultCode === '0' || qd.ResultCode === 0) {
-            clearInterval(pollRef.current);
-            setStep('success');
-            setMsg('PAYMENT SUCCESSFUL');
-            onSuccess();
-          } else if (qd.ResultCode && qd.ResultCode !== '1037') {
-            clearInterval(pollRef.current);
-            setStep('error');
-            setMsg((qd.ResultDesc || 'PAYMENT FAILED').toUpperCase());
-          }
-        } catch {}
-      }, 2000);
-    } catch (e: any) {
-      setStep('error');
-      setMsg((e.message || 'REQUEST FAILED').toUpperCase());
-    }
-  };
-
-  const handlePaystackPay = async () => {
+  const handlePay = async () => {
     setStep('processing');
     setMsg('Initializing payment...');
     try {
@@ -136,11 +85,6 @@ export default function PaymentModal({
     }
   };
 
-  const handlePay = () => {
-    if (method === 'mpesa') handleMpesaPay();
-    else handlePaystackPay();
-  };
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-5">
       <div
@@ -178,60 +122,9 @@ export default function PaymentModal({
 
         {step === 'form' && (
           <div className="space-y-5">
-            <div className="flex gap-2">
-              <button
-                onClick={() => { setMethod('paystack'); setMsg(''); }}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold tracking-wider transition-all min-h-[44px]"
-                style={
-                  method === 'paystack'
-                    ? { background: 'var(--red)', color: '#fff', boxShadow: 'var(--shadow-red)' }
-                    : { background: 'var(--surface-2)', color: 'var(--text-3)', border: '1px solid var(--border)' }
-                }
-              >
-                <CreditCard size={16} /> PAYSTACK
-              </button>
-              <button
-                onClick={() => { setMethod('mpesa'); setMsg(''); }}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold tracking-wider transition-all min-h-[44px]"
-                style={
-                  method === 'mpesa'
-                    ? { background: 'var(--green)', color: '#fff', boxShadow: '0 4px 16px rgba(0,210,106,0.25)' }
-                    : { background: 'var(--surface-2)', color: 'var(--text-3)', border: '1px solid var(--border)' }
-                }
-              >
-                <Smartphone size={16} /> M-PESA
-              </button>
-            </div>
-
-            {method === 'mpesa' && (
-              <div>
-                <label className="t-label block mb-2" style={{ color: 'var(--text-3)' }}>
-                  M-PESA PHONE NUMBER
-                </label>
-                <div className="relative">
-                  <span
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold"
-                    style={{ color: 'var(--text-3)' }}
-                  >
-                    +254
-                  </span>
-                  <input
-                    type="tel"
-                    value={phone.replace(/^0/, '').replace(/^254/, '')}
-                    onChange={e => setPhone(e.target.value)}
-                    placeholder="712 345 678"
-                    className="field pl-14"
-                  />
-                </div>
-              </div>
-            )}
-
-            {method === 'paystack' && (
-              <p className="text-xs" style={{ color: 'var(--text-2)' }}>
-                Pay securely with Paystack — cards, mobile money, or bank transfer.
-              </p>
-            )}
-
+            <p className="text-xs" style={{ color: 'var(--text-2)' }}>
+              Pay with Paystack — cards, M-Pesa, mobile money, or bank transfer.
+            </p>
             {msg && (
               <p className="text-xs font-bold text-center" style={{ color: 'var(--red)' }}>
                 {msg}
@@ -241,7 +134,7 @@ export default function PaymentModal({
               onClick={handlePay}
               className="btn w-full py-4"
             >
-              {method === 'mpesa' ? `PAY WITH M-PESA` : `PAY KES ${amount.toLocaleString()}`}
+              PAY KES {amount.toLocaleString()}
             </button>
           </div>
         )}
@@ -315,15 +208,15 @@ export default function PaymentModal({
         )}
 
         <div
-          className="flex items-center justify-center gap-3 mt-5 pt-4"
+          className="flex items-center justify-center gap-2 mt-5 pt-4"
           style={{ borderTop: '1px solid var(--border)' }}
         >
           <span className="t-label" style={{ color: 'var(--text-3)' }}>
             POWERED BY
           </span>
-          <span className="font-bold text-sm" style={{ color: 'var(--purple)' }}>PAYSTACK</span>
-          <span className="text-xs" style={{ color: 'var(--text-3)' }}>&</span>
-          <span className="font-bold text-sm" style={{ color: 'var(--green)' }}>M-PESA</span>
+          <span className="font-bold text-sm" style={{ color: 'var(--purple)' }}>
+            PAYSTACK
+          </span>
         </div>
       </div>
     </div>
