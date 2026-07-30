@@ -470,7 +470,7 @@ module.exports = async (req, res) => {
       const u = demoRegister(username, email, password, role);
       if (!u) return res.status(409).json({ error: 'Email already registered' });
       addLog({ userId: u.id, type: 'registration', description: `User registered: ${username} (${email})`, metadata: { username, email, role: u.role } });
-      const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: u.id, email: u.email, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
       const credential = buildCredential(u);
       return res.status(201).json({ token, credential, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });
     }
@@ -483,7 +483,7 @@ module.exports = async (req, res) => {
       await db.query('INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)', [username, email, hashed, 'trainee']);
       const [[newUser]] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
       addLog({ userId: newUser.id, type: 'registration', description: `User registered: ${username} (${email})`, metadata: { username, email, role: 'trainee' } });
-      const token = jwt.sign({ id: newUser.id, role: newUser.role, username: newUser.username, profile_pic: newUser.profile_pic, level: newUser.level || 'beginner', premium: !!newUser.premium }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: newUser.id, email: newUser.email, role: newUser.role, username: newUser.username, profile_pic: newUser.profile_pic, level: newUser.level || 'beginner', premium: !!newUser.premium }, JWT_SECRET, { expiresIn: '7d' });
       return res.status(201).json({ token, user: { id: newUser.id, username: newUser.username, role: newUser.role, email: newUser.email, profile_pic: newUser.profile_pic, level: newUser.level || 'beginner', premium: !!newUser.premium } });
     } catch (e) {
       return res.status(500).json({ error: 'Registration failed' });
@@ -520,7 +520,7 @@ module.exports = async (req, res) => {
       
       if (!u) return res.status(401).json({ error: 'Invalid credentials' });
       
-      const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: u.id, email: u.email, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
       const credential = buildCredential(u);
       return res.json({ token, credential, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });
     }
@@ -531,7 +531,7 @@ module.exports = async (req, res) => {
       if (!rows.length) return res.status(401).json({ error: 'Invalid credentials' });
       const u = rows[0];
       if (!await bcrypt.compare(password, u.password)) return res.status(401).json({ error: 'Invalid credentials' });
-      const token = jwt.sign({ id: u.id, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: u.id, email: u.email, role: u.role, username: u.username, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium }, JWT_SECRET, { expiresIn: '7d' });
       return res.json({ token, user: { id: u.id, username: u.username, role: u.role, email: u.email, profile_pic: u.profile_pic, level: u.level || 'beginner', premium: !!u.premium } });
     } catch (e) {
       return res.status(500).json({ error: 'Login failed' });
