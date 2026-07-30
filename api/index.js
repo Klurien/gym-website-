@@ -387,12 +387,13 @@ module.exports = async (req, res) => {
     try {
       const user = getUser(req);
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
-      const { amount, programId, programName } = req.body || {};
+      const { amount, programId, programName, email: bodyEmail } = req.body || {};
       if (!amount) return res.status(400).json({ error: 'Amount required' });
-      if (!user.email) return res.status(400).json({ error: 'User email required for payment' });
+      const email = user.email || bodyEmail;
+      if (!email) return res.status(400).json({ error: 'User email required for payment' });
 
       const reference = `CG-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-      const result = await paystackInitialize(user.email, amount, reference, {
+      const result = await paystackInitialize(email, amount, reference, {
         userId: user.id,
         programId: programId || '',
         programName: programName || 'Premium',

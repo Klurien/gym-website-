@@ -30,15 +30,14 @@ export default function PaymentModal({
     setMsg('Initializing payment...');
     try {
       const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
       const res = await fetch('/api/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ amount, programId, programName }),
+        body: JSON.stringify({ amount, programId, programName, email: user.email }),
       });
       const data = await res.json();
       if (data.error) { setStep('error'); setMsg(data.error.toUpperCase()); return; }
-
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
 
       if (window.PaystackPop) {
         const handler = window.PaystackPop.setup({
