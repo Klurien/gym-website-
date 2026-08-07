@@ -134,11 +134,16 @@ function addLog({ userId, type, description, reference, amount, metadata = {} })
     confirmed_by: null,
   };
   activityLogs.push(entry);
-  if (db) {
-    db.query(`INSERT INTO activity_logs (user_id, type, description, reference, amount, status, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [userId, type, description, reference, amount, 'pending', JSON.stringify(metadata)])
-      .catch((e) => console.error('[LOG] DB insert error:', e.message));
+  try {
+    const p = getPool();
+    if (p) {
+      p.query(`INSERT INTO activity_logs (user_id, type, description, reference, amount, status, metadata)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [userId, type, description, reference, amount, 'pending', JSON.stringify(metadata)])
+        .catch((e) => console.error('[LOG] DB insert error:', e.message));
+    }
+  } catch (e) {
+    console.error('[LOG] addLog error:', e.message);
   }
   return entry;
 }

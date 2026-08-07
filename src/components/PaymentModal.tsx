@@ -61,7 +61,11 @@ export default function PaymentModal({
         body: JSON.stringify({ amount, programId, programName, email }),
       });
       const data = await res.json();
-      if (data.error) { setStep('error'); setMsg(data.error.toUpperCase()); return; }
+      if (data.error) {
+        setStep('error');
+        setMsg(res.status === 401 ? 'SESSION EXPIRED — PLEASE LOG IN AGAIN' : data.error.toUpperCase());
+        return;
+      }
 
       if (window.PaystackPop) {
         const handler = window.PaystackPop.setup({
