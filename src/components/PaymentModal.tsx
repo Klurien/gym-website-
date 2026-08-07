@@ -7,7 +7,10 @@ declare global {
   }
 }
 
-const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_def8e817b833e83cc10e038b85e8ca8d262b6d6f';
+const PAYSTACK_PUBLIC_KEY =
+  import.meta.env.VITE_PAYSTACK_PUBLIC_KEY ||
+  (import.meta.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY as string) ||
+  'pk_test_def8e817b833e83cc10e038b85e8ca8d262b6d6f';
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -68,41 +71,52 @@ export default function PaymentModal({
       }
 
       if (window.PaystackPop) {
-        const handler = window.PaystackPop.setup({
-          key: PAYSTACK_PUBLIC_KEY,
-          email,
-          amount: Math.round(amount * 100),
-          currency: 'KES',
-          ref: data.reference,
-          metadata: { programId, programName },
-          callback: async (response: any) => {
-            setMsg('Verifying payment...');
-            try {
-              const vres = await fetch('/api/paystack/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ reference: response.reference }),
-              });
-              const vdata = await vres.json();
-              if (vdata.verified) {
-                setStep('success');
-                setMsg('PAYMENT SUCCESSFUL');
-                onSuccess();
-              } else {
-                setStep('error');
-                setMsg(vdata.message?.toUpperCase() || 'VERIFICATION FAILED');
-              }
-            } catch {
-              setStep('error');
-              setMsg('VERIFICATION FAILED');
-            }
-          },
-          onClose: () => {
-            setStep('form');
-            setMsg('');
-          },
-        });
-        handler.openIframe();
+        let handler: any;
+        try {
+          handler = window.PaystackPop.setup({
+            key: PAYSTACK_PUBLIC_KEY,
+            email,
+            amount: Math.round(amount * 100),
+            currency: 'KES',
+            ref: data.reference,
+            metadata: { programId, programName },
+            // Paystack V1 validates callbacks with Object.prototype.toString,
+            // which rejects async functions ("[object AsyncFunction]"). Keep
+            // this a plain function and run the async verification inside.
+            callback: (response: any) => {
+              setMsg('Verifying payment...');
+              (async () => {
+                try {
+                  const vres = await fetch('/api/paystack/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ reference: response.reference }),
+                  });
+                  const vdata = await vres.json();
+                  if (vdata.verified) {
+                    setStep('success');
+                    setMsg('PAYMENT SUCCESSFUL');
+                    onSuccess();
+                  } else {
+                    setStep('error');
+                    setMsg(vdata.message?.toUpperCase() || 'VERIFICATION FAILED');
+                  }
+                } catch {
+                  setStep('error');
+                  setMsg('VERIFICATION FAILED');
+                }
+              })();
+            },
+            onClose: () => {
+              setStep('form');
+              setMsg('');
+            },
+          });
+          handler.openIframe();
+        } catch (e: any) {
+          console.error('[PAYSTACK] Popup failed, redirecting:', e?.message || e);
+          window.location.href = data.authorization_url;
+        }
       } else {
         window.location.href = data.authorization_url;
       }
