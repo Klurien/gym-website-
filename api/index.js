@@ -389,8 +389,11 @@ module.exports = async (req, res) => {
       if (!user) return res.status(401).json({ error: 'Unauthorized' });
       const { amount, programId, programName, email: bodyEmail } = req.body || {};
       if (!amount) return res.status(400).json({ error: 'Amount required' });
-      const email = user.email || bodyEmail;
+      const email = (user.email || bodyEmail || '').trim();
       if (!email) return res.status(400).json({ error: 'User email required for payment' });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'A valid email is required for payment' });
+      }
 
       const reference = `CG-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       const result = await paystackInitialize(email, amount, reference, {

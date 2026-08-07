@@ -9,6 +9,10 @@ declare global {
 
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_def8e817b833e83cc10e038b85e8ca8d262b6d6f';
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export default function PaymentModal({
   amount,
   programId,
@@ -31,10 +35,30 @@ export default function PaymentModal({
     try {
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+      // Resolve a real, valid email — never charge under a fake shared email.
+      let email = typeof user.email === 'string' ? user.email.trim() : '';
+      if (!isValidEmail(email)) {
+        try {
+          const profileRes = await fetch('/api/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const profileData = await profileRes.json();
+          email = typeof profileData?.user?.email === 'string' ? profileData.user.email.trim() : '';
+        } catch {
+          email = '';
+        }
+      }
+      if (!isValidEmail(email)) {
+        setStep('error');
+        setMsg('EMAIL REQUIRED — UPDATE YOUR PROFILE FIRST');
+        return;
+      }
+
       const res = await fetch('/api/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ amount, programId, programName, email: user.email }),
+        body: JSON.stringify({ amount, programId, programName, email }),
       });
       const data = await res.json();
       if (data.error) { setStep('error'); setMsg(data.error.toUpperCase()); return; }
@@ -42,7 +66,7 @@ export default function PaymentModal({
       if (window.PaystackPop) {
         const handler = window.PaystackPop.setup({
           key: PAYSTACK_PUBLIC_KEY,
-          email: user.email || 'customer@comrades.com',
+          email,
           amount: Math.round(amount * 100),
           currency: 'KES',
           ref: data.reference,
